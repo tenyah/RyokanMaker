@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>header fragment</title></head>
+<body>
+
+<!--
+  공통 헤더 조각(fragment)입니다.
+  사용하는 페이지에서는 아래처럼 activePage 파라미터로 현재 메뉴를 넘겨주면
+  해당 메뉴에 active 스타일이 자동으로 적용됩니다.
+
+  <div th:replace="~{fragments/header :: header(activePage='booking')}"></div>
+
+  activePage 값 : rooms / onsen / dining / facility / access / contact / booking
+-->
+<header class="site-header" th:fragment="header(activePage)">
+  <a href="/" class="logo" style="text-decoration:none;">
+    <span class="kanji">清流庵</span>
+    <span class="romaji">OTARU FURUKAWA</span>
+  </a>
+  <nav>
+    <a class="navlink" th:classappend="${activePage == 'rooms'} ? 'active' : ''" th:href="@{/rooms}">객실</a>
+    <a class="navlink" th:classappend="${activePage == 'onsen'} ? 'active' : ''" th:href="@{/onsen}">온천</a>
+    <a class="navlink" th:classappend="${activePage == 'dining'} ? 'active' : ''" th:href="@{/dining}">식사</a>
+    <a class="navlink" th:classappend="${activePage == 'facility'} ? 'active' : ''" th:href="@{/facility}">시설</a>
+    <a class="navlink" th:classappend="${activePage == 'access'} ? 'active' : ''" th:href="@{/access}">교통안내</a>
+    <a class="navlink" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/contact}">문의하기</a>
+    <a class="btn-gold" style="padding:11px 28px; font-size:13px; text-decoration:none;" th:href="@{/reservation/plan}">숙박예약</a>
+  </nav>
+</header>
+
+</body>
+</html>

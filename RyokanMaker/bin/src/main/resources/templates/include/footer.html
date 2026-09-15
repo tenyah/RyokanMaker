@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>footer fragment</title></head>
+<body>
+
+<!--
+  공통 푸터 조각(fragment)입니다. 파라미터 없이 그대로 include 해서 씁니다.
+  <div th:replace="~{fragments/footer :: footer}"></div>
+-->
+<footer class="site-footer" th:fragment="footer">
+  <div class="footer-top">
+    <div class="brand">
+      <div class="kanji">清流庵</div>
+      <div class="addr">[주소를 입력하세요], 오타루시, 홋카이도<br>TEL. [전화번호를 입력하세요]</div>
+    </div>
+    <nav>
+      <a th:href="@{/rooms}">객실</a>
+      <a th:href="@{/onsen}">온천</a>
+      <a th:href="@{/dining}">식사</a>
+      <a th:href="@{/facility}">시설</a>
+      <a th:href="@{/access}">교통안내</a>
+      <a th:href="@{/contact}">문의하기</a>
+    </nav>
+  </div>
+  <div class="divider"></div>
+  <div class="copyright">© 2026 오타루 후루카와. All rights reserved.</div>
+</footer>
+
+</body>
+</html>
