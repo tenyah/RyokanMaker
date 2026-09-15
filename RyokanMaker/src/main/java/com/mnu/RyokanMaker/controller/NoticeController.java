@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 유저(비회원 포함)에게 보이는 공지사항 화면.
- * - 목록 : templates/notice/list.html
+ * 목록 페이지는 따로 두지 않고, 메인 화면에서 최신 몇 건만 미리보기로 보여준 뒤
+ * 각 항목을 상세(view)로 연결하는 방식으로 간다 (팀 논의 결과).
  * - 상세 : templates/notice/view.html
  */
 @Controller
@@ -18,12 +19,6 @@ public class NoticeController {
 
     @Autowired
     private NoticeService noticeService;
-
-    @GetMapping("/notice/list")
-    public String list(Model model) {
-        model.addAttribute("noticeList", noticeService.list());
-        return "notice/list";
-    }
 
     @GetMapping("/notice/view")
     public String view(@RequestParam int idx, Model model) {
