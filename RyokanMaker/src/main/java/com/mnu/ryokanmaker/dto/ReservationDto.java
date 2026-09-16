@@ -1,5 +1,7 @@
 package com.mnu.ryokanmaker.dto;
 
+import java.time.LocalDate;
+
 /**
  * RESERVATION 테이블 매핑 DTO (예약 1건의 상위/통합 정보 - 결제 상태 등)
  * PK : resvNum / FK : adminIdx -> ADMIN.AdminIdx, userMail -> MEMBER.UserMail
@@ -14,12 +16,17 @@ public class ReservationDto {
     private String resvStatus;
     private String resvPayStatus;
     private String resvPayMethod;
+    private String resvOrderId;
+    private String resvArrivalTime;
+    private String resvRequest;
+    private LocalDate resvDay;
 
     public ReservationDto() {
     }
 
     public ReservationDto(Integer resvNum, Integer adminIdx, String userMail, Integer resvPrice,
-                           Integer resvPeople, String resvStatus, String resvPayStatus, String resvPayMethod) {
+                           Integer resvPeople, String resvStatus, String resvPayStatus, String resvPayMethod,
+                           String resvOrderId, String resvArrivalTime, String resvRequest, LocalDate resvDay) {
         this.resvNum = resvNum;
         this.adminIdx = adminIdx;
         this.userMail = userMail;
@@ -28,6 +35,10 @@ public class ReservationDto {
         this.resvStatus = resvStatus;
         this.resvPayStatus = resvPayStatus;
         this.resvPayMethod = resvPayMethod;
+        this.resvOrderId = resvOrderId;
+        this.resvArrivalTime = resvArrivalTime;
+        this.resvRequest = resvRequest;
+        this.resvDay = resvDay;
     }
 
     public Integer getResvNum() { return resvNum; }
@@ -53,4 +64,16 @@ public class ReservationDto {
 
     public String getResvPayMethod() { return resvPayMethod; }
     public void setResvPayMethod(String resvPayMethod) { this.resvPayMethod = resvPayMethod; }
+
+    public String getResvOrderId() { return resvOrderId; }
+    public void setResvOrderId(String resvOrderId) { this.resvOrderId = resvOrderId; }
+
+    public String getResvArrivalTime() { return resvArrivalTime; }
+    public void setResvArrivalTime(String resvArrivalTime) { this.resvArrivalTime = resvArrivalTime; }
+
+    public String getResvRequest() { return resvRequest; }
+    public void setResvRequest(String resvRequest) { this.resvRequest = resvRequest; }
+
+    public LocalDate getResvDay() { return resvDay; }
+    public void setResvDay(LocalDate resvDay) { this.resvDay = resvDay; }
 }

@@ -47,62 +47,62 @@
           <div class="panel-header"><h2>예약자 정보</h2></div>
           <div class="panel-body">
 
-            <div class="field-row">
-              <div class="field">
-                <label for="lastNameKr">성 (한글)<span class="required">*</span></label>
-                <input type="text" id="lastNameKr" th:field="*{lastNameKr}" placeholder="예) 은">
-                <span class="field-error" th:if="${#fields.hasErrors('lastNameKr')}" th:errors="*{lastNameKr}"></span>
+            <div class="payfield-row">
+              <div class="payfield">
+                <label for="lastNameJp">姓 (일본어)<span class="required">*</span></label>
+                <input type="text" id="lastNameJp" th:field="*{lastNameJp}" placeholder="例) 田中">
+                <span class="payfield-error" th:if="${#fields.hasErrors('lastNameJp')}" th:errors="*{lastNameJp}"></span>
               </div>
-              <div class="field">
-                <label for="firstNameKr">이름 (한글)<span class="required">*</span></label>
-                <input type="text" id="firstNameKr" th:field="*{firstNameKr}" placeholder="예) 예성">
-                <span class="field-error" th:if="${#fields.hasErrors('firstNameKr')}" th:errors="*{firstNameKr}"></span>
+              <div class="payfield">
+                <label for="firstNameJp">名 (일본어)<span class="required">*</span></label>
+                <input type="text" id="firstNameJp" th:field="*{firstNameJp}" placeholder="例) 太郎">
+                <span class="payfield-error" th:if="${#fields.hasErrors('firstNameJp')}" th:errors="*{firstNameJp}"></span>
               </div>
             </div>
 
-            <div class="field-row">
-              <div class="field">
+            <div class="payfield-row">
+              <div class="payfield">
                 <label for="lastNameEn">Last Name (영문)<span class="required">*</span></label>
                 <input type="text" id="lastNameEn" th:field="*{lastNameEn}" placeholder="EUN">
-                <span class="field-error" th:if="${#fields.hasErrors('lastNameEn')}" th:errors="*{lastNameEn}"></span>
+                <span class="payfield-error" th:if="${#fields.hasErrors('lastNameEn')}" th:errors="*{lastNameEn}"></span>
               </div>
-              <div class="field">
+              <div class="payfield">
                 <label for="firstNameEn">First Name (영문)<span class="required">*</span></label>
                 <input type="text" id="firstNameEn" th:field="*{firstNameEn}" placeholder="YESEONG">
-                <span class="field-error" th:if="${#fields.hasErrors('firstNameEn')}" th:errors="*{firstNameEn}"></span>
+                <span class="payfield-error" th:if="${#fields.hasErrors('firstNameEn')}" th:errors="*{firstNameEn}"></span>
               </div>
             </div>
 
-            <div class="field">
+            <div class="payfield">
               <label for="email">이메일 주소<span class="required">*</span></label>
               <input type="email" id="email" th:field="*{email}" placeholder="you@example.com">
-              <span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+              <span class="payfield-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
             </div>
 
-            <div class="field">
+            <div class="payfield">
               <label for="emailConfirm">이메일 주소 확인<span class="required">*</span></label>
               <input type="email" id="emailConfirm" th:field="*{emailConfirm}" placeholder="you@example.com">
-              <span class="field-error" th:if="${#fields.hasErrors('emailConfirm')}" th:errors="*{emailConfirm}"></span>
+              <span class="payfield-error" th:if="${#fields.hasErrors('emailConfirm')}" th:errors="*{emailConfirm}"></span>
             </div>
 
-            <div class="field-row">
-              <div class="field">
+            <div class="payfield-row">
+              <div class="payfield">
                 <label for="country">국가 / 지역<span class="required">*</span></label>
                 <select id="country" th:field="*{country}">
                   <option th:each="entry : ${countryOptions}"
                           th:value="${entry.key}"
                           th:text="${entry.value}"></option>
                 </select>
-                <span class="field-error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></span>
+                <span class="payfield-error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></span>
               </div>
-              <div class="field">
+              <div class="payfield">
                 <label for="phone">전화번호 (국가번호 포함)<span class="required">*</span></label>
                 <input type="tel" id="phone" th:field="*{phone}" placeholder="+82 10-0000-0000">
-                <span class="field-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+                <span class="payfield-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
               </div>
             </div>
 
-            <div class="field">
+            <div class="payfield">
               <label for="arrivalTime">도착 예정 시간</label>
               <select id="arrivalTime" th:field="*{arrivalTime}">
                 <option value="">선택해주세요</option>
@@ -112,21 +112,10 @@
               </select>
             </div>
 
-            <div class="field">
+            <div class="payfield">
               <label for="requestNote">요청 사항 (선택)</label>
               <textarea id="requestNote" th:field="*{requestNote}"
                         placeholder="알레르기, 침구 종류 등 요청사항을 입력해주세요"></textarea>
-            </div>
-
-            <div class="checkbox-list">
-              <label class="checkbox-row">
-                <input type="checkbox" th:field="*{marketingOptIn}">
-                <span>여행사 및 제휴사의 프로모션 정보 수신에 동의합니다. (선택)</span>
-              </label>
-              <label class="checkbox-row">
-                <input type="checkbox" th:field="*{confirmationEmailOptIn}">
-                <span>예약 확인 및 안내 메일을 받는 것에 동의합니다.</span>
-              </label>
             </div>
 
           </div>
@@ -160,13 +149,13 @@
                 <input type="checkbox" th:field="*{agreeCancelPolicy}">
                 <span><a th:href="@{/policy/cancellation}" target="_blank">숙박약관 및 취소 규정</a>을 확인하였으며 이에 동의합니다.<span class="required">*</span></span>
               </label>
-              <span class="field-error" th:if="${#fields.hasErrors('agreeCancelPolicy')}" th:errors="*{agreeCancelPolicy}"></span>
+              <span class="payfield-error" th:if="${#fields.hasErrors('agreeCancelPolicy')}" th:errors="*{agreeCancelPolicy}"></span>
 
               <label class="checkbox-row">
                 <input type="checkbox" th:field="*{agreePrivacyPolicy}">
                 <span><a th:href="@{/policy/privacy}" target="_blank">개인정보 처리방침</a>에 동의합니다.<span class="required">*</span></span>
               </label>
-              <span class="field-error" th:if="${#fields.hasErrors('agreePrivacyPolicy')}" th:errors="*{agreePrivacyPolicy}"></span>
+              <span class="payfield-error" th:if="${#fields.hasErrors('agreePrivacyPolicy')}" th:errors="*{agreePrivacyPolicy}"></span>
             </div>
           </div>
         </section>
@@ -198,7 +187,7 @@
             </div>
             <div class="summary-row">
               <span class="k">인원</span>
-              <span class="v" th:text="'성인 ' + ${reservation.adultCount} + '명 · 어린이 ' + ${reservation.childCount} + '명'">성인 2명 · 어린이 0명</span>
+              <span class="v" th:text="'인원 ' + (${reservation.adultCount} + ${reservation.childCount}) + '명'">인원 2명</span>
             </div>
 
             <div class="plan-box">
@@ -268,6 +257,20 @@
   const amount = Number(payButton.dataset.amount);
   const orderName = payButton.dataset.orderName;
 
+  // 약관(취소 규정 + 개인정보 처리방침)에 모두 동의해야 결제 버튼을 누를 수 있다.
+  // Thymeleaf th:field가 부여하는 id는 같은 이름의 필드가 여러 번 나오면 중복 방지를 위해 숫자가 붙어
+  // getElementById로는 안정적으로 찾을 수 없다 (예: agreeCancelPolicy1). name 속성은 그대로 유지되므로 이를 사용한다.
+  const agreeCancelPolicy = form.querySelector('[name="agreeCancelPolicy"]');
+  const agreePrivacyPolicy = form.querySelector('[name="agreePrivacyPolicy"]');
+
+  function updatePayButtonState() {
+    payButton.disabled = !(agreeCancelPolicy.checked && agreePrivacyPolicy.checked);
+  }
+
+  agreeCancelPolicy.addEventListener('change', updatePayButtonState);
+  agreePrivacyPolicy.addEventListener('change', updatePayButtonState);
+  updatePayButtonState();
+
   (async () => {
     await widgets.setAmount({ value: amount, currency: 'KRW' });
     await Promise.all([
@@ -277,6 +280,11 @@
   })();
 
   payButton.addEventListener('click', async () => {
+    if (!agreeCancelPolicy.checked || !agreePrivacyPolicy.checked) {
+      alert('약관에 동의해주세요.');
+      return;
+    }
+
     if (!form.reportValidity()) {
       return;
     }

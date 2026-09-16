@@ -4,8 +4,8 @@ package com.mnu.ryokanmaker.dto;
 public class GuestInfoForm {
 
     // 예약자 정보
-    private String lastNameKr;
-    private String firstNameKr;
+    private String lastNameJp;
+    private String firstNameJp;
     private String lastNameEn;
     private String firstNameEn;
     private String email;
@@ -14,8 +14,6 @@ public class GuestInfoForm {
     private String phone;
     private String arrivalTime;
     private String requestNote;
-    private boolean marketingOptIn;
-    private boolean confirmationEmailOptIn;
 
     // 토스페이먼츠 주문서형 결제 식별자 (서버에서 생성해 hidden input으로 전달)
     private String orderId;
@@ -27,11 +25,11 @@ public class GuestInfoForm {
     public GuestInfoForm() {
     }
 
-    public String getLastNameKr() { return lastNameKr; }
-    public void setLastNameKr(String lastNameKr) { this.lastNameKr = lastNameKr; }
+    public String getLastNameJp() { return lastNameJp; }
+    public void setLastNameJp(String lastNameJp) { this.lastNameJp = lastNameJp; }
 
-    public String getFirstNameKr() { return firstNameKr; }
-    public void setFirstNameKr(String firstNameKr) { this.firstNameKr = firstNameKr; }
+    public String getFirstNameJp() { return firstNameJp; }
+    public void setFirstNameJp(String firstNameJp) { this.firstNameJp = firstNameJp; }
 
     public String getLastNameEn() { return lastNameEn; }
     public void setLastNameEn(String lastNameEn) { this.lastNameEn = lastNameEn; }
@@ -56,12 +54,6 @@ public class GuestInfoForm {
 
     public String getRequestNote() { return requestNote; }
     public void setRequestNote(String requestNote) { this.requestNote = requestNote; }
-
-    public boolean isMarketingOptIn() { return marketingOptIn; }
-    public void setMarketingOptIn(boolean marketingOptIn) { this.marketingOptIn = marketingOptIn; }
-
-    public boolean isConfirmationEmailOptIn() { return confirmationEmailOptIn; }
-    public void setConfirmationEmailOptIn(boolean confirmationEmailOptIn) { this.confirmationEmailOptIn = confirmationEmailOptIn; }
 
     public String getOrderId() { return orderId; }
     public void setOrderId(String orderId) { this.orderId = orderId; }
