@@ -31,9 +31,6 @@
     .feature-card .body { padding: 22px 24px; }
     .feature-card h3 { font-family: var(--serif); font-weight: 400; font-size: 18px; color: var(--ink); margin: 0 0 8px; }
     .feature-card p { font-size: 13px; color: var(--ink-soft); line-height: 1.8; margin: 0; }
-
-    .admin-cta { background: var(--bg-soft); border-top: 1px solid var(--line); padding: 48px 56px; text-align: center; }
-    .admin-cta p { font-size: 13px; color: var(--ink-soft); margin: 0 0 18px; }
   </style>
 </head>
 <body>
@@ -50,6 +47,7 @@
       <div class="hero-actions">
         <a class="btn-gold" th:href="@{/reservation/plan}">숙박예약</a>
         <a class="btn-line" th:href="@{/reservation/plan}">플랜 둘러보기</a>
+        <a class="btn-line" th:href="@{/admin/apply}">관리자 계정 신청</a>
       </div>
     </div>
   </section>
@@ -97,11 +95,6 @@
     </a>
     <div th:if="${#lists.isEmpty(notices)}" class="board-empty">등록된 공지사항이 없습니다.</div>
   </div>
-
-  <section class="admin-cta">
-    <p>료칸을 운영하고 계신가요? 관리자 계정을 신청해보세요.</p>
-    <a class="btn-line" th:href="@{/admin/apply}">관리자 계정 신청</a>
-  </section>
 
   <div th:replace="~{include/footer :: footer}"></div>
 
