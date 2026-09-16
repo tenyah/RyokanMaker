@@ -10,7 +10,7 @@
         <result column="APPLICANT_TEL"     property="applicantTel"/>
         <result column="REQUEST_MESSAGE"   property="requestMessage"/>
         <result column="REQUEST_STATUS"    property="requestStatus"/>
-        <result column="REQUESTED_AT"      property="requestedAt"/>
+        <result column="REQUEST_AT"        property="requestedAt"/>
         <result column="PROCESSED_AT"      property="processedAt"/>
         <result column="RESULT_ADMIN_IDX"  property="resultAdminIdx"/>
     </resultMap>
@@ -18,7 +18,7 @@
     <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminRequestDto"
             useGeneratedKeys="true" keyProperty="requestIdx" keyColumn="REQUEST_IDX">
         INSERT INTO ADMIN_REQUEST (RYOKAN_NAME, APPLICANT_NAME, APPLICANT_EMAIL, APPLICANT_TEL,
-                                    REQUEST_MESSAGE, REQUEST_STATUS, REQUESTED_AT)
+                                    REQUEST_MESSAGE, REQUEST_STATUS, REQUEST_AT)
         VALUES (#{ryokanName}, #{applicantName}, #{applicantEmail}, #{applicantTel},
                 #{requestMessage}, '대기', SYSTIMESTAMP)
     </insert>
