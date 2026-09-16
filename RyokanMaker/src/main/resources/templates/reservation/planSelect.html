@@ -21,32 +21,46 @@
   </section>
 
   <!--
-    plans는 DB의 PLAN 테이블에서 조회한 PlanDTO 리스트입니다.
-    필드 : planIdx, planName, planImage, planIncludesMeal(Y/N), planIncludesOnsen(Y/N), planInfo, planPrice
+    플랜 카드 목록
+    컨트롤러에서 아래와 같은 형태로 모델에 담아 내려준다고 가정합니다.
+
+    model.addAttribute("plans", List.of(
+        new PlanDto("ROOM_ONLY",  "객실 플랜",             "/images/room-sakura.jpg", true,  false, false,
+                     "숙박만 필요하신 분을 위한 가장 기본적인 구성입니다. 식사와 온천은 현지에서 별도로 이용하실 수 있습니다.", 780000),
+        new PlanDto("ROOM_MEAL",  "객실 + 식사 플랜",       "/images/course-moon.jpg", true,  true,  false,
+                     "『계절의 맛 가이세키』 등 코스 요리가 포함된 구성입니다.", 848508),
+        new PlanDto("ROOM_MEAL_ONSEN", "객실 + 식사 + 온천 플랜", "/images/onsen-bath.jpg", true, true, true,
+                     "숙박, 식사, 전세탕 온천까지 모두 포함된 가장 여유로운 구성입니다.", 1020000),
+        new PlanDto("ROOM_ONSEN", "객실 + 온천 플랜",       "/images/course-snow.jpg", true,  false, true,
+                     "전세탕 온천 이용이 포함된 구성입니다. 식사는 현지에서 자유롭게 즐기실 수 있습니다.", 867321)
+    ));
+
+    PlanDto 필드 예시 : code, name, imageUrl, includesRoom, includesMeal, includesOnsen, description, priceFrom
   -->
   <section class="plan-grid">
 
     <div class="plan-card" th:each="plan : ${plans}">
       <div class="thumb">
-        <img th:src="@{${plan.planImage}}" alt="">
+        <img th:src="@{${plan.imageUrl}}" alt="">
       </div>
       <div class="body">
-       <!-- 식사/온천만 포함된 경우에만 표시 -->
         <div class="incl-row">
-          <span class="incl on" th:if="${plan.planIncludesMeal == 'Y'}">식사</span>
-          <span class="incl on" th:if="${plan.planIncludesOnsen == 'Y'}">온천</span>
+          <span class="incl" th:classappend="${plan.includesRoom} ? 'on' : ''">객실</span>
+          <span class="incl" th:classappend="${plan.includesMeal} ? 'on' : ''">식사</span>
+          <span class="incl" th:classappend="${plan.includesOnsen} ? 'on' : ''">온천</span>
         </div>
-        <h3 th:text="${plan.planName}">플랜명</h3>
-        <p th:text="${plan.planInfo}">플랜 설명</p>
+        <h3 th:text="${plan.name}">플랜명</h3>
+        <p th:text="${plan.description}">플랜 설명</p>
         <div class="price-row">
           <div>
             <span class="from">1박 2인 기준</span>
             <span class="amount">
-              <span th:text="${'₩' + #numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩0</span>
+              <span th:text="${'₩' + #numbers.formatInteger(plan.priceFrom, 0, 'COMMA')}">₩0</span>
               <span class="unit">부터</span>
             </span>
           </div>
-         <a class="btn-gold" ... th:href="@{/reservation/reservation(planCode=${plan.planIdx})}">이 플랜으로 예약하기</a>
+          <a class="btn-gold" style="padding:12px 24px; font-size:13px; text-decoration:none;"
+             th:href="@{/reservation/booking(planCode=${plan.code})}">이 플랜으로 예약하기</a>
         </div>
       </div>
     </div>
