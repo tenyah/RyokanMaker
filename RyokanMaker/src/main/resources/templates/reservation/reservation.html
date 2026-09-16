@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>숙박예약 | 清流庵 오타루 후루카와</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+	<div class="page-wrap">
+
+		<!-- 공통 헤더 include (현재 메뉴 = booking) -->
+		<div th:replace="~{include/header :: header(activePage='booking')}"></div>
+
+		<!-- 타이틀 -->
+		<section class="page-title">
+			<div class="crumb">HOME &nbsp;/&nbsp; 숙박예약 &nbsp;/&nbsp; 날짜 선택</div>
+			<h1>숙박예약</h1>
+			<div class="rule"></div>
+			<span class="plan-badge" style="margin-top: 4px;"> 선택하신 플랜 : <span
+				th:text="${selectedPlan.planName}">객실 + 식사 플랜</span>
+			</span>
+		</section>
+
+		<!-- 검색 조건 바 -->
+		<section style="padding: 32px 56px 0;">
+			<form class="search-bar" th:action="@{/reservation/reservation}" method="get">
+				<input type="hidden" name="planCode" th:value="${selectedPlan.planIdx}">
+
+				<div class="search-field">
+					<span class="field-label">체크인 - 체크아웃</span>
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<input type="date" name="checkIn" th:value="${searchCondition.checkIn}"
+							style="border:none; font-family:var(--serif); font-size:15px; color:var(--ink); background:transparent;">
+						<span>—</span>
+						<input type="date" name="checkOut" th:value="${searchCondition.checkOut}"
+							style="border:none; font-family:var(--serif); font-size:15px; color:var(--ink); background:transparent;">
+					</div>
+				</div>
+
+				<div class="search-field" style="border-right: none;">
+					<span class="field-label">객실 1개당 이용 인원</span>
+					<div style="display: flex; align-items: center; gap: 10px;">
+						성인 <input type="number" name="adultCount" min="1" th:value="${searchCondition.adultCount}" style="width:44px; border:none; background:transparent;">
+						어린이 <input type="number" name="childCount" min="0" th:value="${searchCondition.childCount}" style="width:44px; border:none; background:transparent;">
+					</div>
+				</div>
+
+				<button type="submit" class="btn-gold" style="margin-left: 24px;">검색</button>
+			</form>
+		</section>
+
+		<!-- ① 객실 선택 : 날짜별 예약 현황 캘린더 (모든 플랜 공통 — 항상 표시) -->
+		<div class="section-tag">
+			<span class="num">1</span><span class="label">객실 선택 — 날짜별 예약
+				현황</span><span class="line"></span>
+		</div>
+
+		<section style="padding: 0 56px 40px;">
+			<div
+				style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px;">
+				<div
+					style="font-family: var(--serif); font-weight: 400; font-size: 19px; color: var(--ink);">객실별
+					예약 가능 현황</div>
+				<p style="font-size: 12px; color: var(--ink-faint); margin: 0;">※
+					아래 표는 화면 구성 예시이며, 실제 예약 가능 여부와 요금은 서버에서 조회한 데이터로 대체됩니다.</p>
+			</div>
+
+			<div style="overflow-x: auto;">
+				<table class="cal-table">
+					<thead>
+						<tr>
+							<th style="text-align: left; padding-left: 16px;">객실</th>
+							<th th:each="date : ${calendarDates}"><span
+								th:text="${#temporals.format(date, 'M/d')}">9/13</span><br>
+								<span
+								th:text="${date.dayOfWeek.getDisplayName(T(java.time.format.TextStyle).SHORT, T(java.util.Locale).KOREAN)}">일</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="room : ${rooms}">
+							<td class="roomname" th:text="${room.roomName}">사쿠라</td>
+							<td class="cal-cell" th:each="day : ${room.days}"><span
+								class="status"
+								th:classappend="${day.status == 'OK'} ? 'status-ok' : (${day.status == 'ASK'} ? 'status-ask' : 'status-no')"
+								th:text="${day.status == 'OK'} ? '○' : (${day.status == 'ASK'} ? '問' : '−')">○</span>
+								<span class="price"
+								th:text="${day.status == 'OK'} ? ('₩' + ${#numbers.formatInteger(day.price, 0, 'COMMA')}) : (${day.status == 'ASK'} ? '전화문의' : '마감')">₩848,508</span>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="cal-legend">
+				<span><span class="status status-ok">○</span>&nbsp;예약 가능</span> <span><span
+					class="status status-ask">問</span>&nbsp;전화/메일 문의</span> <span><span
+					class="status status-no">−</span>&nbsp;마감</span>
+			</div>
+		</section>
+
+		<!-- ②③ 번호를 플랜 구성에 맞게 동적으로 계산 -->
+		<div
+			th:with="mealStep=${selectedPlan.planIncludesMeal == 'Y'} ? 2 : 0,
+                onsenStep=${selectedPlan.planIncludesOnsen == 'Y'} ? (${selectedPlan.planIncludesMeal == 'Y'} ? 3 : 2) : 0">
+
+			<!-- ② 식사(플랜) 선택 : 이 플랜에 식사가 포함된 경우에만 표시 -->
+			<div th:if="${selectedPlan.planIncludesMeal == 'Y'}">
+				<div class="section-tag">
+					<span class="num" th:text="${mealStep}">2</span><span class="label">식사(플랜)
+						선택</span><span class="line"></span>
+				</div>
+
+				<section style="padding: 0 56px 0;">
+					<div class="search-bar" style="margin-bottom: 28px;">
+						<div class="search-field" style="padding-left: 0;">
+							<span class="field-label">이용일</span> <span class="field-value"
+								th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')}">2026.09.13</span>
+						</div>
+						<div class="search-field" style="border-right: none;">
+							<span class="field-label">인원</span> <span class="field-value">성인
+								<span th:text="${searchCondition.adultCount}">2</span>명
+							</span>
+						</div>
+						<button class="btn-gold" style="margin-left: auto;">검색</button>
+					</div>
+				</section>
+
+				<section class="course-grid">
+					<div class="course-card" th:each="course : ${courses}">
+						<div class="thumb">
+							<img th:src="@{${course.restaurantCourseImage}}" alt="">
+						</div>
+						<div class="body">
+							<h4 th:text="${course.restaurantCourseName}">달 코스 『계절의 맛
+								가이세키』</h4>
+							<p th:if="${course.restaurantCourseSaleYN == 'Y'}"
+								th:text="${course.restaurantCourseInfo}">코스 설명</p>
+							<p class="tbd"
+								th:unless="${course.restaurantCourseSaleYN == 'Y'}">[코스 상세
+								설명 준비 중입니다]</p>
+							<button class="btn-gold" style="margin-top: 8px;"
+								th:disabled="${course.restaurantCourseSaleYN != 'Y'}">이
+								코스로 선택</button>
+						</div>
+					</div>
+				</section>
+			</div>
+
+			<!-- ③ 온천 선택 : 이 플랜에 온천이 포함된 경우에만 표시 -->
+			<div th:if="${selectedPlan.planIncludesOnsen == 'Y'}">
+				<div class="section-tag">
+					<span class="num" th:text="${onsenStep}">3</span><span
+						class="label">온천 선택</span><span class="line"></span>
+				</div>
+
+				<section style="padding: 0 56px 0;">
+					<div class="search-bar" style="margin-bottom: 24px;">
+						<div class="search-field"
+							style="padding-left: 0; border-right: none;">
+							<span class="field-label">이용일</span> <span class="field-value"
+								th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')}">2026.09.13</span>
+						</div>
+						<p
+							style="font-size: 12px; color: var(--ink-faint); margin: 0 0 0 24px;">전세탕(대절)
+							예약 — 원하시는 시간대를 선택해주세요.</p>
+					</div>
+				</section>
+
+				<section style="padding: 0 56px 40px;">
+					<div style="overflow-x: auto;">
+						<table class="slot-table">
+							<thead>
+								<tr>
+									<th style="text-align: left; padding-left: 16px;">전세탕</th>
+									<th th:each="slot : ${baths[0].slots}" th:text="${slot.time}">15:00</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:each="bath : ${baths}">
+									<td class="roomname" th:text="${bath.bathName}">노천탕
+										(露天湯)</td>
+									<td th:each="slot : ${bath.slots}">
+										<button class="slot-btn"
+											th:classappend="${slot.available} ? '' : 'taken'"
+											th:disabled="${!slot.available}"
+											th:text="${slot.available} ? '예약가능' : '마감'">예약가능</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<p
+						style="font-size: 12px; color: var(--ink-faint); margin-top: 14px;">시간대를
+						선택하시면 선택하신 전세탕과 시간이 하단 예약 요약에 담깁니다.</p>
+				</section>
+			</div>
+
+		</div>
+
+		<!-- 결제 페이지로 이동 -->
+		<section
+			style="padding: 24px 56px 56px; display: flex; justify-content: center;">
+			<a class="btn-gold"
+				style="text-decoration: none; padding: 18px 56px; font-size: 15px;"
+				th:href="@{/payment(planCode=${selectedPlan.planIdx})}">결제 페이지로
+				이동</a>
+		</section>
+
+		<!-- 공통 푸터 include -->
+		<div th:replace="~{include/footer :: footer}"></div>
+
+	</div>
+</body>
+</html>
