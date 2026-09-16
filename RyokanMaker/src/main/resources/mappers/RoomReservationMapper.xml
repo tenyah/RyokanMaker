@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mappers.RoomReservationMapper">
+<select id="findOverlapping" resultType="com.mnu.ryokanmaker.domain.RoomReservationDTO">
+    SELECT "RoomResv_num", "UserMail", "AdminIdx", "RoomIdx", "Resv_num", "PlanIdx",
+           "Resv_CheckIn", "Resv_CheckOut", "Resv_Price", "Resv_People",
+           "Resv_Status", "Resv_PayStatus", "Resv_PayMethod"
+    FROM "ROOM_RESERVATION"
+    WHERE "Resv_CheckIn" &lt; #{rangeEnd}
+      AND "Resv_CheckOut" &gt; #{rangeStart}
+</select>
+</mapper>

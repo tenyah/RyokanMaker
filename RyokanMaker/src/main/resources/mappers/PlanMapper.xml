@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mappers.PlanMapper">
+
+
+<select id="findAll" resultType="com.mnu.ryokanmaker.domain.PlanDTO">
+    SELECT "PlanIdx", "AdminIdx", "PlanName", "PlanImage", "PlanIncludesMeal",
+           "PlanIncludesOnsen", "PlanInfo", "PlanPrice", "PlanSaleYN"
+    FROM "PLAN"
+    WHERE "PlanSaleYN" = 'Y'
+    ORDER BY "PlanIdx"
+</select>
+
+
+</mapper>
+

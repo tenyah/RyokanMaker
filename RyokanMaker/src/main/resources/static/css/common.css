@@ -173,8 +173,22 @@ img { max-width: 100%; display: block; }
 .slot-btn.taken { background: var(--bg-soft); color: var(--ink-faint); border-color: var(--line); cursor: not-allowed; }
 
 /* ---------------- 식사 코스 카드 ---------------- */
-.course-grid { padding: 0 56px 40px; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 40px; }
-.course-card { border: 1px solid var(--line); display: flex; flex-direction: column; }
+.course-grid {
+  padding: 0 56px 40px;
+  display: flex;
+  gap: 40px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.course-grid::-webkit-scrollbar { height: 6px; }
+.course-grid::-webkit-scrollbar-thumb { background: var(--gold-pale); border-radius: 3px; }
+
+.course-card {
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  flex: 0 0 calc(50% - 20px); 
+  scroll-snap-align: start;
+}
 .course-card .thumb { width: 100%; height: 260px; overflow: hidden; }
 .course-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .course-card .body { padding: 22px; display: flex; flex-direction: column; gap: 10px; }
