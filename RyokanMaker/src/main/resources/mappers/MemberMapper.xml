@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.MemberMapper">
+
+    <resultMap id="memberResultMap" type="com.mnu.ryokanmaker.dto.MemberDto">
+        <id     column="USER_MAIL"     property="userMail"/>
+        <result column="USER_PASSWORD" property="userPassword"/>
+        <result column="USER_NICKNAME" property="userNickname"/>
+        <result column="USER_ADDRESS"  property="userAddress"/>
+        <result column="USER_COUNTRY"  property="userCountry"/>
+        <result column="USER_TEL"      property="userTel"/>
+    </resultMap>
+
+    <select id="selectByUserMail" parameterType="string" resultMap="memberResultMap">
+        SELECT * FROM MEMBER WHERE USER_MAIL = #{userMail}
+    </select>
+
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.MemberDto">
+        INSERT INTO MEMBER (USER_MAIL, USER_PASSWORD, USER_NICKNAME, USER_ADDRESS, USER_COUNTRY, USER_TEL)
+        VALUES (#{userMail}, #{userPassword}, #{userNickname}, #{userAddress}, #{userCountry}, #{userTel})
+    </insert>
+
+</mapper>
