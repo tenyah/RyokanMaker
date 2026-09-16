@@ -2,12 +2,19 @@ package com.mnu.ryokanmaker.dto;
 
 import java.time.LocalDate;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * ROOM_RESERVATION 테이블 매핑 DTO (객실 예약 상세 - 체크인/아웃, 플랜 등)
  * PK : roomResvNum
- * FK : userMail -> MEMBER.UserMail, adminIdx -> ADMIN.AdminIdx,
- *      roomIdx -> ROOM.RoomIdx, resvNum -> RESERVATION.Resv_num
+ * FK : userMail -> MEMBER.USER_MAIL, adminIdx -> ADMIN.ADMIN_IDX,
+ *      roomIdx -> ROOM.ROOM_IDX, resvNum -> RESERVATION.RESV_NUM
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RoomReservationDto {
 
     private Integer roomResvNum;
@@ -23,65 +30,4 @@ public class RoomReservationDto {
     private String resvStatus;
     private String resvPayStatus;
     private String resvPayMethod;
-
-    public RoomReservationDto() {
-    }
-
-    public RoomReservationDto(Integer roomResvNum, String userMail, Integer adminIdx, Integer roomIdx,
-                               Integer resvNum, Integer planIdx, LocalDate resvCheckIn, LocalDate resvCheckOut,
-                               Integer resvPrice, Integer resvPeople, String resvStatus,
-                               String resvPayStatus, String resvPayMethod) {
-        this.roomResvNum = roomResvNum;
-        this.userMail = userMail;
-        this.adminIdx = adminIdx;
-        this.roomIdx = roomIdx;
-        this.resvNum = resvNum;
-        this.planIdx = planIdx;
-        this.resvCheckIn = resvCheckIn;
-        this.resvCheckOut = resvCheckOut;
-        this.resvPrice = resvPrice;
-        this.resvPeople = resvPeople;
-        this.resvStatus = resvStatus;
-        this.resvPayStatus = resvPayStatus;
-        this.resvPayMethod = resvPayMethod;
-    }
-
-    public Integer getRoomResvNum() { return roomResvNum; }
-    public void setRoomResvNum(Integer roomResvNum) { this.roomResvNum = roomResvNum; }
-
-    public String getUserMail() { return userMail; }
-    public void setUserMail(String userMail) { this.userMail = userMail; }
-
-    public Integer getAdminIdx() { return adminIdx; }
-    public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
-
-    public Integer getRoomIdx() { return roomIdx; }
-    public void setRoomIdx(Integer roomIdx) { this.roomIdx = roomIdx; }
-
-    public Integer getResvNum() { return resvNum; }
-    public void setResvNum(Integer resvNum) { this.resvNum = resvNum; }
-
-    public Integer getPlanIdx() { return planIdx; }
-    public void setPlanIdx(Integer planIdx) { this.planIdx = planIdx; }
-
-    public LocalDate getResvCheckIn() { return resvCheckIn; }
-    public void setResvCheckIn(LocalDate resvCheckIn) { this.resvCheckIn = resvCheckIn; }
-
-    public LocalDate getResvCheckOut() { return resvCheckOut; }
-    public void setResvCheckOut(LocalDate resvCheckOut) { this.resvCheckOut = resvCheckOut; }
-
-    public Integer getResvPrice() { return resvPrice; }
-    public void setResvPrice(Integer resvPrice) { this.resvPrice = resvPrice; }
-
-    public Integer getResvPeople() { return resvPeople; }
-    public void setResvPeople(Integer resvPeople) { this.resvPeople = resvPeople; }
-
-    public String getResvStatus() { return resvStatus; }
-    public void setResvStatus(String resvStatus) { this.resvStatus = resvStatus; }
-
-    public String getResvPayStatus() { return resvPayStatus; }
-    public void setResvPayStatus(String resvPayStatus) { this.resvPayStatus = resvPayStatus; }
-
-    public String getResvPayMethod() { return resvPayMethod; }
-    public void setResvPayMethod(String resvPayMethod) { this.resvPayMethod = resvPayMethod; }
 }
