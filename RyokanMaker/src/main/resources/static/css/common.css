@@ -172,6 +172,119 @@ img { max-width: 100%; display: block; }
 .slot-btn:hover { background: var(--gold-pale); }
 .slot-btn.taken { background: var(--bg-soft); color: var(--ink-faint); border-color: var(--line); cursor: not-allowed; }
 
+/* ---------------- 결제 화면 (payment.html) ---------------- */
+.steps { display: flex; justify-content: center; align-items: flex-start; gap: 96px; padding: 0 56px 56px; }
+.step { text-align: center; }
+.step-dot {
+  width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px; font-family: var(--serif); font-size: 17px; border: 1px solid var(--line);
+  background: var(--paper); color: var(--ink-faint);
+}
+.step-label { font-size: 13px; letter-spacing: 0.04em; color: var(--ink-faint); }
+.step.is-done .step-dot, .step.is-active .step-dot { background: var(--gold); border-color: var(--gold); color: #fff; }
+.step.is-active .step-label { color: var(--ink); font-weight: 500; }
+.step.is-done .step-label { color: var(--ink-soft); }
+
+.checkout-grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 32px; align-items: start; padding: 0 56px 72px; }
+
+.panel { background: var(--paper); border: 1px solid var(--line); margin-bottom: 32px; }
+.panel-header { padding: 28px 40px; border-bottom: 1px solid var(--line); }
+.panel-header h2 { margin: 0; font-family: var(--serif); font-size: 19px; font-weight: 400; letter-spacing: 0.03em; color: var(--ink); }
+.panel-body { padding: 36px 40px 40px; }
+
+.payfield-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 24px; }
+.payfield { margin-bottom: 24px; }
+.payfield-row .payfield { margin-bottom: 0; }
+.payfield label { display: block; font-size: 14px; color: var(--ink-soft); margin-bottom: 10px; }
+.required { color: var(--warn); margin-left: 2px; }
+.payfield input[type="text"], .payfield input[type="email"], .payfield input[type="tel"], .payfield select, .payfield textarea {
+  width: 100%; padding: 14px 16px; border: 1px solid var(--line); background: #fff;
+  font-family: var(--serif); font-size: 15px; color: var(--ink);
+}
+.payfield input::placeholder, .payfield textarea::placeholder { color: var(--ink-faint); }
+.payfield select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-faint) 50%), linear-gradient(135deg, var(--ink-faint) 50%, transparent 50%);
+  background-position: calc(100% - 22px) center, calc(100% - 16px) center;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.payfield textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+.payfield-error { display: block; margin-top: 8px; font-size: 12.5px; color: var(--warn); }
+
+.checkbox-list { margin-top: 4px; }
+.checkbox-row { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--ink-soft); padding: 8px 0; }
+.checkbox-row input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--gold-deep); }
+.checkbox-row a { text-decoration: underline; text-underline-offset: 3px; color: var(--ink); }
+
+.ssl-note { font-size: 12.5px; color: var(--ink-faint); }
+.card-hint { margin: 20px 0 0; font-size: 12.5px; color: var(--ink-faint); line-height: 1.7; }
+
+.summary-panel { position: sticky; top: 24px; background: var(--paper); border: 1px solid var(--line); overflow: hidden; }
+.summary-panel .panel-body { padding: 32px 36px 36px; }
+.summary-panel .panel-header { padding: 26px 36px; }
+.summary-panel .panel-header h2 { font-size: 18px; }
+
+.summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; font-size: 14.5px; }
+.summary-row .k { color: var(--ink-soft); }
+.summary-row .v { font-weight: 500; text-align: right; }
+
+.plan-box { margin: 20px 0 22px; padding: 18px 20px; background: var(--bg-soft); border: 1px solid var(--line); }
+.plan-box .name { font-family: var(--serif); font-size: 16px; font-weight: 400; margin-bottom: 6px; color: var(--ink); }
+.plan-box .desc { font-size: 13.5px; color: var(--ink-soft); }
+
+.price-list { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; }
+.price-list .summary-row .v { font-weight: 400; }
+
+.total-row { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--line); margin-top: 12px; padding-top: 22px; }
+.total-row .k { font-size: 16px; font-weight: 500; color: var(--ink); }
+.total-row .v { font-family: var(--serif); font-size: 30px; font-weight: 500; color: var(--gold-deep); }
+
+.warning-box { display: flex; gap: 10px; margin-top: 22px; padding: 16px 18px; background: var(--warn-bg); color: var(--warn); font-size: 12.5px; line-height: 1.7; }
+.warning-box .icon { flex-shrink: 0; }
+
+.pay-button {
+  display: block; width: 100%; margin-top: 22px; padding: 20px; border: none;
+  background: var(--gold-deep); color: #fff; font-family: var(--serif); font-size: 17px;
+  font-weight: 500; letter-spacing: 0.02em; cursor: pointer;
+}
+.pay-button:hover { background: #7a5e39; }
+.pay-button:disabled { background: #b8b0a4; cursor: not-allowed; }
+.pay-button:disabled:hover { background: #b8b0a4; }
+
+@media (max-width: 1080px) {
+  .checkout-grid { grid-template-columns: 1fr; }
+  .summary-panel { position: static; }
+}
+@media (max-width: 720px) {
+  .payfield-row { grid-template-columns: 1fr; gap: 20px; }
+  .panel-body { padding: 24px 22px 28px; }
+  .panel-header { padding: 22px; }
+  .steps { gap: 36px; padding: 0 20px 40px; }
+  .checkout-grid { padding: 0 20px 48px; }
+}
+
+/* ---------------- 결제 결과 화면 (success.html / fail.html) ---------------- */
+.result-wrap { max-width: 640px; margin: 0 auto; padding: 96px 24px; text-align: center; }
+.result-badge {
+  display: inline-block; width: 64px; height: 64px; border-radius: 50%;
+  font-size: 30px; line-height: 64px; margin-bottom: 28px;
+}
+.result-badge.ok { background: var(--gold-pale); color: var(--gold-deep); }
+.result-badge.error { background: var(--warn-bg); color: var(--warn); }
+.result-wrap h1 { font-family: var(--serif); font-size: 26px; font-weight: 400; margin: 0 0 16px; color: var(--ink); }
+.result-wrap p { color: var(--ink-soft); line-height: 1.7; }
+.result-panel { margin-top: 32px; padding: 28px 32px; background: var(--paper); border: 1px solid var(--line); text-align: left; }
+.result-panel.error { color: var(--warn); font-size: 14px; text-align: center; padding: 20px 24px; }
+.result-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14.5px; }
+.result-row .k { color: var(--ink-soft); }
+.result-row .v { font-weight: 500; color: var(--ink); }
+.result-action {
+  display: inline-block; margin-top: 36px; padding: 16px 32px;
+  background: var(--gold-deep); color: #fff; text-decoration: none;
+}
+.result-action.retry { background: var(--warn); }
+
 /* ---------------- 식사 코스 카드 ---------------- */
 .course-grid { padding: 0 56px 40px; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 40px; }
 .course-card { border: 1px solid var(--line); display: flex; flex-direction: column; }

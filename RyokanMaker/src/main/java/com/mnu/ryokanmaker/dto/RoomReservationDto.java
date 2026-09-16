@@ -15,12 +15,12 @@ public class RoomReservationDto {
     private Integer adminIdx;
     private Integer roomIdx;
     private Integer resvNum;
+    private Integer planIdx;
     private LocalDate resvCheckIn;
     private LocalDate resvCheckOut;
     private Integer resvPrice;
     private Integer resvPeople;
     private String resvStatus;
-    private String resvRoomPlan;
     private String resvPayStatus;
     private String resvPayMethod;
 
@@ -28,20 +28,20 @@ public class RoomReservationDto {
     }
 
     public RoomReservationDto(Integer roomResvNum, String userMail, Integer adminIdx, Integer roomIdx,
-                               Integer resvNum, LocalDate resvCheckIn, LocalDate resvCheckOut,
+                               Integer resvNum, Integer planIdx, LocalDate resvCheckIn, LocalDate resvCheckOut,
                                Integer resvPrice, Integer resvPeople, String resvStatus,
-                               String resvRoomPlan, String resvPayStatus, String resvPayMethod) {
+                               String resvPayStatus, String resvPayMethod) {
         this.roomResvNum = roomResvNum;
         this.userMail = userMail;
         this.adminIdx = adminIdx;
         this.roomIdx = roomIdx;
         this.resvNum = resvNum;
+        this.planIdx = planIdx;
         this.resvCheckIn = resvCheckIn;
         this.resvCheckOut = resvCheckOut;
         this.resvPrice = resvPrice;
         this.resvPeople = resvPeople;
         this.resvStatus = resvStatus;
-        this.resvRoomPlan = resvRoomPlan;
         this.resvPayStatus = resvPayStatus;
         this.resvPayMethod = resvPayMethod;
     }
@@ -61,6 +61,9 @@ public class RoomReservationDto {
     public Integer getResvNum() { return resvNum; }
     public void setResvNum(Integer resvNum) { this.resvNum = resvNum; }
 
+    public Integer getPlanIdx() { return planIdx; }
+    public void setPlanIdx(Integer planIdx) { this.planIdx = planIdx; }
+
     public LocalDate getResvCheckIn() { return resvCheckIn; }
     public void setResvCheckIn(LocalDate resvCheckIn) { this.resvCheckIn = resvCheckIn; }
 
@@ -75,9 +78,6 @@ public class RoomReservationDto {
 
     public String getResvStatus() { return resvStatus; }
     public void setResvStatus(String resvStatus) { this.resvStatus = resvStatus; }
-
-    public String getResvRoomPlan() { return resvRoomPlan; }
-    public void setResvRoomPlan(String resvRoomPlan) { this.resvRoomPlan = resvRoomPlan; }
 
     public String getResvPayStatus() { return resvPayStatus; }
     public void setResvPayStatus(String resvPayStatus) { this.resvPayStatus = resvPayStatus; }

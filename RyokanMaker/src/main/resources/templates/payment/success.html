@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예약 완료 | 清流庵 OTARU FURUKAWA</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='booking')}"></div>
+
+  <div class="result-wrap">
+    <span class="result-badge ok">✓</span>
+    <h1>예약이 확정되었습니다</h1>
+    <p>결제가 정상적으로 완료되었습니다. 예약 확인 메일을 보내드렸습니다.</p>
+
+    <div class="result-panel">
+      <div class="result-row"><span class="k">주문번호</span><span class="v" th:text="${orderId}">RYOKAN-XXXX</span></div>
+      <div class="result-row"><span class="k">결제금액</span><span class="v" th:text="'₩' + ${#numbers.formatInteger(amount, 0, 'COMMA')}">₩848,508</span></div>
+      <div class="result-row"><span class="k">결제상태</span><span class="v" th:text="${result['status']}">DONE</span></div>
+    </div>
+
+    <a class="result-action" th:href="@{/}">메인으로 돌아가기</a>
+  </div>
+
+</div>
+
+<div th:replace="~{include/footer :: footer}"></div>
+
+</body>
+</html>

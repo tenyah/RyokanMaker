@@ -5,7 +5,8 @@ import java.time.LocalDate;
 /**
  * ONSEN_RESERVATION 테이블 매핑 DTO
  * PK : onsenFacilityIdx
- * FK : adminIdx -> ADMIN.AdminIdx, userMail -> MEMBER.UserMail, resvNum -> RESERVATION.Resv_num
+ * FK : adminIdx -> ADMIN.AdminIdx, userMail -> MEMBER.UserMail, resvNum -> RESERVATION.Resv_num,
+ *      onsenIdx -> ONSEN.OnsenIdx
  */
 public class OnsenReservationDto {
 
@@ -13,27 +14,27 @@ public class OnsenReservationDto {
     private Integer adminIdx;
     private String userMail;
     private Integer resvNum;
-    private String onsenType;
     private LocalDate onsenUseDate;
     private String onsenTimeSlot;
     private Integer onsenHeadcount;
     private String onsenStatus;
+    private Integer onsenIdx;
 
     public OnsenReservationDto() {
     }
 
     public OnsenReservationDto(Integer onsenFacilityIdx, Integer adminIdx, String userMail, Integer resvNum,
-                                String onsenType, LocalDate onsenUseDate, String onsenTimeSlot,
-                                Integer onsenHeadcount, String onsenStatus) {
+                                LocalDate onsenUseDate, String onsenTimeSlot,
+                                Integer onsenHeadcount, String onsenStatus, Integer onsenIdx) {
         this.onsenFacilityIdx = onsenFacilityIdx;
         this.adminIdx = adminIdx;
         this.userMail = userMail;
         this.resvNum = resvNum;
-        this.onsenType = onsenType;
         this.onsenUseDate = onsenUseDate;
         this.onsenTimeSlot = onsenTimeSlot;
         this.onsenHeadcount = onsenHeadcount;
         this.onsenStatus = onsenStatus;
+        this.onsenIdx = onsenIdx;
     }
 
     public Integer getOnsenFacilityIdx() { return onsenFacilityIdx; }
@@ -48,8 +49,8 @@ public class OnsenReservationDto {
     public Integer getResvNum() { return resvNum; }
     public void setResvNum(Integer resvNum) { this.resvNum = resvNum; }
 
-    public String getOnsenType() { return onsenType; }
-    public void setOnsenType(String onsenType) { this.onsenType = onsenType; }
+    public Integer getOnsenIdx() { return onsenIdx; }
+    public void setOnsenIdx(Integer onsenIdx) { this.onsenIdx = onsenIdx; }
 
     public LocalDate getOnsenUseDate() { return onsenUseDate; }
     public void setOnsenUseDate(LocalDate onsenUseDate) { this.onsenUseDate = onsenUseDate; }

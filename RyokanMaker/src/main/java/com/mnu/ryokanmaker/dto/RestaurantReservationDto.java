@@ -5,35 +5,37 @@ import java.time.LocalDate;
 /**
  * RESTAURANT_RESERVATION 테이블 매핑 DTO (식사 플랜 예약)
  * PK : restaurantFacilityIdx
- * FK : userMail -> MEMBER.UserMail, adminIdx -> ADMIN.AdminIdx, resvNum -> RESERVATION.Resv_num
+ * FK : userMail -> MEMBER.UserMail, adminIdx -> ADMIN.AdminIdx, resvNum -> RESERVATION.Resv_num,
+ *      courseIdx -> RESTAURANT_COURSE.RestaurantCourseIdx
  */
 public class RestaurantReservationDto {
 
     private Integer restaurantFacilityIdx;
     private String userMail;
     private Integer adminIdx;
-    private String restaurantType;
     private LocalDate restaurantUseDate;
     private String restaurantTimeSlot;
     private Integer restaurantHeadcount;
     private String restaurantSidemenu;
     private Integer resvNum;
+    private Integer courseIdx;
 
     public RestaurantReservationDto() {
     }
 
     public RestaurantReservationDto(Integer restaurantFacilityIdx, String userMail, Integer adminIdx,
-                                     String restaurantType, LocalDate restaurantUseDate, String restaurantTimeSlot,
-                                     Integer restaurantHeadcount, String restaurantSidemenu, Integer resvNum) {
+                                     LocalDate restaurantUseDate, String restaurantTimeSlot,
+                                     Integer restaurantHeadcount, String restaurantSidemenu, Integer resvNum,
+                                     Integer courseIdx) {
         this.restaurantFacilityIdx = restaurantFacilityIdx;
         this.userMail = userMail;
         this.adminIdx = adminIdx;
-        this.restaurantType = restaurantType;
         this.restaurantUseDate = restaurantUseDate;
         this.restaurantTimeSlot = restaurantTimeSlot;
         this.restaurantHeadcount = restaurantHeadcount;
         this.restaurantSidemenu = restaurantSidemenu;
         this.resvNum = resvNum;
+        this.courseIdx = courseIdx;
     }
 
     public Integer getRestaurantFacilityIdx() { return restaurantFacilityIdx; }
@@ -45,8 +47,8 @@ public class RestaurantReservationDto {
     public Integer getAdminIdx() { return adminIdx; }
     public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
 
-    public String getRestaurantType() { return restaurantType; }
-    public void setRestaurantType(String restaurantType) { this.restaurantType = restaurantType; }
+    public Integer getCourseIdx() { return courseIdx; }
+    public void setCourseIdx(Integer courseIdx) { this.courseIdx = courseIdx; }
 
     public LocalDate getRestaurantUseDate() { return restaurantUseDate; }
     public void setRestaurantUseDate(LocalDate restaurantUseDate) { this.restaurantUseDate = restaurantUseDate; }
