@@ -48,7 +48,7 @@
       <label class="field-label">국가</label>
       <select name="userCountry" required>
         <option value="">국가를 선택해주세요</option>
-        <option th:each="c : ${countries}" th:value="${c}" th:text="${c}"></option>
+        <option th:each="c : ${countries}" th:value="${c.countryName}" th:text="${c.countryName + ' (' + c.dialCode + ')'}"></option>
       </select>
     </div>
 

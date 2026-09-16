@@ -2,7 +2,6 @@ package com.mnu.ryokanmaker.controller;
 
 import com.mnu.ryokanmaker.dto.MemberDto;
 import com.mnu.ryokanmaker.service.MemberService;
-import com.mnu.ryokanmaker.util.CountryCodes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,7 +17,7 @@ public class MemberController {
 
     @GetMapping("/member/signup")
     public String signupForm(Model model) {
-        model.addAttribute("countries", CountryCodes.DIAL_CODES.keySet());
+        model.addAttribute("countries", memberService.listCountries());
         return "member/signup";
     }
 
@@ -34,12 +33,12 @@ public class MemberController {
         if (memberService.existsByUserMail(memberDto.getUserMail())) {
             model.addAttribute("error", "이미 가입된 이메일입니다.");
             model.addAttribute("member", memberDto);
-            model.addAttribute("countries", CountryCodes.DIAL_CODES.keySet());
+            model.addAttribute("countries", memberService.listCountries());
             return "member/signup";
         }
 
         memberDto.setUserCountry(userCountry);
-        memberDto.setUserTel(CountryCodes.dialCodeOf(userCountry) + " " + userTelLocal);
+        memberDto.setUserTel(memberService.dialCodeOf(userCountry) + " " + userTelLocal);
         memberDto.setUserAddress("[" + userPostalCode + "] " + userAddress1 + ", " + userAddress2);
 
         memberService.signup(memberDto);
