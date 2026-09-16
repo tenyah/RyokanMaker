@@ -12,18 +12,12 @@ public class MemberDto {
     private String userAddress;
     private String userCountry;
     private String userTel;
+    private String userLastNameEn;
+    private String userFirstNameEn;
+    private String userLastNameJp;
+    private String userFirstNameJp;
 
     public MemberDto() {
-    }
-
-    public MemberDto(String userMail, String userPassword, String userNickname,
-                      String userAddress, String userCountry, String userTel) {
-        this.userMail = userMail;
-        this.userPassword = userPassword;
-        this.userNickname = userNickname;
-        this.userAddress = userAddress;
-        this.userCountry = userCountry;
-        this.userTel = userTel;
     }
 
     public String getUserMail() { return userMail; }
@@ -43,4 +37,16 @@ public class MemberDto {
 
     public String getUserTel() { return userTel; }
     public void setUserTel(String userTel) { this.userTel = userTel; }
+
+    public String getUserLastNameEn() { return userLastNameEn; }
+    public void setUserLastNameEn(String userLastNameEn) { this.userLastNameEn = userLastNameEn; }
+
+    public String getUserFirstNameEn() { return userFirstNameEn; }
+    public void setUserFirstNameEn(String userFirstNameEn) { this.userFirstNameEn = userFirstNameEn; }
+
+    public String getUserLastNameJp() { return userLastNameJp; }
+    public void setUserLastNameJp(String userLastNameJp) { this.userLastNameJp = userLastNameJp; }
+
+    public String getUserFirstNameJp() { return userFirstNameJp; }
+    public void setUserFirstNameJp(String userFirstNameJp) { this.userFirstNameJp = userFirstNameJp; }
 }

@@ -45,6 +45,22 @@
     </div>
 
     <div class="form-row">
+      <label class="field-label">영문 이름 (여권 표기 기준)</label>
+      <div class="row-2">
+        <input type="text" name="userLastNameEn" th:value="${member?.userLastNameEn}" placeholder="Last Name" required>
+        <input type="text" name="userFirstNameEn" th:value="${member?.userFirstNameEn}" placeholder="First Name" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">일본어 이름 (선택)</label>
+      <div class="row-2">
+        <input type="text" name="userLastNameJp" th:value="${member?.userLastNameJp}" placeholder="姓">
+        <input type="text" name="userFirstNameJp" th:value="${member?.userFirstNameJp}" placeholder="名">
+      </div>
+    </div>
+
+    <div class="form-row">
       <label class="field-label">국가</label>
       <select name="userCountry" required>
         <option value="">국가를 선택해주세요</option>

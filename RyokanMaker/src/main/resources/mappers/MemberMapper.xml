@@ -3,12 +3,16 @@
 <mapper namespace="com.mnu.ryokanmaker.mapper.MemberMapper">
 
     <resultMap id="memberResultMap" type="com.mnu.ryokanmaker.dto.MemberDto">
-        <id     column="USER_MAIL"     property="userMail"/>
-        <result column="USER_PASSWORD" property="userPassword"/>
-        <result column="USER_NICKNAME" property="userNickname"/>
-        <result column="USER_ADDRESS"  property="userAddress"/>
-        <result column="USER_COUNTRY"  property="userCountry"/>
-        <result column="USER_TEL"      property="userTel"/>
+        <id     column="USER_MAIL"          property="userMail"/>
+        <result column="USER_PASSWORD"      property="userPassword"/>
+        <result column="USER_NICKNAME"      property="userNickname"/>
+        <result column="USER_ADDRESS"       property="userAddress"/>
+        <result column="USER_COUNTRY"       property="userCountry"/>
+        <result column="USER_TEL"           property="userTel"/>
+        <result column="USER_LAST_NAME_EN"  property="userLastNameEn"/>
+        <result column="USER_FIRST_NAME_EN" property="userFirstNameEn"/>
+        <result column="USER_LAST_NAME_JP"  property="userLastNameJp"/>
+        <result column="USER_FIRST_NAME_JP" property="userFirstNameJp"/>
     </resultMap>
 
     <select id="selectByUserMail" parameterType="string" resultMap="memberResultMap">
@@ -16,8 +20,10 @@
     </select>
 
     <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.MemberDto">
-        INSERT INTO MEMBER (USER_MAIL, USER_PASSWORD, USER_NICKNAME, USER_ADDRESS, USER_COUNTRY, USER_TEL)
-        VALUES (#{userMail}, #{userPassword}, #{userNickname}, #{userAddress}, #{userCountry}, #{userTel})
+        INSERT INTO MEMBER (USER_MAIL, USER_PASSWORD, USER_NICKNAME, USER_ADDRESS, USER_COUNTRY, USER_TEL,
+                             USER_LAST_NAME_EN, USER_FIRST_NAME_EN, USER_LAST_NAME_JP, USER_FIRST_NAME_JP)
+        VALUES (#{userMail}, #{userPassword}, #{userNickname}, #{userAddress}, #{userCountry}, #{userTel},
+                #{userLastNameEn}, #{userFirstNameEn}, #{userLastNameJp}, #{userFirstNameJp})
     </insert>
 
 </mapper>
