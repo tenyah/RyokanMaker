@@ -2,51 +2,51 @@ package com.mnu.ryokanmaker.dto;
 
 /**
  * RESTAURANT_COURSE 테이블 매핑 DTO (식사 코스 마스터 정보)
- * PK : restaurantCourseIdx / FK : adminIdx -> ADMIN.AdminIdx
+ * PK : courseIdx / FK : adminIdx -> ADMIN.ADMIN_IDX
  */
 public class RestaurantCourseDto {
 
-    private Integer restaurantCourseIdx;
-    private String restaurantCourseName;
-    private String restaurantCourseImage;
-    private String restaurantCourseInfo;
+    private Integer courseIdx;
+    private String courseName;
+    private String courseImage;
+    private String courseInfo;
     private Integer adminIdx;
-    private String restaurantCourseSaleYN;
-    private String restaurantCourseMemo;
+    private String courseSaleYN;
+    private String courseMemo;
 
     public RestaurantCourseDto() {
     }
 
-    public RestaurantCourseDto(Integer restaurantCourseIdx, String restaurantCourseName, String restaurantCourseImage,
-                                String restaurantCourseInfo, Integer adminIdx, String restaurantCourseSaleYN,
-                                String restaurantCourseMemo) {
-        this.restaurantCourseIdx = restaurantCourseIdx;
-        this.restaurantCourseName = restaurantCourseName;
-        this.restaurantCourseImage = restaurantCourseImage;
-        this.restaurantCourseInfo = restaurantCourseInfo;
+    public RestaurantCourseDto(Integer courseIdx, String courseName, String courseImage,
+                                String courseInfo, Integer adminIdx, String courseSaleYN,
+                                String courseMemo) {
+        this.courseIdx = courseIdx;
+        this.courseName = courseName;
+        this.courseImage = courseImage;
+        this.courseInfo = courseInfo;
         this.adminIdx = adminIdx;
-        this.restaurantCourseSaleYN = restaurantCourseSaleYN;
-        this.restaurantCourseMemo = restaurantCourseMemo;
+        this.courseSaleYN = courseSaleYN;
+        this.courseMemo = courseMemo;
     }
 
-    public Integer getRestaurantCourseIdx() { return restaurantCourseIdx; }
-    public void setRestaurantCourseIdx(Integer restaurantCourseIdx) { this.restaurantCourseIdx = restaurantCourseIdx; }
+    public Integer getCourseIdx() { return courseIdx; }
+    public void setCourseIdx(Integer courseIdx) { this.courseIdx = courseIdx; }
 
-    public String getRestaurantCourseName() { return restaurantCourseName; }
-    public void setRestaurantCourseName(String restaurantCourseName) { this.restaurantCourseName = restaurantCourseName; }
+    public String getCourseName() { return courseName; }
+    public void setCourseName(String courseName) { this.courseName = courseName; }
 
-    public String getRestaurantCourseImage() { return restaurantCourseImage; }
-    public void setRestaurantCourseImage(String restaurantCourseImage) { this.restaurantCourseImage = restaurantCourseImage; }
+    public String getCourseImage() { return courseImage; }
+    public void setCourseImage(String courseImage) { this.courseImage = courseImage; }
 
-    public String getRestaurantCourseInfo() { return restaurantCourseInfo; }
-    public void setRestaurantCourseInfo(String restaurantCourseInfo) { this.restaurantCourseInfo = restaurantCourseInfo; }
+    public String getCourseInfo() { return courseInfo; }
+    public void setCourseInfo(String courseInfo) { this.courseInfo = courseInfo; }
 
     public Integer getAdminIdx() { return adminIdx; }
     public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
 
-    public String getRestaurantCourseSaleYN() { return restaurantCourseSaleYN; }
-    public void setRestaurantCourseSaleYN(String restaurantCourseSaleYN) { this.restaurantCourseSaleYN = restaurantCourseSaleYN; }
+    public String getCourseSaleYN() { return courseSaleYN; }
+    public void setCourseSaleYN(String courseSaleYN) { this.courseSaleYN = courseSaleYN; }
 
-    public String getRestaurantCourseMemo() { return restaurantCourseMemo; }
-    public void setRestaurantCourseMemo(String restaurantCourseMemo) { this.restaurantCourseMemo = restaurantCourseMemo; }
+    public String getCourseMemo() { return courseMemo; }
+    public void setCourseMemo(String courseMemo) { this.courseMemo = courseMemo; }
 }

@@ -13,13 +13,18 @@ public class AdminDto {
     private String adminMail;
     private String adminLoc;
     private String ryokanName;
-    private Integer ryokanLevel;
+    private String ryokanFacility;
+    private String ryokanTel;
+    private String ryokanAccess;
+    private String ryokanLogo;
+    private String pwResetYn;
 
     public AdminDto() {
     }
 
     public AdminDto(Integer adminIdx, String adminId, String adminPassword, String adminName,
-                     String adminMail, String adminLoc, String ryokanName, Integer ryokanLevel) {
+                     String adminMail, String adminLoc, String ryokanName, String ryokanFacility,
+                     String ryokanTel, String ryokanAccess, String ryokanLogo, String pwResetYn) {
         this.adminIdx = adminIdx;
         this.adminId = adminId;
         this.adminPassword = adminPassword;
@@ -27,7 +32,11 @@ public class AdminDto {
         this.adminMail = adminMail;
         this.adminLoc = adminLoc;
         this.ryokanName = ryokanName;
-        this.ryokanLevel = ryokanLevel;
+        this.ryokanFacility = ryokanFacility;
+        this.ryokanTel = ryokanTel;
+        this.ryokanAccess = ryokanAccess;
+        this.ryokanLogo = ryokanLogo;
+        this.pwResetYn = pwResetYn;
     }
 
     public Integer getAdminIdx() { return adminIdx; }
@@ -51,6 +60,18 @@ public class AdminDto {
     public String getRyokanName() { return ryokanName; }
     public void setRyokanName(String ryokanName) { this.ryokanName = ryokanName; }
 
-    public Integer getRyokanLevel() { return ryokanLevel; }
-    public void setRyokanLevel(Integer ryokanLevel) { this.ryokanLevel = ryokanLevel; }
+    public String getRyokanFacility() { return ryokanFacility; }
+    public void setRyokanFacility(String ryokanFacility) { this.ryokanFacility = ryokanFacility; }
+
+    public String getRyokanTel() { return ryokanTel; }
+    public void setRyokanTel(String ryokanTel) { this.ryokanTel = ryokanTel; }
+
+    public String getRyokanAccess() { return ryokanAccess; }
+    public void setRyokanAccess(String ryokanAccess) { this.ryokanAccess = ryokanAccess; }
+
+    public String getRyokanLogo() { return ryokanLogo; }
+    public void setRyokanLogo(String ryokanLogo) { this.ryokanLogo = ryokanLogo; }
+
+    public String getPwResetYn() { return pwResetYn; }
+    public void setPwResetYn(String pwResetYn) { this.pwResetYn = pwResetYn; }
 }

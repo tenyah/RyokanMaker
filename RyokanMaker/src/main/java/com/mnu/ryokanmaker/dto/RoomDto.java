@@ -2,7 +2,7 @@ package com.mnu.ryokanmaker.dto;
 
 /**
  * ROOM 테이블 매핑 DTO (객실 마스터 정보)
- * PK : roomIdx / FK : adminIdx -> ADMIN.AdminIdx
+ * PK : roomIdx / FK : adminIdx -> ADMIN.ADMIN_IDX
  */
 public class RoomDto {
 
@@ -13,7 +13,7 @@ public class RoomDto {
     private String roomInfo;
     private Integer roomPrice;
     private Integer roomPeople;
-    private String roomPicture;   // 이미지 경로 또는 파일명 (VARCHAR2)
+    private String roomImage;   // 이미지 경로 또는 파일명 (CLOB)
     private String roomSaleYN;
     private String roomMemo;
 
@@ -21,7 +21,7 @@ public class RoomDto {
     }
 
     public RoomDto(Integer roomIdx, Integer adminIdx, String roomName, String roomLevel,
-                    String roomInfo, Integer roomPrice, Integer roomPeople, String roomPicture,
+                    String roomInfo, Integer roomPrice, Integer roomPeople, String roomImage,
                     String roomSaleYN, String roomMemo) {
         this.roomIdx = roomIdx;
         this.adminIdx = adminIdx;
@@ -30,7 +30,7 @@ public class RoomDto {
         this.roomInfo = roomInfo;
         this.roomPrice = roomPrice;
         this.roomPeople = roomPeople;
-        this.roomPicture = roomPicture;
+        this.roomImage = roomImage;
         this.roomSaleYN = roomSaleYN;
         this.roomMemo = roomMemo;
     }
@@ -56,8 +56,8 @@ public class RoomDto {
     public Integer getRoomPeople() { return roomPeople; }
     public void setRoomPeople(Integer roomPeople) { this.roomPeople = roomPeople; }
 
-    public String getRoomPicture() { return roomPicture; }
-    public void setRoomPicture(String roomPicture) { this.roomPicture = roomPicture; }
+    public String getRoomImage() { return roomImage; }
+    public void setRoomImage(String roomImage) { this.roomImage = roomImage; }
 
     public String getRoomSaleYN() { return roomSaleYN; }
     public void setRoomSaleYN(String roomSaleYN) { this.roomSaleYN = roomSaleYN; }
