@@ -14,12 +14,15 @@ public class RoomDto {
     private Integer roomPrice;
     private Integer roomPeople;
     private String roomPicture;   // 이미지 경로 또는 파일명 (VARCHAR2)
+    private String roomSaleYN;
+    private String roomMemo;
 
     public RoomDto() {
     }
 
     public RoomDto(Integer roomIdx, Integer adminIdx, String roomName, String roomLevel,
-                    String roomInfo, Integer roomPrice, Integer roomPeople, String roomPicture) {
+                    String roomInfo, Integer roomPrice, Integer roomPeople, String roomPicture,
+                    String roomSaleYN, String roomMemo) {
         this.roomIdx = roomIdx;
         this.adminIdx = adminIdx;
         this.roomName = roomName;
@@ -28,6 +31,8 @@ public class RoomDto {
         this.roomPrice = roomPrice;
         this.roomPeople = roomPeople;
         this.roomPicture = roomPicture;
+        this.roomSaleYN = roomSaleYN;
+        this.roomMemo = roomMemo;
     }
 
     public Integer getRoomIdx() { return roomIdx; }
@@ -53,4 +58,10 @@ public class RoomDto {
 
     public String getRoomPicture() { return roomPicture; }
     public void setRoomPicture(String roomPicture) { this.roomPicture = roomPicture; }
+
+    public String getRoomSaleYN() { return roomSaleYN; }
+    public void setRoomSaleYN(String roomSaleYN) { this.roomSaleYN = roomSaleYN; }
+
+    public String getRoomMemo() { return roomMemo; }
+    public void setRoomMemo(String roomMemo) { this.roomMemo = roomMemo; }
 }
