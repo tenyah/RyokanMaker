@@ -596,4 +596,6 @@ img { max-width: 100%; display: block; }
 .account-dropdown-item svg { color: var(--ink-faint); flex: none; }
 .account-dropdown-item:hover { background: var(--bg-soft); color: var(--ink); }
 .account-dropdown-item.danger:hover { color: var(--warn); }
+
+.reservation-row-active { background: var(--gold-pale); }
 .account-dropdown-item.danger:hover svg { color: var(--warn); }

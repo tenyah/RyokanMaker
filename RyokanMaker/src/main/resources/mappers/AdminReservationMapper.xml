@@ -4,107 +4,108 @@
 
     <!--
         예약 목록: RESERVATION 1건당 1행.
-        대표 객실명/플랜명은 그 예약에 딸린 ROOM_RESERVATION 중 RoomResv_num이 가장 작은 1건만 조인해서 보여준다
+        대표 객실명/플랜명은 그 예약에 딸린 ROOM_RESERVATION 중 ROOM_RESV_NUM이 가장 작은 1건만 조인해서 보여준다
         (한 예약에 객실이 여러 개면 상세 패널에서 전부 확인 가능).
+        컬럼명은 실제 Oracle DB 스키마(user_tab_columns 조회 결과) 기준 SCREAMING_SNAKE_CASE.
     -->
     <select id="selectReservationList" resultType="com.mnu.ryokanmaker.dto.AdminReservationListItemDto">
         SELECT
-            r.Resv_num        AS resvNum,
-            m.UserNickname     AS userNickname,
-            r.Resv_Status      AS resvStatus,
-            rm.RoomName        AS roomName,
-            p.PlanName         AS planName,
-            rr.Resv_CheckIn    AS resvCheckIn,
-            rr.Resv_CheckOut   AS resvCheckOut,
-            r.Resv_People      AS resvPeople,
-            r.Resv_Price       AS resvPrice
+            r.RESV_NUM          AS resvNum,
+            m.USER_NICKNAME     AS userNickname,
+            r.RESV_STATUS       AS resvStatus,
+            rm.ROOM_NAME        AS roomName,
+            p.PLAN_NAME         AS planName,
+            rr.RESV_CHECK_IN    AS resvCheckIn,
+            rr.RESV_CHECK_OUT   AS resvCheckOut,
+            r.RESV_PEOPLE       AS resvPeople,
+            r.RESV_PRICE        AS resvPrice
         FROM RESERVATION r
-        JOIN MEMBER m ON m.UserMail = r.UserMail
+        JOIN MEMBER m ON m.USER_MAIL = r.USER_MAIL
         LEFT JOIN ROOM_RESERVATION rr
-            ON rr.Resv_num = r.Resv_num
-            AND rr.RoomResv_num = (
-                SELECT MIN(rr2.RoomResv_num)
+            ON rr.RESV_NUM = r.RESV_NUM
+            AND rr.ROOM_RESV_NUM = (
+                SELECT MIN(rr2.ROOM_RESV_NUM)
                 FROM ROOM_RESERVATION rr2
-                WHERE rr2.Resv_num = r.Resv_num
+                WHERE rr2.RESV_NUM = r.RESV_NUM
             )
-        LEFT JOIN ROOM rm ON rm.RoomIdx = rr.RoomIdx
-        LEFT JOIN PLAN p ON p.PlanIdx = rr.PlanIdx
+        LEFT JOIN ROOM rm ON rm.ROOM_IDX = rr.ROOM_IDX
+        LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
         <where>
             <if test="adminIdx != null">
-                r.AdminIdx = #{adminIdx}
+                r.ADMIN_IDX = #{adminIdx}
             </if>
         </where>
-        ORDER BY r.Resv_num DESC
+        ORDER BY r.RESV_NUM DESC
     </select>
 
     <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.dto.ReservationDto">
         SELECT
-            Resv_num         AS resvNum,
-            AdminIdx          AS adminIdx,
-            UserMail          AS userMail,
-            Resv_Price        AS resvPrice,
-            Resv_People       AS resvPeople,
-            Resv_Status       AS resvStatus,
-            Resv_PayStatus    AS resvPayStatus,
-            Resv_PayMethod    AS resvPayMethod,
-            Resv_ArrivalTime  AS resvArrivalTime,
-            Resv_Request      AS resvRequest,
-            Resv_Day          AS resvDay
+            RESV_NUM         AS resvNum,
+            ADMIN_IDX        AS adminIdx,
+            USER_MAIL        AS userMail,
+            RESV_PRICE       AS resvPrice,
+            RESV_PEOPLE      AS resvPeople,
+            RESV_STATUS      AS resvStatus,
+            RESV_PAY_STATUS  AS resvPayStatus,
+            RESV_PAY_METHOD  AS resvPayMethod,
+            RESV_ARRIVAL_TIME AS resvArrivalTime,
+            RESV_REQUEST     AS resvRequest,
+            RESV_DAY         AS resvDay
         FROM RESERVATION
-        WHERE Resv_num = #{resvNum}
+        WHERE RESV_NUM = #{resvNum}
     </select>
 
     <select id="selectMember" resultType="com.mnu.ryokanmaker.dto.MemberDto">
         SELECT
-            UserMail      AS userMail,
-            UserPassword  AS userPassword,
-            UserNickname  AS userNickname,
-            UserAddress   AS userAddress,
-            UserCountry   AS userCountry,
-            UserTel       AS userTel
+            USER_MAIL      AS userMail,
+            USER_PASSWORD  AS userPassword,
+            USER_NICKNAME  AS userNickname,
+            USER_ADDRESS   AS userAddress,
+            USER_COUNTRY   AS userCountry,
+            USER_TEL       AS userTel
         FROM MEMBER
-        WHERE UserMail = #{userMail}
+        WHERE USER_MAIL = #{userMail}
     </select>
 
     <select id="selectRoomItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRoomItemDto">
         SELECT
-            rm.RoomName      AS roomName,
-            p.PlanName       AS planName,
-            rr.Resv_CheckIn  AS resvCheckIn,
-            rr.Resv_CheckOut AS resvCheckOut,
-            rr.Resv_People   AS resvPeople,
-            rr.Resv_Price    AS resvPrice
+            rm.ROOM_NAME       AS roomName,
+            p.PLAN_NAME        AS planName,
+            rr.RESV_CHECK_IN   AS resvCheckIn,
+            rr.RESV_CHECK_OUT  AS resvCheckOut,
+            rr.RESV_PEOPLE     AS resvPeople,
+            rr.RESV_PRICE      AS resvPrice
         FROM ROOM_RESERVATION rr
-        JOIN ROOM rm ON rm.RoomIdx = rr.RoomIdx
-        LEFT JOIN PLAN p ON p.PlanIdx = rr.PlanIdx
-        WHERE rr.Resv_num = #{resvNum}
-        ORDER BY rr.RoomResv_num
+        JOIN ROOM rm ON rm.ROOM_IDX = rr.ROOM_IDX
+        LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
+        WHERE rr.RESV_NUM = #{resvNum}
+        ORDER BY rr.ROOM_RESV_NUM
     </select>
 
     <select id="selectRestaurantItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRestaurantItemDto">
         SELECT
-            c.RestaurantCourseName   AS courseName,
-            rr.RestaurantUseDate     AS restaurantUseDate,
-            rr.RestaurantTimeSlot    AS restaurantTimeSlot,
-            rr.RestaurantHeadcount   AS restaurantHeadcount,
-            rr.RestaurantSidemenu    AS restaurantSidemenu
+            c.COURSE_NAME              AS courseName,
+            rr.RESTAURANT_USE_DATE     AS restaurantUseDate,
+            rr.RESTAURANT_TIME_SLOT    AS restaurantTimeSlot,
+            rr.RESTAURANT_HEADCOUNT    AS restaurantHeadcount,
+            rr.RESTAURANT_SIDEMENU     AS restaurantSidemenu
         FROM RESTAURANT_RESERVATION rr
-        LEFT JOIN RESTAURANT_COURSE c ON c.RestaurantCourseIdx = rr.CourseIdx
-        WHERE rr.Resv_num = #{resvNum}
-        ORDER BY rr.RestaurantFacilityIdx
+        LEFT JOIN RESTAURANT_COURSE c ON c.COURSE_IDX = rr.COURSE_IDX
+        WHERE rr.RESV_NUM = #{resvNum}
+        ORDER BY rr.RESTAURANT_FACILITY_IDX
     </select>
 
     <select id="selectOnsenItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationOnsenItemDto">
         SELECT
-            o.OnsenName        AS onsenName,
-            orr.OnsenUseDate   AS onsenUseDate,
-            orr.OnsenTimeSlot  AS onsenTimeSlot,
-            orr.OnsenHeadcount AS onsenHeadcount,
-            orr.OnsenStatus    AS onsenStatus
+            o.ONSEN_NAME        AS onsenName,
+            orr.ONSEN_USE_DATE  AS onsenUseDate,
+            orr.ONSEN_TIME_SLOT AS onsenTimeSlot,
+            orr.ONSEN_HEADCOUNT AS onsenHeadcount,
+            orr.ONSEN_STATUS    AS onsenStatus
         FROM ONSEN_RESERVATION orr
-        LEFT JOIN ONSEN o ON o.OnsenIdx = orr.OnsenIdx
-        WHERE orr.Resv_num = #{resvNum}
-        ORDER BY orr.OnsenFacilityIdx
+        LEFT JOIN ONSEN o ON o.ONSEN_IDX = orr.ONSEN_IDX
+        WHERE orr.RESV_NUM = #{resvNum}
+        ORDER BY orr.ONSEN_FACILITY_IDX
     </select>
 
 </mapper>

@@ -1,9 +1,16 @@
 package com.mnu.ryokanmaker.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * ADMIN 테이블 매핑 DTO
  * PK : adminIdx
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AdminDto {
 
     private Integer adminIdx;
@@ -17,40 +24,4 @@ public class AdminDto {
     private String ryokanAccess;
     private String ryokanLogo;
     private String pwResetYn;
-
-    public AdminDto() {
-    }
-
-    public Integer getAdminIdx() { return adminIdx; }
-    public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
-
-    public String getAdminId() { return adminId; }
-    public void setAdminId(String adminId) { this.adminId = adminId; }
-
-    public String getAdminPassword() { return adminPassword; }
-    public void setAdminPassword(String adminPassword) { this.adminPassword = adminPassword; }
-
-    public String getAdminName() { return adminName; }
-    public void setAdminName(String adminName) { this.adminName = adminName; }
-
-    public String getAdminMail() { return adminMail; }
-    public void setAdminMail(String adminMail) { this.adminMail = adminMail; }
-
-    public String getAdminLoc() { return adminLoc; }
-    public void setAdminLoc(String adminLoc) { this.adminLoc = adminLoc; }
-
-    public String getRyokanName() { return ryokanName; }
-    public void setRyokanName(String ryokanName) { this.ryokanName = ryokanName; }
-
-    public String getRyokanTel() { return ryokanTel; }
-    public void setRyokanTel(String ryokanTel) { this.ryokanTel = ryokanTel; }
-
-    public String getRyokanAccess() { return ryokanAccess; }
-    public void setRyokanAccess(String ryokanAccess) { this.ryokanAccess = ryokanAccess; }
-
-    public String getRyokanLogo() { return ryokanLogo; }
-    public void setRyokanLogo(String ryokanLogo) { this.ryokanLogo = ryokanLogo; }
-
-    public String getPwResetYn() { return pwResetYn; }
-    public void setPwResetYn(String pwResetYn) { this.pwResetYn = pwResetYn; }
 }
