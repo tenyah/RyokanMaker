@@ -77,7 +77,7 @@ img { max-width: 100%; display: block; }
 .site-header .logo .romaji { font-size: 10px; letter-spacing: 0.18em; color: var(--gold-deep); }
 .site-header nav { display: flex; align-items: center; gap: 44px; }
 
-.navlink { color: var(--ink-soft); font-size: 14px; letter-spacing: 0.05em; font-weight: 300; }
+.navlink { color: var(--ink-soft); font-size: 14px; letter-spacing: 0.05em; font-weight: 300; text-decoration: none; }
 .navlink:hover { color: var(--gold-deep); }
 .navlink.active { color: var(--gold-deep); border-bottom: 1px solid var(--gold-deep); padding-bottom: 4px; }
 
@@ -370,6 +370,7 @@ img { max-width: 100%; display: block; }
 .field input[type="email"],
 .field input[type="tel"],
 .field input[type="time"],
+.field input[type="password"],
 .field input[type="url"] {
   height: 42px; border: 1px solid var(--line); background: #fff; padding: 0 14px;
   font-size: 13px; font-family: var(--serif); color: var(--ink); width: 100%;
@@ -439,6 +440,7 @@ img { max-width: 100%; display: block; }
 
 /* ---------------- 통계 타일 ---------------- */
 .stat-grid { padding: 24px 56px 0; display: grid; gap: 16px; }
+.stat-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .stat-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .stat-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
 .stat-tile { border: 1px solid var(--line); padding: 20px 22px; }
@@ -546,3 +548,52 @@ img { max-width: 100%; display: block; }
 .limit-card .row { display: flex; align-items: flex-end; gap: 14px; }
 .limit-card .row .field { flex: 1; }
 .limit-card .today { height: 40px; display: flex; align-items: center; font-size: 13px; color: var(--ink-soft); }
+
+/* ---------------- 로그인 / 비밀번호 변경 ---------------- */
+.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-soft); padding: 40px 20px; box-sizing: border-box; }
+.auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--line); padding: 48px 44px; box-sizing: border-box; }
+.auth-logo { text-align: center; margin-bottom: 26px; }
+.auth-logo .kanji { font-family: var(--serif); font-size: 34px; color: var(--gold-deep); font-weight: 500; letter-spacing: .04em; }
+.auth-logo .romaji { font-size: 10.5px; letter-spacing: .18em; color: var(--ink-faint); margin-top: 6px; }
+.auth-title { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--ink); text-align: center; margin: 0 0 6px; }
+.auth-sub { font-size: 12.5px; color: var(--ink-soft); text-align: center; margin: 0 0 30px; line-height: 1.7; }
+.auth-form { display: flex; flex-direction: column; gap: 18px; }
+.auth-form .btn-gold { width: 100%; justify-content: center; padding: 14px; font-size: 13.5px; margin-top: 6px; }
+.auth-footnote { margin-top: 26px; text-align: center; font-size: 11.5px; color: var(--ink-faint); line-height: 1.8; }
+.auth-footnote a { color: var(--gold-deep); text-decoration: none; }
+.auth-error { display: flex; align-items: center; gap: 8px; background: var(--warn-bg); color: var(--warn); font-size: 12px; padding: 11px 14px; margin-bottom: 20px; }
+.auth-rule { width: 30px; height: 1px; background: var(--gold); margin: 0 auto 26px; }
+
+/* ---------------- 계정 메뉴 (헤더 우측 아바타 드롭다운) ---------------- */
+.account-menu { position: relative; }
+.account-trigger {
+  width: 32px; height: 32px; border-radius: 999px; background: var(--gold-pale);
+  display: flex; align-items: center; justify-content: center; color: var(--gold-deep);
+  font-size: 12px; font-weight: 500; font-family: var(--sans); border: none; padding: 0;
+  cursor: pointer; transition: box-shadow .15s;
+}
+.account-trigger:hover { box-shadow: 0 0 0 3px var(--gold-pale); }
+.account-menu.open .account-trigger { box-shadow: 0 0 0 3px var(--gold-pale); }
+.account-dropdown {
+  position: absolute; top: calc(100% + 12px); right: 0; width: 224px; background: #fff;
+  border: 1px solid var(--line); box-shadow: 0 12px 32px rgba(38,35,31,0.16);
+  padding: 8px 0; z-index: 50; opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .15s, transform .15s, visibility .15s;
+}
+.account-menu.open .account-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.account-dropdown-head { display: flex; align-items: center; gap: 10px; padding: 8px 16px 14px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.account-dropdown-head .avatar-sm {
+  width: 30px; height: 30px; border-radius: 999px; background: var(--gold-pale); flex: none;
+  display: flex; align-items: center; justify-content: center; color: var(--gold-deep); font-size: 11px; font-weight: 500;
+}
+.account-dropdown-head .name { font-size: 12.5px; color: var(--ink); font-weight: 500; }
+.account-dropdown-head .sub { font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; }
+.account-dropdown-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 12.5px;
+  color: var(--ink-soft); text-decoration: none; cursor: pointer; background: none; border: none;
+  width: 100%; box-sizing: border-box; text-align: left; font-family: var(--sans);
+}
+.account-dropdown-item svg { color: var(--ink-faint); flex: none; }
+.account-dropdown-item:hover { background: var(--bg-soft); color: var(--ink); }
+.account-dropdown-item.danger:hover { color: var(--warn); }
+.account-dropdown-item.danger:hover svg { color: var(--warn); }

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>清流庵 관리자 - 비밀번호 변경</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12.5 5 5L19 7"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="auth-page">
+  <div class="auth-card" style="max-width:440px;">
+    <div class="auth-logo">
+      <div class="kanji">清流庵</div>
+      <div class="romaji">OTARU FURUKAWA &nbsp;·&nbsp; ADMIN</div>
+    </div>
+
+    <div class="auth-title">비밀번호 변경</div>
+    <div class="auth-sub">최초 로그인 시에는 발급받은 초기 비밀번호를<br>새 비밀번호로 반드시 변경해야 합니다.</div>
+
+    <div class="notice-banner" style="margin:0 0 24px;" id="pwnotice">
+      초기 비밀번호 상태입니다. 비밀번호를 변경해야 관리자 화면을 계속 이용할 수 있습니다.
+    </div>
+
+    <!-- 실제 연동 시 method="post" th:action="@{/Admin/password_reset}" 로 바꿔주세요 -->
+    <form class="auth-form" action="/Admin/password_reset" method="post">
+      <div class="field">
+        <label>현재 비밀번호</label>
+        <input type="password" name="currentPassword" placeholder="비밀번호를 입력하세요">
+      </div>
+      <div class="field">
+        <label>새 비밀번호</label>
+        <input type="password" name="newPassword" placeholder="영문·숫자·특수문자 포함 8자 이상">
+      </div>
+      <div class="field">
+        <label>새 비밀번호 확인</label>
+        <input type="password" name="newPasswordConfirm" placeholder="새 비밀번호를 한 번 더 입력하세요">
+      </div>
+
+      <button type="submit" class="btn-gold">비밀번호 변경하기</button>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

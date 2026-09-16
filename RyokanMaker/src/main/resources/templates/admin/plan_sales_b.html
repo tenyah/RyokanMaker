@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>清流庵 관리자 - 판매 관리</title>
-<link rel="stylesheet" th:href="@{/css/common.css}"> 
+<link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
 
@@ -47,19 +47,6 @@
     <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12.5 5.5 18 11 8 21H3v-5Z"/><path d="m16 4 4 4"/>
     </symbol>
-    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 5v14M5 12h14"/>
-    </symbol>
-    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M7 16a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.3 9.02 4.5 4.5 0 0 1 16.5 18H7Z"/>
-      <path d="M12 12v6"/><path d="m9.5 14.5 2.5-2.5 2.5 2.5"/>
-    </symbol>
-    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
-    </symbol>
-    <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
-    </symbol>
   </defs>
 </svg>
 
@@ -72,29 +59,12 @@
   <nav style="gap:44px;">
     <a class="navlink" href="#">대시보드</a>
     <a class="navlink" th:href="@{/Admin/admin_info_register}" href="/Admin/admin_info_register">정보등록</a>
-    <a class="navlink" th:href="@{/Admin/reservation_status}" href="/Admin/reservation_status">예약 현황</a>
+    <a class="navlink" href="/Admin/admin_reservation">예약 현황</a>
     <a class="navlink" th:href="@{/Admin/room_status}" href="/Admin/room_status">객실 현황</a>
     <a class="navlink active" th:href="@{/Admin/plan_sales}" href="/Admin/plan_sales">판매 관리</a>
-    <a class="navlink" th:href="@{/Admin/admin_inquiry}">문의 관리</a>
+    <a class="navlink" href="/Admin/admin_inquiry">문의 관리</a>
     <span class="btn-line" style="padding:10px 20px;font-size:12px;gap:7px;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</span>
-    <div class="account-menu" id="accountMenu">
-      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">관</button>
-      <div class="account-dropdown">
-        <div class="account-dropdown-head">
-          <div class="avatar-sm">관</div>
-          <div>
-            <div class="name">清流庵 관리자</div>
-            <div class="sub">ADMIN_ID</div>
-          </div>
-        </div>
-        <a class="account-dropdown-item" th:href="@{/Admin/admin_pwreset}" href="admin-pwreset.html">
-          <svg width="15" height="15"><use href="#i-lock"/></svg>비밀번호 변경
-        </a>
-        <a class="account-dropdown-item danger" th:href="@{/Admin/admin_logout}" href="admin-login.html">
-          <svg width="15" height="15"><use href="#i-logout"/></svg>로그아웃
-        </a>
-      </div>
-    </div>
+    <div style="width:32px;height:32px;border-radius:999px;background:var(--gold-pale);display:flex;align-items:center;justify-content:center;color:var(--gold-deep);font-size:12px;font-weight:500;">관</div>
   </nav>
 </div>
 
@@ -118,7 +88,7 @@
         <svg width="17" height="17"><use href="#i-doc"/></svg>
         <span>정보등록</span>
       </a>
-      <a class="admin-nav-item" th:href="@{/Admin/reservation_status}" href="/Admin/reservation_status">
+      <a class="admin-nav-item" href="/Admin/admin_reservation">
         <svg width="17" height="17"><use href="#i-cal"/></svg>
         <span>예약 현황</span>
       </a>
@@ -131,7 +101,7 @@
         <span>판매 관리</span>
       </a>
 
-      <a class="admin-nav-item" th:href="@{/Admin/admin_inquiry}">
+      <a class="admin-nav-item" href="/Admin/admin_inquiry">
         <svg width="17" height="17"><use href="#i-mail"/></svg>
         <span>문의 관리</span>
         <span style="margin-left:auto;background:var(--warn);color:#fff;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 7px;">3</span>
@@ -237,42 +207,6 @@
         </div>
       </div>
 
-    </div>
-
-    <!-- 새 플랜 등록 -->
-    <div class="form-card" style="margin:0 56px 40px;">
-      <div class="sub-label" style="margin-bottom:4px;">새 플랜 등록</div>
-
-      <div>
-        <div class="img-field-head">
-          <div class="sub-label">플랜 이미지</div>
-          <div class="count-badge">0 / 1</div>
-        </div>
-        <div class="img-grid" style="grid-template-columns:120px;">
-          <div class="img-tile"><input type="file" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
-        </div>
-      </div>
-
-      <div class="field"><label>플랜 이름</label><input type="text" placeholder="예: 객실 + 식사 플랜"></div>
-
-      <div class="field-row">
-        <div class="field"><label>기본 가격 (1박 2인 기준)</label><input type="text" placeholder="예: 848,508"></div>
-        <div class="field" style="flex-direction:row;align-items:center;gap:24px;max-width:none;padding-top:20px;">
-          <label style="display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;color:var(--ink-soft);"><input type="checkbox" style="width:15px;height:15px;">식사 포함</label>
-          <label style="display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;color:var(--ink-soft);"><input type="checkbox" style="width:15px;height:15px;">온천 포함</label>
-        </div>
-      </div>
-
-      <div class="field"><label>플랜 설명</label><textarea placeholder="예: 숙박과 저녁 가이세키 코스가 포함된 구성입니다..."></textarea></div>
-
-      <div class="field" style="flex-direction:row;align-items:center;gap:12px;max-width:none;">
-        <label style="margin:0;">판매 여부</label>
-        <label class="toggle"><input type="checkbox" checked><span class="track"></span></label>
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;">
-        <button type="button" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;플랜 등록</button>
-      </div>
     </div>
 
     <!-- 날짜별 가격·판매 표 -->
@@ -409,12 +343,5 @@
   </main>
 </div>
 
-<script>
-document.addEventListener('click', function (e) {
-  document.querySelectorAll('.account-menu.open').forEach(function (menu) {
-    if (!menu.contains(e.target)) menu.classList.remove('open');
-  });
-});
-</script>
 </body>
 </html>
