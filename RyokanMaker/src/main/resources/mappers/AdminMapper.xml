@@ -10,7 +10,10 @@
         <result column="ADMIN_MAIL"     property="adminMail"/>
         <result column="ADMIN_LOC"      property="adminLoc"/>
         <result column="RYOKAN_NAME"    property="ryokanName"/>
-        <result column="RYOKAN_LEVEL"   property="ryokanLevel"/>
+        <result column="RYOKAN_TEL"     property="ryokanTel"/>
+        <result column="RYOKAN_ACCESS"  property="ryokanAccess"/>
+        <result column="RYOKAN_LOGO"    property="ryokanLogo"/>
+        <result column="PW_RESET_YN"    property="pwResetYn"/>
     </resultMap>
 
     <select id="selectByAdminId" parameterType="string" resultMap="adminResultMap">
