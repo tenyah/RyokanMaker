@@ -20,7 +20,6 @@ public class AdminDto {
     private String adminMail;
     private String adminLoc;
     private String ryokanName;
-    private String ryokanFacility;
     private String ryokanTel;
     private String ryokanAccess;
     private String ryokanLogo;

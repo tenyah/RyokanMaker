@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.CountryCodeMapper">
+
+    <resultMap id="countryCodeResultMap" type="com.mnu.ryokanmaker.dto.CountryCodeDto">
+        <id     column="COUNTRY_NAME" property="countryName"/>
+        <result column="DIAL_CODE"    property="dialCode"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="countryCodeResultMap">
+        SELECT * FROM COUNTRY_CODE ORDER BY COUNTRY_NAME ASC
+    </select>
+
+    <select id="selectDialCode" parameterType="string" resultType="string">
+        SELECT DIAL_CODE FROM COUNTRY_CODE WHERE COUNTRY_NAME = #{countryName}
+    </select>
+
+</mapper>

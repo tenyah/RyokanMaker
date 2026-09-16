@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.AdminMapper">
+
+    <resultMap id="adminResultMap" type="com.mnu.ryokanmaker.dto.AdminDto">
+        <id     column="ADMIN_IDX"      property="adminIdx"/>
+        <result column="ADMIN_ID"       property="adminId"/>
+        <result column="ADMIN_PASSWORD" property="adminPassword"/>
+        <result column="ADMIN_NAME"     property="adminName"/>
+        <result column="ADMIN_MAIL"     property="adminMail"/>
+        <result column="ADMIN_LOC"      property="adminLoc"/>
+        <result column="RYOKAN_NAME"    property="ryokanName"/>
+        <result column="RYOKAN_TEL"     property="ryokanTel"/>
+        <result column="RYOKAN_ACCESS"  property="ryokanAccess"/>
+        <result column="RYOKAN_LOGO"    property="ryokanLogo"/>
+        <result column="PW_RESET_YN"    property="pwResetYn"/>
+    </resultMap>
+
+    <select id="selectByAdminId" parameterType="string" resultMap="adminResultMap">
+        SELECT * FROM ADMIN WHERE ADMIN_ID = #{adminId}
+    </select>
+
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminDto"
+            useGeneratedKeys="true" keyProperty="adminIdx" keyColumn="ADMIN_IDX">
+        INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME)
+        VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName})
+    </insert>
+
+</mapper>

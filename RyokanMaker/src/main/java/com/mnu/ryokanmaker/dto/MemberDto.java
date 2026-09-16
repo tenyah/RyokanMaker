@@ -19,4 +19,8 @@ public class MemberDto {
     private String userAddress;
     private String userCountry;
     private String userTel;
+    private String userLastNameEn;
+    private String userFirstNameEn;
+    private String userLastNameJp;
+    private String userFirstNameJp;
 }
