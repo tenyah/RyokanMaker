@@ -12,7 +12,7 @@
         <result column="REQUEST_STATUS"    property="requestStatus"/>
         <result column="REQUEST_AT"        property="requestedAt"/>
         <result column="PROCESSED_AT"      property="processedAt"/>
-        <result column="RESULT_ADMIN_IDX"  property="resultAdminIdx"/>
+        <result column="ADMIN_IDX"         property="resultAdminIdx"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminRequestDto"
@@ -35,7 +35,7 @@
 
     <update id="approve">
         UPDATE ADMIN_REQUEST
-        SET REQUEST_STATUS = '승인', PROCESSED_AT = SYSTIMESTAMP, RESULT_ADMIN_IDX = #{resultAdminIdx}
+        SET REQUEST_STATUS = '승인', PROCESSED_AT = SYSTIMESTAMP, ADMIN_IDX = #{resultAdminIdx}
         WHERE REQUEST_IDX = #{requestIdx}
     </update>
 
