@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>회원가입 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
+  <style>
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  </style>
 </head>
 <body>
 
@@ -42,18 +45,30 @@
     </div>
 
     <div class="form-row">
-      <label class="field-label">주소 (선택)</label>
-      <input type="text" name="userAddress" th:value="${member?.userAddress}" placeholder="주소">
+      <label class="field-label">국가</label>
+      <select name="userCountry" required>
+        <option value="">국가를 선택해주세요</option>
+        <option th:each="c : ${countries}" th:value="${c}" th:text="${c}"></option>
+      </select>
     </div>
 
     <div class="form-row">
-      <label class="field-label">국가 (선택)</label>
-      <input type="text" name="userCountry" th:value="${member?.userCountry}" placeholder="대한민국">
+      <label class="field-label">연락처 (국가번호는 위에서 선택한 국가에 맞춰 자동으로 붙습니다)</label>
+      <input type="text" name="userTelLocal" placeholder="10-1234-5678" required>
+    </div>
+
+    <!-- 주소 : 아마존 가입 폼처럼 우편번호 + 기본주소 + 상세주소로 분리 -->
+    <div class="form-row">
+      <label class="field-label">우편번호</label>
+      <input type="text" name="userPostalCode" placeholder="12345" style="max-width:200px;" required>
     </div>
 
     <div class="form-row">
-      <label class="field-label">연락처 (선택)</label>
-      <input type="text" name="userTel" th:value="${member?.userTel}" placeholder="010-0000-0000">
+      <label class="field-label">주소</label>
+      <div class="row-2">
+        <input type="text" name="userAddress1" placeholder="도로명 주소" required>
+        <input type="text" name="userAddress2" placeholder="상세 주소 (건물명, 동/호수 등)" required>
+      </div>
     </div>
 
     <div class="form-actions">
