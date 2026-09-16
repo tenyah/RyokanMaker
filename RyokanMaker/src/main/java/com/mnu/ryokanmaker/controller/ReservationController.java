@@ -7,6 +7,8 @@ import com.mnu.ryokanmaker.dto.PlanDto;
 import com.mnu.ryokanmaker.dto.RoomAvailabilityDto;
 import com.mnu.ryokanmaker.dto.SearchConditionDto;
 import com.mnu.ryokanmaker.dto.SlotDto;
+import com.mnu.ryokanmaker.service.NoticeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +26,13 @@ import java.util.List;
 @Controller
 public class ReservationController {
 
+    @Autowired
+    private NoticeService noticeService;
+
     @GetMapping("/")
-    public String mainIndex() {
+    public String mainIndex(Model model) {
+        List<com.mnu.ryokanmaker.dto.NoticeDto> notices = noticeService.list();
+        model.addAttribute("notices", notices.size() > 3 ? notices.subList(0, 3) : notices);
         return "index";
     }
 
