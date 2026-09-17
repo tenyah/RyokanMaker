@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.AdminMapper">
+	<!--
+		AdminDTO 필드명이 DB 컬럼명과 동일한 snake_case라서, 전역 설정인
+		map-underscore-to-camel-case=true(컬럼명을 camelCase로 변환해서 매핑) 때문에
+		resultType 자동 매핑이 프로퍼티를 못 찾고 실패한다(row는 있어도 결과가 null이 됨).
+		그래서 resultMap으로 컬럼-프로퍼티를 그대로 1:1 명시해서 우회한다.
+	-->
+	<resultMap id="adminResultMap" type="com.mnu.ryokanmaker.domain.AdminDTO">
+		<id column="ADMIN_IDX" property="admin_idx"/>
+		<result column="ADMIN_ID" property="admin_id"/>
+		<result column="ADMIN_PASSWORD" property="admin_password"/>
+		<result column="ADMIN_MAIL" property="admin_mail"/>
+		<result column="ADMIN_NAME" property="admin_name"/>
+		<result column="ADMIN_LOC" property="admin_loc"/>
+		<result column="RYOKAN_NAME" property="ryokan_name"/>
+		<result column="RYOKAN_TEL" property="ryokan_tel"/>
+		<result column="RYOKAN_ACCESS" property="ryokan_access"/>
+		<result column="RYOKAN_LOGO" property="ryokan_logo"/>
+		<result column="PW_RESET_YN" property="pw_reset_yn"/>
+		<result column="RYOKAN_IMAGE" property="ryokan_image"/>
+	</resultMap>
+
+	<select id="adminLogin" parameterType="com.mnu.ryokanmaker.domain.AdminDTO" resultMap="adminResultMap">
+		SELECT *
+		FROM ADMIN
+		WHERE ADMIN_ID = #{admin_id}
+		  AND ADMIN_PASSWORD = #{admin_password}
+	</select>
+
+	<!--
+		여관 기본정보 수정 (1 관리자 = 1 여관이라 등록/삭제 없이 수정만 있음).
+		ryokan_logo / ryokan_image는 새 이미지를 올렸을 때만 값이 채워짐(null이면 기존 이미지 유지).
+	-->
+	<update id="updateRyokanInfo" parameterType="com.mnu.ryokanmaker.domain.AdminDTO">
+		UPDATE ADMIN
+		<set>
+			RYOKAN_NAME = #{ryokan_name},
+			RYOKAN_TEL = #{ryokan_tel},
+			ADMIN_MAIL = #{admin_mail},
+			ADMIN_LOC = #{admin_loc},
+			<if test="ryokan_logo != null">RYOKAN_LOGO = #{ryokan_logo},</if>
+			<if test="ryokan_image != null">RYOKAN_IMAGE = #{ryokan_image},</if>
+		</set>
+		WHERE ADMIN_IDX = #{admin_idx}
+	</update>
+
+	<!-- 교통안내(RYOKAN_ACCESS) 단독 수정용. 인덱스 화면 본체와 별도 폼이라 전용 update로 분리 -->
+	<update id="updateRyokanAccess">
+		UPDATE ADMIN
+		SET RYOKAN_ACCESS = #{ryokan_access}
+		WHERE ADMIN_IDX = #{admin_idx}
+	</update>
+
+	<!-- 비밀번호 변경 시 PW_RESET_YN도 'Y'로 같이 갱신 (초기 비밀번호 상태 해제) -->
+	<update id="updatePassword" parameterType="com.mnu.ryokanmaker.domain.AdminDTO">
+		UPDATE ADMIN
+		SET ADMIN_PASSWORD = #{admin_password},
+		    PW_RESET_YN = 'Y'
+		WHERE ADMIN_IDX = #{admin_idx}
+	</update>
+
+</mapper>

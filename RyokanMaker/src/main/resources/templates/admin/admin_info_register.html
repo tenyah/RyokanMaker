@@ -221,47 +221,52 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <!-- 여관 기본정보 수정 : 등록/삭제 없이 저장(UPDATE)만 있음 (1 관리자 = 1 여관) -->
+      <form class="form-card" th:action="@{/Admin/admin_info_save}" method="post" enctype="multipart/form-data">
 
         <div class="field" style="gap:10px;">
           <label style="font-size:12.5px;color:var(--ink);font-weight:500;letter-spacing:0;">여관 로고</label>
           <div class="img-tile filled" style="cursor:default;">
-            <input type="file" accept="image/*" title="로고 이미지 업로드">
+            <input type="file" name="ryokanLogoFile" accept="image/*" title="로고 이미지 업로드">
             <span style="font-family:var(--serif);color:var(--gold-deep);font-size:28px;font-weight:500;">淸</span>
             <span style="letter-spacing:.1em;">SEIRYUAN</span>
             <div class="remove"><svg width="10" height="10"><use href="#i-x"/></svg></div>
           </div>
-          <div class="img-hint">권장 크기 240×240px, PNG/SVG</div>
+          <div class="img-hint">권장 크기 240×240px, PNG/SVG. 새로 올리지 않으면 기존 로고가 유지됩니다.</div>
         </div>
 
         <div>
           <div class="img-field-head">
             <div class="sub-label">메인 화면 이미지</div>
-            <div class="count-badge">3 / 10</div>
+            <div class="count-badge">0 / 10</div>
           </div>
           <div class="img-grid">
-            <div class="img-tile filled"><input type="file" accept="image/*"><svg width="22" height="22"><use href="#i-image"/></svg><div class="remove"><svg width="10" height="10"><use href="#i-x"/></svg></div></div>
-            <div class="img-tile filled"><input type="file" accept="image/*"><svg width="22" height="22"><use href="#i-image"/></svg><div class="remove"><svg width="10" height="10"><use href="#i-x"/></svg></div></div>
-            <div class="img-tile filled"><input type="file" accept="image/*"><svg width="22" height="22"><use href="#i-image"/></svg><div class="remove"><svg width="10" height="10"><use href="#i-x"/></svg></div></div>
-            <div class="img-tile"><input type="file" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="ryokanImageFiles" accept="image/*"></div>
           </div>
-          <div class="img-hint">메인 화면 상단 슬라이드에 노출되는 대표 사진입니다. 최대 10장까지 등록할 수 있습니다.</div>
+          <div class="img-hint">메인 화면 상단 슬라이드에 노출되는 대표 사진입니다. 최대 10장까지 등록할 수 있습니다. 새로 올리지 않으면 기존 이미지가 유지됩니다.</div>
         </div>
 
         <div>
           <div class="sub-label" style="margin-bottom:12px;">여관 정보</div>
           <div class="field-row">
-            <div class="field"><label>여관 이름</label><input type="text" placeholder="예: 清流庵 (세이류안)"></div>
-            <div class="field"><label>연락처</label><input type="tel" placeholder="예: 0134-XX-XXXX"></div>
-            <div class="field"><label>이메일</label><input type="email" placeholder="예: info@example.com"></div>
-            <div class="field"><label>주소</label><input type="text" placeholder="[주소를 입력하세요]"></div>
+            <div class="field"><label>여관 이름</label><input type="text" name="ryokan_name" th:value="${session.admin.ryokan_name}" placeholder="예: 清流庵 (세이류안)" required></div>
+            <div class="field"><label>연락처</label><input type="tel" name="ryokan_tel" th:value="${session.admin.ryokan_tel}" placeholder="예: 0134-XX-XXXX"></div>
+            <div class="field"><label>이메일</label><input type="email" name="admin_mail" th:value="${session.admin.admin_mail}" placeholder="예: info@example.com" required></div>
+            <div class="field"><label>주소</label><input type="text" name="admin_loc" th:value="${session.admin.admin_loc}" placeholder="[주소를 입력하세요]"></div>
           </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn-gold small">저장</button>
         </div>
 
       </form>
@@ -278,22 +283,44 @@
       <form class="form-card">
 
         <div>
-          <div class="sub-label" style="margin-bottom:10px;">등록된 객실 (1)</div>
-          <div class="list-item">
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 객실 (' + ${#lists.size(roomList)} + ')'">등록된 객실 (0)</div>
+
+          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</div>
+
+          <div class="list-item" th:each="room : ${roomList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo},data-sale=${room.roomSaleYn}">
             <div class="thumb"><svg width="20" height="20"><use href="#i-image"/></svg></div>
             <div class="info">
-              <div class="name">스탠다드 객실</div>
-              <div class="desc">다다미와 도코노마가 어우러진 전통 객실 · 비고: 최대 2인</div>
+              <div class="name" th:text="${room.roomName}">스탠다드 객실</div>
+              <div class="desc">
+                <span th:text="${room.roomLevel}">스탠다드</span> · 1박
+                <span th:text="${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">78,000</span>원 · 기준
+                <span th:text="${room.roomPeople}">2</span>인
+                <span th:if="${room.roomMemo != null and !room.roomMemo.isEmpty()}" th:text="' · 비고: ' + ${room.roomMemo}"></span>
+              </div>
             </div>
+            <span th:if="${room.roomSaleYn == 'Y'}" style="font-size:11px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:4px 10px;flex:0 0 auto;">노출중</span>
+            <span th:unless="${room.roomSaleYn == 'Y'}" style="font-size:11px;font-weight:500;color:var(--ink-faint);background:var(--bg-soft);padding:4px 10px;flex:0 0 auto;">비노출</span>
             <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              <button type="button" class="icon-btn" onclick="editRoom(this)"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
+              <form th:action="@{/Admin/room_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 객실을 삭제하시겠습니까?');">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              </form>
             </div>
           </div>
         </div>
 
         <div class="divider"></div>
-        <div class="sub-label">새 객실 추가</div>
+      </form>
+
+      <!-- 새 객실 추가 / 수정 공용 폼 : roomIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <form class="form-card" id="roomForm" th:action="@{/Admin/room_save}" method="post" enctype="multipart/form-data">
+
+        <!-- 0이면 신규 등록으로 처리 (Integer 필드라 빈 문자열을 보내면 바인딩 에러가 나서 0을 기본값으로 둠) -->
+        <input type="hidden" id="roomIdx" name="roomIdx" value="0">
+
+        <div class="sub-label" id="roomFormTitle">새 객실 추가</div>
 
         <div>
           <div class="img-field-head">
@@ -301,21 +328,43 @@
             <div class="count-badge">0 / 10</div>
           </div>
           <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
-            <div class="img-tile"><input type="file" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
           </div>
+          <div class="img-hint">최대 10장까지 등록됩니다. 수정 시 새 이미지를 선택하지 않으면 기존 이미지가 그대로 유지됩니다.</div>
         </div>
 
         <div class="field-row">
-          <div class="field"><label>객실 설명</label><textarea placeholder="예: 오타루 운하가 내려다보이는 다다미 객실입니다..."></textarea></div>
-          <div class="field"><label>비고</label><textarea placeholder="예: 최대 인원, 금연/흡연, 전망 등 추가 메모"></textarea></div>
+          <div class="field"><label>객실 이름</label><input type="text" id="roomName" name="roomName" placeholder="예: 스탠다드 객실" required></div>
+          <div class="field"><label>객실 등급</label><input type="text" id="roomLevel" name="roomLevel" placeholder="예: 스탠다드 / 디럭스 / 스위트" required></div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;객실 추가</button>
+        <div class="field-row">
+          <div class="field"><label>1박 가격</label><input type="number" id="roomPrice" name="roomPrice" placeholder="예: 78000" required></div>
+          <div class="field"><label>기준 인원</label><input type="number" id="roomPeople" name="roomPeople" placeholder="예: 2" required></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label>객실 설명</label><textarea id="roomInfo" name="roomInfo" placeholder="예: 오타루 운하가 내려다보이는 다다미 객실입니다..."></textarea></div>
+          <div class="field"><label>비고</label><textarea id="roomMemo" name="roomMemo" placeholder="예: 최대 인원, 금연/흡연, 전망 등 추가 메모"></textarea></div>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:12px;max-width:none;">
+          <label style="margin:0;">사이트에 노출</label>
+          <label class="toggle"><input type="checkbox" id="roomSaleYn" name="roomSaleYn" value="Y" checked><span class="track"></span></label>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="roomCancelBtn" style="display:none;" onclick="resetRoomForm()">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;<span id="roomSubmitLabel">객실 추가</span></button>
         </div>
 
       </form>
@@ -332,22 +381,42 @@
       <form class="form-card">
 
         <div>
-          <div class="sub-label" style="margin-bottom:10px;">등록된 코스 (1)</div>
-          <div class="list-item">
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 코스 (' + ${#lists.size(courseList)} + ')'">등록된 코스 (0)</div>
+
+          <div class="img-hint" th:if="${#lists.isEmpty(courseList)}">등록된 코스가 없습니다. 아래에서 새 코스를 추가해 주세요.</div>
+
+          <div class="list-item" th:each="course : ${courseList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${course.restaurantCourseIdx},data-name=${course.restaurantCourseName},data-info=${course.restaurantCourseInfo},data-memo=${course.restaurantCourseMemo},data-sale=${course.restaurantSaleYn}">
             <div class="thumb"><svg width="20" height="20"><use href="#i-image"/></svg></div>
             <div class="info">
-              <div class="name">달 코스 『계절의 맛 가이세키』</div>
-              <div class="desc">홋카이도의 맛을 즐기는 계절 가이세키 (전 8품) · 비고: 스탠다드</div>
+              <div class="name" th:text="${course.restaurantCourseName}">달 코스 『계절의 맛 가이세키』</div>
+              <div class="desc">
+                <span th:if="${course.restaurantCourseInfo != null}" th:text="${course.restaurantCourseInfo}"></span>
+                <span th:if="${course.restaurantCourseMemo != null and !course.restaurantCourseMemo.isEmpty()}" th:text="' · 비고: ' + ${course.restaurantCourseMemo}"></span>
+              </div>
             </div>
+            <span th:if="${course.restaurantSaleYn == 'Y'}" style="font-size:11px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:4px 10px;flex:0 0 auto;">노출중</span>
+            <span th:unless="${course.restaurantSaleYn == 'Y'}" style="font-size:11px;font-weight:500;color:var(--ink-faint);background:var(--bg-soft);padding:4px 10px;flex:0 0 auto;">비노출</span>
             <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              <button type="button" class="icon-btn" onclick="editCourse(this)"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
+              <form th:action="@{/Admin/course_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 코스를 삭제하시겠습니까?');">
+                <input type="hidden" name="restaurantCourseIdx" th:value="${course.restaurantCourseIdx}">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              </form>
             </div>
           </div>
         </div>
 
         <div class="divider"></div>
-        <div class="sub-label">새 코스 추가</div>
+      </form>
+
+      <!-- 새 코스 추가 / 수정 공용 폼 : restaurantCourseIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <form class="form-card" id="courseForm" th:action="@{/Admin/course_save}" method="post" enctype="multipart/form-data">
+
+        <!-- 0이면 신규 등록으로 처리 (Integer 필드라 빈 문자열을 보내면 바인딩 에러가 나서 0을 기본값으로 둠) -->
+        <input type="hidden" id="restaurantCourseIdx" name="restaurantCourseIdx" value="0">
+
+        <div class="sub-label" id="courseFormTitle">새 코스 추가</div>
 
         <div>
           <div class="img-field-head">
@@ -355,21 +424,37 @@
             <div class="count-badge">0 / 10</div>
           </div>
           <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
-            <div class="img-tile"><input type="file" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="courseImageFiles" accept="image/*"></div>
           </div>
+          <div class="img-hint">최대 10장까지 등록됩니다. 수정 시 새 이미지를 선택하지 않으면 기존 이미지가 그대로 유지됩니다.</div>
         </div>
 
         <div class="field-row">
-          <div class="field"><label>코스 설명</label><textarea placeholder="예: 오타루 인근 제철 식재료로 빚은 가이세키 코스입니다..."></textarea></div>
-          <div class="field"><label>비고</label><textarea placeholder="예: 알레르기 정보, 인분 수 등 추가 메모"></textarea></div>
+          <div class="field"><label>코스 이름</label><input type="text" id="restaurantCourseName" name="restaurantCourseName" placeholder="예: 달 코스 『계절의 맛 가이세키』" required></div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;코스 추가</button>
+        <div class="field-row">
+          <div class="field"><label>코스 설명</label><textarea id="restaurantCourseInfo" name="restaurantCourseInfo" placeholder="예: 오타루 인근 제철 식재료로 빚은 가이세키 코스입니다..."></textarea></div>
+          <div class="field"><label>비고</label><textarea id="restaurantCourseMemo" name="restaurantCourseMemo" placeholder="예: 알레르기 정보, 인분 수 등 추가 메모"></textarea></div>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:12px;max-width:none;">
+          <label style="margin:0;">사이트에 노출</label>
+          <label class="toggle"><input type="checkbox" id="restaurantSaleYn" name="restaurantSaleYn" value="Y" checked><span class="track"></span></label>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="courseCancelBtn" style="display:none;" onclick="resetCourseForm()">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;<span id="courseSubmitLabel">코스 추가</span></button>
         </div>
 
       </form>
@@ -386,22 +471,43 @@
       <form class="form-card">
 
         <div>
-          <div class="sub-label" style="margin-bottom:10px;">등록된 온천 (1)</div>
-          <div class="list-item">
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 온천 (' + ${#lists.size(onsenList)} + ')'">등록된 온천 (0)</div>
+
+          <div class="img-hint" th:if="${#lists.isEmpty(onsenList)}">등록된 온천이 없습니다. 아래에서 새 온천을 추가해 주세요.</div>
+
+          <div class="list-item" th:each="onsen : ${onsenList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${onsen.onsenIdx},data-name=${onsen.onsenName},data-info=${onsen.onsenInfo},data-memo=${onsen.onsenMemo},data-sale=${onsen.onsenSaleYn},data-start=${onsen.onsenStartTime},data-end=${onsen.onsenEndTime}">
             <div class="thumb"><svg width="20" height="20"><use href="#i-image"/></svg></div>
             <div class="info">
-              <div class="name">노천탕 (露天湯) — 전세탕</div>
-              <div class="desc">이용시간 15:00–21:00 · 오타루 연석을 두른 실내탕과 정원이 보이는 창가</div>
+              <div class="name" th:text="${onsen.onsenName}">노천탕 (露天湯) — 전세탕</div>
+              <div class="desc">
+                <span th:if="${onsen.onsenHour != null}" th:text="'이용시간 ' + ${onsen.onsenHour} + ' · '"></span>
+                <span th:if="${onsen.onsenInfo != null}" th:text="${onsen.onsenInfo}"></span>
+                <span th:if="${onsen.onsenMemo != null and !onsen.onsenMemo.isEmpty()}" th:text="' · 비고: ' + ${onsen.onsenMemo}"></span>
+              </div>
             </div>
+            <span th:if="${onsen.onsenSaleYn == 'Y'}" style="font-size:11px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:4px 10px;flex:0 0 auto;">노출중</span>
+            <span th:unless="${onsen.onsenSaleYn == 'Y'}" style="font-size:11px;font-weight:500;color:var(--ink-faint);background:var(--bg-soft);padding:4px 10px;flex:0 0 auto;">비노출</span>
             <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              <button type="button" class="icon-btn" onclick="editOnsen(this)"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
+              <form th:action="@{/Admin/onsen_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 온천을 삭제하시겠습니까?');">
+                <input type="hidden" name="onsenIdx" th:value="${onsen.onsenIdx}">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              </form>
             </div>
           </div>
         </div>
 
         <div class="divider"></div>
-        <div class="sub-label">새 온천 추가</div>
+      </form>
+
+      <!-- 새 온천 추가 / 수정 공용 폼 : onsenIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <form class="form-card" id="onsenForm" th:action="@{/Admin/onsen_save}" method="post" enctype="multipart/form-data">
+
+        <!-- 0이면 신규 등록으로 처리 (Integer 필드라 빈 문자열을 보내면 바인딩 에러가 나서 0을 기본값으로 둠) -->
+        <input type="hidden" id="onsenIdx" name="onsenIdx" value="0">
+
+        <div class="sub-label" id="onsenFormTitle">새 온천 추가</div>
 
         <div>
           <div class="img-field-head">
@@ -409,26 +515,42 @@
             <div class="count-badge">0 / 10</div>
           </div>
           <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
-            <div class="img-tile"><input type="file" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
-            <div class="img-tile"><input type="file" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="onsenImageFiles" accept="image/*"></div>
           </div>
-        </div>
-
-        <div class="field-row time-row">
-          <div class="field"><label>이용 시작 시간</label><input type="time" value="15:00" style="width:160px;"></div>
-          <div class="field"><label>이용 종료 시간</label><input type="time" value="21:00" style="width:160px;"></div>
+          <div class="img-hint">최대 10장까지 등록됩니다. 수정 시 새 이미지를 선택하지 않으면 기존 이미지가 그대로 유지됩니다.</div>
         </div>
 
         <div class="field-row">
-          <div class="field"><label>온천 설명</label><textarea placeholder="예: 오타루 연석을 두른 대나무 정원이 보이는 창가 전세탕입니다..."></textarea></div>
-          <div class="field"><label>비고</label><textarea placeholder="예: 예약 필수, 1회 이용 45분 등 추가 메모"></textarea></div>
+          <div class="field"><label>온천 이름</label><input type="text" id="onsenName" name="onsenName" placeholder="예: 노천탕 (露天湯) — 전세탕" required></div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;온천 추가</button>
+        <div class="field-row time-row">
+          <div class="field"><label>이용 시작 시간</label><input type="time" id="onsenStartTime" name="onsenStartTime" value="15:00" style="width:160px;"></div>
+          <div class="field"><label>이용 종료 시간</label><input type="time" id="onsenEndTime" name="onsenEndTime" value="21:00" style="width:160px;"></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label>온천 설명</label><textarea id="onsenInfo" name="onsenInfo" placeholder="예: 오타루 연석을 두른 대나무 정원이 보이는 창가 전세탕입니다..."></textarea></div>
+          <div class="field"><label>비고</label><textarea id="onsenMemo" name="onsenMemo" placeholder="예: 예약 필수, 1회 이용 45분 등 추가 메모"></textarea></div>
+        </div>
+
+        <div class="field" style="flex-direction:row;align-items:center;gap:12px;max-width:none;">
+          <label style="margin:0;">사이트에 노출</label>
+          <label class="toggle"><input type="checkbox" id="onsenSaleYn" name="onsenSaleYn" value="Y" checked><span class="track"></span></label>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="onsenCancelBtn" style="display:none;" onclick="resetOnsenForm()">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;<span id="onsenSubmitLabel">온천 추가</span></button>
         </div>
 
       </form>
@@ -445,45 +567,72 @@
       <form class="form-card">
 
         <div>
-          <div class="sub-label" style="margin-bottom:10px;">등록된 시설 (1)</div>
-          <div class="list-item">
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 시설 (' + ${#lists.size(facilityList)} + ')'">등록된 시설 (0)</div>
+
+          <div class="img-hint" th:if="${#lists.isEmpty(facilityList)}">등록된 시설이 없습니다. 아래에서 새 시설을 추가해 주세요.</div>
+
+          <div class="list-item" th:each="facility : ${facilityList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${facility.facilityIdx},data-name=${facility.facilityName},data-info=${facility.facilityInfo},data-memo=${facility.facilityMemo}">
             <div class="thumb"><svg width="20" height="20"><use href="#i-facility"/></svg></div>
             <div class="info">
-              <div class="name">라운지 &amp; 무료 커피 코너</div>
-              <div class="desc">오타루 운하가 보이는 1층 라운지 · 07:00–22:00 운영</div>
+              <div class="name" th:text="${facility.facilityName}">라운지 &amp; 무료 커피 코너</div>
+              <div class="desc">
+                <span th:if="${facility.facilityInfo != null}" th:text="${facility.facilityInfo}"></span>
+                <span th:if="${facility.facilityMemo != null and !facility.facilityMemo.isEmpty()}" th:text="' · 비고: ' + ${facility.facilityMemo}"></span>
+              </div>
             </div>
-            <span style="font-size:11px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:4px 10px;flex:0 0 auto;">노출중</span>
             <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              <button type="button" class="icon-btn" onclick="editFacility(this)"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
+              <form th:action="@{/Admin/facility_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 시설을 삭제하시겠습니까?');">
+                <input type="hidden" name="facilityIdx" th:value="${facility.facilityIdx}">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              </form>
             </div>
           </div>
         </div>
 
         <div class="divider"></div>
-        <div class="sub-label">새 시설 추가</div>
+      </form>
+
+      <!-- 새 시설 추가 / 수정 공용 폼 : facilityIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <!-- 참고: FACILITY 테이블엔 노출여부(SALE_YN) 컬럼이 없어서 다른 섹션과 달리 "사이트에 노출" 토글이 없음 -->
+      <form class="form-card" id="facilityForm" th:action="@{/Admin/facility_save}" method="post" enctype="multipart/form-data">
+
+        <!-- 0이면 신규 등록으로 처리 (Integer 필드라 빈 문자열을 보내면 바인딩 에러가 나서 0을 기본값으로 둠) -->
+        <input type="hidden" id="facilityIdx" name="facilityIdx" value="0">
+
+        <div class="sub-label" id="facilityFormTitle">새 시설 추가</div>
 
         <div>
           <div class="img-field-head">
             <div class="sub-label">시설 이미지</div>
-            <div class="count-badge">0 / 1</div>
+            <div class="count-badge">0 / 10</div>
           </div>
-          <div class="img-grid" style="grid-template-columns:120px;">
-            <div class="img-tile"><input type="file" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+          <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="facilityImageFiles" accept="image/*"></div>
           </div>
+          <div class="img-hint">최대 10장까지 등록됩니다. 수정 시 새 이미지를 선택하지 않으면 기존 이미지가 그대로 유지됩니다.</div>
         </div>
 
-        <div class="field"><label>시설명</label><input type="text" placeholder="예: 대욕장 앞 자판기 코너"></div>
+        <div class="field"><label>시설명</label><input type="text" id="facilityName" name="facilityName" placeholder="예: 대욕장 앞 자판기 코너" required></div>
 
-        <div class="field"><label>시설 설명</label><textarea placeholder="예: 오타루 지역 특산 음료를 갖춘 자판기 코너입니다..."></textarea></div>
-
-        <div class="field" style="flex-direction:row;align-items:center;gap:12px;max-width:none;">
-          <label style="margin:0;">사이트에 노출</label>
-          <label class="toggle"><input type="checkbox" checked><span class="track"></span></label>
+        <div class="field-row">
+          <div class="field"><label>시설 설명</label><textarea id="facilityInfo" name="facilityInfo" placeholder="예: 오타루 지역 특산 음료를 갖춘 자판기 코너입니다..."></textarea></div>
+          <div class="field"><label>비고</label><textarea id="facilityMemo" name="facilityMemo" placeholder="예: 이용시간, 위치 등 추가 메모"></textarea></div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;시설 추가</button>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="facilityCancelBtn" style="display:none;" onclick="resetFacilityForm()">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;<span id="facilitySubmitLabel">시설 추가</span></button>
         </div>
 
       </form>
@@ -497,16 +646,16 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <form class="form-card" th:action="@{/Admin/admin_access_save}" method="post">
 
         <div class="field">
           <label>교통안내</label>
-          <input type="text" maxlength="33" placeholder="예: JR 오타루역 남쪽 출구에서 도보 15분" value="JR 오타루역 남쪽 출구에서 도보 15분">
+          <input type="text" name="ryokanAccess" maxlength="33" placeholder="예: JR 오타루역 남쪽 출구에서 도보 15분" th:value="${session.admin.ryokan_access}">
           <div class="img-hint">여관 하나당 한 줄만 등록됩니다 (최대 약 33자 · DB 컬럼 제한 100byte). 자세한 안내가 필요하면 시설이나 공지사항을 활용해 주세요.</div>
         </div>
 
         <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="btn-gold small">저장</button>
+          <button type="submit" class="btn-gold small">저장</button>
         </div>
 
       </form>
@@ -523,55 +672,49 @@
       <form class="form-card">
 
         <div>
-          <div class="sub-label" style="margin-bottom:10px;">등록된 공지사항 (3)</div>
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 공지사항 (' + ${#lists.size(noticeList)} + ')'">등록된 공지사항 (0)</div>
 
-          <div class="list-item">
+          <div class="img-hint" th:if="${#lists.isEmpty(noticeList)}">등록된 공지사항이 없습니다. 아래에서 새 공지사항을 추가해 주세요.</div>
+
+          <div class="list-item" th:each="notice : ${noticeList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${notice.noticeIdx},data-title=${notice.noticeTitle},data-content=${notice.noticeContent}">
             <div class="thumb"><svg width="20" height="20"><use href="#i-bell"/></svg></div>
             <div class="info">
-              <div class="name">10월 임시 휴업 안내</div>
-              <div class="desc">2026.10.14(수) 시설 점검으로 임시 휴업합니다 · 등록일 2026.09.10</div>
+              <div class="name" th:text="${notice.noticeTitle}">10월 임시 휴업 안내</div>
+              <div class="desc">
+                <span th:if="${notice.noticeContent != null}" th:text="${notice.noticeContent}"></span>
+                <span th:if="${notice.noticeCreatedAt != null}" th:text="' · 등록일 ' + ${#temporals.format(notice.noticeCreatedAt, 'yyyy.MM.dd')}"></span>
+              </div>
             </div>
             <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
-            </div>
-          </div>
-
-          <div class="list-item" style="margin-top:10px;">
-            <div class="thumb"><svg width="20" height="20"><use href="#i-bell"/></svg></div>
-            <div class="info">
-              <div class="name">가을 단풍 시즌 온천 연장 운영 안내</div>
-              <div class="desc">노천탕 이용시간 21:00 → 22:00 연장 · 등록일 2026.09.02</div>
-            </div>
-            <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
-            </div>
-          </div>
-
-          <div class="list-item" style="margin-top:10px;">
-            <div class="thumb"><svg width="20" height="20"><use href="#i-bell"/></svg></div>
-            <div class="info">
-              <div class="name">여름 성수기 예약 마감 안내</div>
-              <div class="desc">8월 예약이 전 객실 마감되었습니다 · 등록일 2026.07.20</div>
-            </div>
-            <div class="actions">
-              <button type="button" class="icon-btn"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
-              <button type="button" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              <button type="button" class="icon-btn" onclick="editNotice(this)"><svg width="14" height="14"><use href="#i-edit"/></svg></button>
+              <form th:action="@{/Admin/notice_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 공지사항을 삭제하시겠습니까?');">
+                <input type="hidden" name="noticeIdx" th:value="${notice.noticeIdx}">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-trash"/></svg></button>
+              </form>
             </div>
           </div>
         </div>
 
         <div class="divider"></div>
-        <div class="sub-label">새 공지사항 추가</div>
+      </form>
 
-        <div class="field"><label>제목</label><input type="text" placeholder="예: 12월 연말 특별 휴관 안내"></div>
+      <!-- 새 공지사항 추가 / 수정 공용 폼 : noticeIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <form class="form-card" id="noticeForm" th:action="@{/Admin/notice_save}" method="post">
 
-        <div class="field"><label>내용</label><textarea placeholder="예: 안내 내용을 입력하세요..."></textarea></div>
-        <div class="img-hint">등록일은 저장 시점의 시스템 날짜(SYSDATE)로 자동 기록됩니다.</div>
+        <!-- 0이면 신규 등록으로 처리 (Integer 필드라 빈 문자열을 보내면 바인딩 에러가 나서 0을 기본값으로 둠) -->
+        <input type="hidden" id="noticeIdx" name="noticeIdx" value="0">
 
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;공지사항 등록</button>
+        <div class="sub-label" id="noticeFormTitle">새 공지사항 추가</div>
+
+        <div class="field"><label>제목</label><input type="text" id="noticeTitle" name="noticeTitle" placeholder="예: 12월 연말 특별 휴관 안내" required></div>
+
+        <div class="field"><label>내용</label><textarea id="noticeContent" name="noticeContent" placeholder="예: 안내 내용을 입력하세요..."></textarea></div>
+        <div class="img-hint">등록일은 최초 등록 시점의 시스템 시각(SYSTIMESTAMP)으로 자동 기록되며 수정해도 바뀌지 않습니다.</div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="noticeCancelBtn" style="display:none;" onclick="resetNoticeForm()">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;<span id="noticeSubmitLabel">공지사항 등록</span></button>
         </div>
 
       </form>
@@ -592,6 +735,118 @@ document.addEventListener('click', function (e) {
     if (!menu.contains(e.target)) menu.classList.remove('open');
   });
 });
+
+/* ---------------- 객실 등록/수정 폼 ---------------- */
+function editRoom(btn) {
+  var item = btn.closest('.list-item');
+  document.getElementById('roomIdx').value = item.dataset.idx;
+  document.getElementById('roomName').value = item.dataset.name || '';
+  document.getElementById('roomLevel').value = item.dataset.level || '';
+  document.getElementById('roomPrice').value = item.dataset.price || '';
+  document.getElementById('roomPeople').value = item.dataset.people || '';
+  document.getElementById('roomInfo').value = item.dataset.info || '';
+  document.getElementById('roomMemo').value = item.dataset.memo || '';
+  document.getElementById('roomSaleYn').checked = (item.dataset.sale === 'Y');
+  document.getElementById('roomFormTitle').textContent = '객실 수정';
+  document.getElementById('roomSubmitLabel').textContent = '수정 내용 저장';
+  document.getElementById('roomCancelBtn').style.display = '';
+  document.getElementById('roomForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetRoomForm() {
+  var form = document.getElementById('roomForm');
+  form.reset();
+  document.getElementById('roomIdx').value = '0';
+  document.getElementById('roomFormTitle').textContent = '새 객실 추가';
+  document.getElementById('roomSubmitLabel').textContent = '객실 추가';
+  document.getElementById('roomCancelBtn').style.display = 'none';
+}
+
+/* ---------------- 식사 코스 등록/수정 폼 ---------------- */
+function editCourse(btn) {
+  var item = btn.closest('.list-item');
+  document.getElementById('restaurantCourseIdx').value = item.dataset.idx;
+  document.getElementById('restaurantCourseName').value = item.dataset.name || '';
+  document.getElementById('restaurantCourseInfo').value = item.dataset.info || '';
+  document.getElementById('restaurantCourseMemo').value = item.dataset.memo || '';
+  document.getElementById('restaurantSaleYn').checked = (item.dataset.sale === 'Y');
+  document.getElementById('courseFormTitle').textContent = '코스 수정';
+  document.getElementById('courseSubmitLabel').textContent = '수정 내용 저장';
+  document.getElementById('courseCancelBtn').style.display = '';
+  document.getElementById('courseForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetCourseForm() {
+  var form = document.getElementById('courseForm');
+  form.reset();
+  document.getElementById('restaurantCourseIdx').value = '0';
+  document.getElementById('courseFormTitle').textContent = '새 코스 추가';
+  document.getElementById('courseSubmitLabel').textContent = '코스 추가';
+  document.getElementById('courseCancelBtn').style.display = 'none';
+}
+
+/* ---------------- 온천 등록/수정 폼 ---------------- */
+function editOnsen(btn) {
+  var item = btn.closest('.list-item');
+  document.getElementById('onsenIdx').value = item.dataset.idx;
+  document.getElementById('onsenName').value = item.dataset.name || '';
+  document.getElementById('onsenInfo').value = item.dataset.info || '';
+  document.getElementById('onsenMemo').value = item.dataset.memo || '';
+  document.getElementById('onsenStartTime').value = item.dataset.start || '';
+  document.getElementById('onsenEndTime').value = item.dataset.end || '';
+  document.getElementById('onsenSaleYn').checked = (item.dataset.sale === 'Y');
+  document.getElementById('onsenFormTitle').textContent = '온천 수정';
+  document.getElementById('onsenSubmitLabel').textContent = '수정 내용 저장';
+  document.getElementById('onsenCancelBtn').style.display = '';
+  document.getElementById('onsenForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetOnsenForm() {
+  var form = document.getElementById('onsenForm');
+  form.reset();
+  document.getElementById('onsenIdx').value = '0';
+  document.getElementById('onsenFormTitle').textContent = '새 온천 추가';
+  document.getElementById('onsenSubmitLabel').textContent = '온천 추가';
+  document.getElementById('onsenCancelBtn').style.display = 'none';
+}
+
+/* ---------------- 시설 등록/수정 폼 ---------------- */
+function editFacility(btn) {
+  var item = btn.closest('.list-item');
+  document.getElementById('facilityIdx').value = item.dataset.idx;
+  document.getElementById('facilityName').value = item.dataset.name || '';
+  document.getElementById('facilityInfo').value = item.dataset.info || '';
+  document.getElementById('facilityMemo').value = item.dataset.memo || '';
+  document.getElementById('facilityFormTitle').textContent = '시설 수정';
+  document.getElementById('facilitySubmitLabel').textContent = '수정 내용 저장';
+  document.getElementById('facilityCancelBtn').style.display = '';
+  document.getElementById('facilityForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetFacilityForm() {
+  var form = document.getElementById('facilityForm');
+  form.reset();
+  document.getElementById('facilityIdx').value = '0';
+  document.getElementById('facilityFormTitle').textContent = '새 시설 추가';
+  document.getElementById('facilitySubmitLabel').textContent = '시설 추가';
+  document.getElementById('facilityCancelBtn').style.display = 'none';
+}
+
+/* ---------------- 공지사항 등록/수정 폼 ---------------- */
+function editNotice(btn) {
+  var item = btn.closest('.list-item');
+  document.getElementById('noticeIdx').value = item.dataset.idx;
+  document.getElementById('noticeTitle').value = item.dataset.title || '';
+  document.getElementById('noticeContent').value = item.dataset.content || '';
+  document.getElementById('noticeFormTitle').textContent = '공지사항 수정';
+  document.getElementById('noticeSubmitLabel').textContent = '수정 내용 저장';
+  document.getElementById('noticeCancelBtn').style.display = '';
+  document.getElementById('noticeForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetNoticeForm() {
+  var form = document.getElementById('noticeForm');
+  form.reset();
+  document.getElementById('noticeIdx').value = '0';
+  document.getElementById('noticeFormTitle').textContent = '새 공지사항 추가';
+  document.getElementById('noticeSubmitLabel').textContent = '공지사항 등록';
+  document.getElementById('noticeCancelBtn').style.display = 'none';
+}
 </script>
 </body>
 </html>

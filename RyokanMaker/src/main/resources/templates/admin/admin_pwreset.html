@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>清流庵 관리자 - 비밀번호 변경</title>
 <link rel="stylesheet" th:href="@{/css/common.css}">
+<script type="text/javascript">
+
+</script>
 </head>
 <body>
 
@@ -29,12 +32,13 @@
     <div class="auth-title">비밀번호 변경</div>
     <div class="auth-sub">최초 로그인 시에는 발급받은 초기 비밀번호를<br>새 비밀번호로 반드시 변경해야 합니다.</div>
 
-    <div class="notice-banner" style="margin:0 0 24px;" id="pwnotice">
+    <div class="notice-banner" style="margin:0 0 24px;" id="pwnotice" th:if="${admin.pw_reset_yn=='N'}">
       초기 비밀번호 상태입니다. 비밀번호를 변경해야 관리자 화면을 계속 이용할 수 있습니다.
     </div>
 
-    <!-- 실제 연동 시 method="post" th:action="@{/Admin/password_reset}" 로 바꿔주세요 -->
-    <form class="auth-form" action="/Admin/password_reset" method="post">
+    <div class="notice-banner" style="margin:0 0 24px;" th:if="${error}" th:text="${error}"></div>
+
+    <form class="auth-form" name="pwreset" th:action="@{/Admin/password_reset}" method="post">
       <div class="field">
         <label>현재 비밀번호</label>
         <input type="password" name="currentPassword" placeholder="비밀번호를 입력하세요">
@@ -48,7 +52,7 @@
         <input type="password" name="newPasswordConfirm" placeholder="새 비밀번호를 한 번 더 입력하세요">
       </div>
 
-      <button type="submit" class="btn-gold">비밀번호 변경하기</button>
+      <input type="submit" class="btn-gold" value="비밀번호 변경하기">
     </form>
   </div>
 </div>

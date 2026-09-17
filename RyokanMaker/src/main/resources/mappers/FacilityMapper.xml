@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.FacilityMapper">
+
+	<!-- FACILITY_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
+	<insert id="insertFacility" parameterType="com.mnu.ryokanmaker.domain.FacilityDto">
+		INSERT INTO FACILITY (
+			ADMIN_IDX,
+			FACILITY_NAME,
+			FACILITY_INFO,
+			FACILITY_IMAGE,
+			FACILITY_MEMO
+		) VALUES (
+			#{adminIdx},
+			#{facilityName},
+			#{facilityInfo},
+			#{facilityImage},
+			#{facilityMemo}
+		)
+	</insert>
+
+	<select id="selectFacilitiesByAdmin" resultType="com.mnu.ryokanmaker.domain.FacilityDto">
+		SELECT *
+		FROM FACILITY
+		WHERE ADMIN_IDX = #{adminIdx}
+		ORDER BY FACILITY_IDX DESC
+	</select>
+
+	<!-- facilityImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
+	<update id="updateFacility" parameterType="com.mnu.ryokanmaker.domain.FacilityDto">
+		UPDATE FACILITY
+		<set>
+			FACILITY_NAME = #{facilityName},
+			FACILITY_INFO = #{facilityInfo},
+			FACILITY_MEMO = #{facilityMemo},
+			<if test="facilityImage != null">FACILITY_IMAGE = #{facilityImage},</if>
+		</set>
+		WHERE FACILITY_IDX = #{facilityIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
+	<delete id="deleteFacility">
+		DELETE FROM FACILITY
+		WHERE FACILITY_IDX = #{facilityIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</delete>
+
+</mapper>
