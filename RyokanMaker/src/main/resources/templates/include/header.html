@@ -29,7 +29,8 @@
       <a class="navlink" th:classappend="${activePage == 'signup'} ? 'active' : ''" th:href="@{/member/signup}">회원가입</a>
     </th:block>
     <th:block th:unless="${#session.getAttribute('loginMember') == null}">
-      <span class="navlink" th:text="${#session.getAttribute('loginMember').userNickname} + '님'"></span>
+      <a class="navlink" th:classappend="${activePage == 'mypage'} ? 'active' : ''" th:href="@{/member/mypage}"
+         th:text="${#session.getAttribute('loginMember').userNickname} + '님'"></a>
       <a class="navlink" th:href="@{/member/logout}">로그아웃</a>
     </th:block>
     <a class="btn-gold" style="padding:11px 28px; font-size:13px; text-decoration:none;" th:href="@{/reservation/plan}">숙박예약</a>

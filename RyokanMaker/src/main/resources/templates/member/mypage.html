@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>마이페이지 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+  <style>
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='mypage')}"></div>
+
+  <section class="page-title">
+    <div class="crumb">HOME &nbsp;/&nbsp; 마이페이지</div>
+    <h1>마이페이지</h1>
+    <div class="rule"></div>
+    <p class="desc">회원 정보를 확인하고 수정할 수 있습니다.</p>
+  </section>
+
+  <div th:if="${message}" class="form-card" style="padding-bottom:0;">
+    <div class="answer-block">
+      <div class="answer-body" th:text="${message}"></div>
+    </div>
+  </div>
+
+  <form class="form-card" th:action="@{/member/mypage}" method="post">
+
+    <div class="form-row">
+      <label class="field-label">이메일 (아이디)</label>
+      <input type="text" th:value="${member.userMail}" disabled>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">새 비밀번호 (변경할 때만 입력)</label>
+      <input type="password" name="newPassword" placeholder="변경하지 않으려면 비워두세요">
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">닉네임</label>
+      <input type="text" name="userNickname" th:value="${member.userNickname}" required>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">영문 이름 (여권 표기 기준)</label>
+      <div class="row-2">
+        <input type="text" name="userLastNameEn" th:value="${member.userLastNameEn}" placeholder="Last Name" required>
+        <input type="text" name="userFirstNameEn" th:value="${member.userFirstNameEn}" placeholder="First Name" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">일본어 이름 (선택)</label>
+      <div class="row-2">
+        <input type="text" name="userLastNameJp" th:value="${member.userLastNameJp}" placeholder="姓">
+        <input type="text" name="userFirstNameJp" th:value="${member.userFirstNameJp}" placeholder="名">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">국가</label>
+      <select name="userCountry" required>
+        <option value="">국가를 선택해주세요</option>
+        <option th:each="c : ${countries}" th:value="${c.countryName}" th:text="${c.countryName + ' (' + c.dialCode + ')'}"
+                th:selected="${c.countryName == member.userCountry}"></option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">연락처</label>
+      <input type="text" name="userTel" th:value="${member.userTel}" required>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">주소</label>
+      <input type="text" name="userAddress" th:value="${member.userAddress}" required>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-gold">저장</button>
+    </div>
+  </form>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+</body>
+</html>

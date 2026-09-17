@@ -9,4 +9,6 @@ public interface MemberMapper {
     MemberDto selectByUserMail(String userMail);
 
     int insert(MemberDto memberDto);
+
+    int update(MemberDto memberDto);
 }

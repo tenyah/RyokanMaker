@@ -76,4 +76,37 @@ public class MemberController {
         session.invalidate();
         return "redirect:/";
     }
+
+    @GetMapping("/member/mypage")
+    public String mypageForm(HttpSession session, Model model) {
+        MemberDto loginMember = (MemberDto) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/member/login";
+        }
+        model.addAttribute("member", memberService.findByUserMail(loginMember.getUserMail()));
+        model.addAttribute("countries", memberService.listCountries());
+        return "member/mypage";
+    }
+
+    @PostMapping("/member/mypage")
+    public String mypageUpdate(HttpSession session,
+                                MemberDto memberDto,
+                                @RequestParam(required = false) String newPassword,
+                                Model model) {
+        MemberDto loginMember = (MemberDto) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/member/login";
+        }
+        // 세션의 이메일을 그대로 쓰고, 폼에서 온 이메일은 무시 (본인 계정만 수정 가능하게)
+        memberDto.setUserMail(loginMember.getUserMail());
+
+        MemberDto updated = memberService.updateProfile(memberDto, newPassword);
+        updated.setUserPassword(null);
+        session.setAttribute("loginMember", updated);
+
+        model.addAttribute("member", updated);
+        model.addAttribute("countries", memberService.listCountries());
+        model.addAttribute("message", "정보가 수정되었습니다.");
+        return "member/mypage";
+    }
 }

@@ -26,4 +26,18 @@
                 #{userLastNameEn}, #{userFirstNameEn}, #{userLastNameJp}, #{userFirstNameJp})
     </insert>
 
+    <update id="update" parameterType="com.mnu.ryokanmaker.dto.MemberDto">
+        UPDATE MEMBER
+        SET USER_PASSWORD = #{userPassword},
+            USER_NICKNAME = #{userNickname},
+            USER_ADDRESS = #{userAddress},
+            USER_COUNTRY = #{userCountry},
+            USER_TEL = #{userTel},
+            USER_LAST_NAME_EN = #{userLastNameEn},
+            USER_FIRST_NAME_EN = #{userFirstNameEn},
+            USER_LAST_NAME_JP = #{userLastNameJp},
+            USER_FIRST_NAME_JP = #{userFirstNameJp}
+        WHERE USER_MAIL = #{userMail}
+    </update>
+
 </mapper>
