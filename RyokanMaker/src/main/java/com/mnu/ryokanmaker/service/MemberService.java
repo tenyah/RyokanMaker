@@ -48,4 +48,25 @@ public class MemberService {
         }
         return member;
     }
+
+    public MemberDto findByUserMail(String userMail) {
+        return memberMapper.selectByUserMail(userMail);
+    }
+
+    /**
+     * 마이페이지 정보 수정. newPassword가 비어있으면 기존 비밀번호를 그대로 유지.
+     * memberDto에는 userMail만 채워져 있어도 되고, 나머지는 이 메서드가 DB에서 채운 뒤 덮어씀.
+     */
+    public MemberDto updateProfile(MemberDto memberDto, String newPassword) {
+        String passwordToSave;
+        if (newPassword == null || newPassword.isBlank()) {
+            MemberDto current = memberMapper.selectByUserMail(memberDto.getUserMail());
+            passwordToSave = current.getUserPassword();
+        } else {
+            passwordToSave = PasswordUtil.sha256(newPassword);
+        }
+        memberDto.setUserPassword(passwordToSave);
+        memberMapper.update(memberDto);
+        return memberDto;
+    }
 }
