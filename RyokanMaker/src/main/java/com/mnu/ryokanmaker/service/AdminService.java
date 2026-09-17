@@ -20,9 +20,24 @@ public class AdminService {
 	@Autowired
 	private AdminMapper adminMapper;
 
+	/**
+	 * PW_RESET_YN에 따라 비밀번호 비교 방식을 다르게 처리한다.
+	 * 'N'(초기 비밀번호, 아직 변경 안 함) : DB에 평문으로 저장돼 있으므로 입력값을 그대로 비교.
+	 * 'Y'(비밀번호 변경 완료) : DB에 SHA-256 해시로 저장돼 있으므로 입력값을 해시해서 비교.
+	 * 아이디가 존재하지 않거나 비밀번호가 일치하지 않으면 null을 반환한다.
+	 */
 	public AdminDTO adminLogin(AdminDTO adminDTO) {
-		// adminDTO.setAdmin_password(UserSHA256.getSHA256(adminDTO.getAdmin_password()));
-		return adminMapper.adminLogin(adminDTO);
+		AdminDTO found = adminMapper.findByAdminId(adminDTO.getAdmin_id());
+		if (found == null) {
+			return null;
+		}
+
+		String inputPassword = adminDTO.getAdmin_password();
+		boolean matches = "N".equals(found.getPw_reset_yn())
+				? found.getAdmin_password().equals(inputPassword)
+				: found.getAdmin_password().equals(UserSHA256.getSHA256(inputPassword));
+
+		return matches ? found : null;
 	}
 
 	/**
@@ -33,11 +48,11 @@ public class AdminService {
 	public void updateRyokanInfo(AdminDTO adminDto, MultipartFile logoFile, List<MultipartFile> ryokanImageFiles) throws IOException {
 
 		if (logoFile != null && !logoFile.isEmpty()) {
-			String logoJson = ImageJsonUtil.toJson(List.of(logoFile), 1);
+			String logoJson = ImageJsonUtil.toJson(List.of(logoFile), 1, "logo");
 			adminDto.setRyokan_logo(logoJson);
 		}
 
-		String imagesJson = ImageJsonUtil.toJson(ryokanImageFiles, MAX_MAIN_IMAGES);
+		String imagesJson = ImageJsonUtil.toJson(ryokanImageFiles, MAX_MAIN_IMAGES, "ryokan");
 		if (imagesJson != null) {
 			adminDto.setRyokan_image(imagesJson);
 		}

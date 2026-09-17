@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.PlanMapper">
+
+	<!-- PLAN_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외. PLAN_SALE_YN은 화면 입력 항목이 아니라
+	     컬럼 목록에서 빼고 DB 기본값('Y')에 맡긴다. -->
+	<insert id="insertPlan" parameterType="com.mnu.ryokanmaker.domain.PlanDto">
+		INSERT INTO PLAN (
+			ADMIN_IDX,
+			PLAN_NAME,
+			PLAN_IMAGE,
+			PLAN_INCLUDES_MEAL,
+			PLAN_INCLUDES_ONSEN,
+			PLAN_INFO,
+			PLAN_PRICE
+		) VALUES (
+			#{adminIdx},
+			#{planName},
+			#{planImage},
+			#{planIncludesMeal},
+			#{planIncludesOnsen},
+			#{planInfo},
+			#{planPrice}
+		)
+	</insert>
+
+	<select id="selectPlansByAdmin" resultType="com.mnu.ryokanmaker.domain.PlanDto">
+		SELECT *
+		FROM PLAN
+		WHERE ADMIN_IDX = #{adminIdx}
+		ORDER BY PLAN_IDX DESC
+	</select>
+
+	<!-- planImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
+	<update id="updatePlan" parameterType="com.mnu.ryokanmaker.domain.PlanDto">
+		UPDATE PLAN
+		<set>
+			PLAN_NAME = #{planName},
+			PLAN_INCLUDES_MEAL = #{planIncludesMeal},
+			PLAN_INCLUDES_ONSEN = #{planIncludesOnsen},
+			PLAN_INFO = #{planInfo},
+			PLAN_PRICE = #{planPrice},
+			<if test="planImage != null">PLAN_IMAGE = #{planImage},</if>
+		</set>
+		WHERE PLAN_IDX = #{planIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
+	<delete id="deletePlan">
+		DELETE FROM PLAN
+		WHERE PLAN_IDX = #{planIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</delete>
+
+</mapper>

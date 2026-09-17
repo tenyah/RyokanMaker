@@ -29,7 +29,7 @@ public class FacilityService {
 	 */
 	public void saveFacility(FacilityDto facilityDto, List<MultipartFile> facilityImageFiles) throws IOException {
 
-		String imageJson = ImageJsonUtil.toJson(facilityImageFiles, MAX_IMAGES);
+		String imageJson = ImageJsonUtil.toJson(facilityImageFiles, MAX_IMAGES, "facility");
 		if (imageJson != null) {
 			facilityDto.setFacilityImage(imageJson);
 		}

@@ -2,7 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.RoomMapper">
 
-	<!-- ROOM_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
+	<!-- ROOM_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외. ROOM_SALE_YN은 화면 입력 항목이 아니라
+	     컬럼 목록에서 빼고 DB 기본값('Y')에 맡긴다. -->
 	<insert id="insertRoom" parameterType="com.mnu.ryokanmaker.domain.RoomDto">
 		INSERT INTO ROOM (
 			ADMIN_IDX,
@@ -12,7 +13,6 @@
 			ROOM_PRICE,
 			ROOM_PEOPLE,
 			ROOM_IMAGE,
-			ROOM_SALE_YN,
 			ROOM_MEMO
 		) VALUES (
 			#{adminIdx},
@@ -22,7 +22,6 @@
 			#{roomPrice},
 			#{roomPeople},
 			#{roomImage},
-			#{roomSaleYn},
 			#{roomMemo}
 		)
 	</insert>
@@ -47,7 +46,6 @@
 			ROOM_INFO = #{roomInfo},
 			ROOM_PRICE = #{roomPrice},
 			ROOM_PEOPLE = #{roomPeople},
-			ROOM_SALE_YN = #{roomSaleYn},
 			ROOM_MEMO = #{roomMemo},
 			<if test="roomImage != null">ROOM_IMAGE = #{roomImage},</if>
 		</set>

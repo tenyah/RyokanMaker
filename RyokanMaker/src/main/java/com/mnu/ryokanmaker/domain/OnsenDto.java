@@ -2,6 +2,8 @@ package com.mnu.ryokanmaker.domain;
 
 import lombok.Data;
 
+import com.mnu.ryokanmaker.util.ImageJsonUtil;
+
 /**
  * ONSEN 테이블 매핑 DTO (온천 마스터 정보)
  * PK : onsenIdx (IDENTITY, 자동 채번) / FK : adminIdx -> ADMIN.ADMIN_IDX
@@ -14,12 +16,17 @@ public class OnsenDto {
 
     private Integer onsenIdx;
     private String onsenName;
-    private String onsenImage;   // ONSEN_IMAGE (CLOB) - 이미지 JSON 배열(base64) 저장
+    private String onsenImage;   // ONSEN_IMAGE (CLOB) - 이미지 경로 JSON 배열 문자열 저장
     private String onsenInfo;
     private Integer adminIdx;
     private String onsenSaleYn;  // ONSEN_SALE_YN, 기본값 'Y'
     private String onsenMemo;
     private String onsenHour;    // 예: "15:00–21:00"
+
+    /** 목록 화면 썸네일용. onsenImage(경로 JSON 배열)에서 첫 번째 이미지 경로만 뽑는다. */
+    public String getThumbnailUrl() {
+        return ImageJsonUtil.firstPath(onsenImage);
+    }
 
     /** ONSEN_HOUR를 "시작–종료"로 합쳐서 세팅 (둘 다 비어있으면 null) */
     public void setOnsenHourFromRange(String startTime, String endTime) {

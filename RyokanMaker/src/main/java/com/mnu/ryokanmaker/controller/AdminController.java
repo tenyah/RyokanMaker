@@ -3,8 +3,6 @@ package com.mnu.ryokanmaker.controller;
 import java.io.IOException;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,14 +14,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.mnu.ryokanmaker.domain.AdminDTO;
 import com.mnu.ryokanmaker.domain.FacilityDto;
+import com.mnu.ryokanmaker.domain.InquiryDto;
 import com.mnu.ryokanmaker.domain.NoticeDto;
 import com.mnu.ryokanmaker.domain.OnsenDto;
+import com.mnu.ryokanmaker.domain.PlanDto;
 import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
 import com.mnu.ryokanmaker.domain.RoomDto;
 import com.mnu.ryokanmaker.service.AdminService;
 import com.mnu.ryokanmaker.service.FacilityService;
+import com.mnu.ryokanmaker.service.InquiryService;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.OnsenService;
+import com.mnu.ryokanmaker.service.PlanService;
 import com.mnu.ryokanmaker.service.RestaurantCourseService;
 import com.mnu.ryokanmaker.service.RoomService;
 
@@ -34,10 +36,7 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 @RequestMapping("Admin")
 public class AdminController {
-	
-	private static final Logger log =
-			LoggerFactory.getLogger(AdminController.class);
-	
+
 	@Autowired
 	private AdminService adminService;
 
@@ -56,6 +55,12 @@ public class AdminController {
 	@Autowired
 	private NoticeService noticeService;
 
+	@Autowired
+	private PlanService planService;
+
+	@Autowired
+	private InquiryService inquiryService;
+
 	@GetMapping("admin_info_register")
 	public String adminInfoRegister(HttpSession session, Model model) {
 		AdminDTO loginAdmin = (AdminDTO) session.getAttribute("admin");
@@ -65,6 +70,7 @@ public class AdminController {
 		model.addAttribute("roomList", roomService.getRoomList(loginAdmin.getAdmin_idx()));
 		model.addAttribute("courseList", restaurantCourseService.getCourseList(loginAdmin.getAdmin_idx()));
 		model.addAttribute("onsenList", onsenService.getOnsenList(loginAdmin.getAdmin_idx()));
+		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdmin_idx()));
 		model.addAttribute("facilityList", facilityService.getFacilityList(loginAdmin.getAdmin_idx()));
 		model.addAttribute("noticeList", noticeService.getNoticeList(loginAdmin.getAdmin_idx()));
 		return "Admin/admin_info_register";
@@ -78,8 +84,50 @@ public class AdminController {
 		return"Admin/room_status";
 	}
 	@GetMapping("admin_inquiry")
-	public String adminInquiry() {
-		return"Admin/admin_inquiry";
+	public String adminInquiry(@RequestParam(value = "idx", required = false) Integer idx,
+			@RequestParam(value = "status", required = false) String status,
+			HttpSession session, Model model) {
+		AdminDTO loginAdmin = (AdminDTO) session.getAttribute("admin");
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
+		// Thymeleaf가 @{...(status=${nullValue})}를 렌더링할 때 빈 문자열("")로 넘어오는 경우가 있어 정규화
+		if (status != null && status.isEmpty()) {
+			status = null;
+		}
+
+		Integer adminIdx = loginAdmin.getAdmin_idx();
+		List<InquiryDto> inquiryList = inquiryService.getInquiryList(adminIdx, status);
+		model.addAttribute("inquiryList", inquiryList);
+		model.addAttribute("statusFilter", status);
+		model.addAttribute("totalCount", inquiryService.countTotal(adminIdx));
+		model.addAttribute("pendingCount", inquiryService.countByStatus(adminIdx, "답변대기"));
+		model.addAttribute("answeredCount", inquiryService.countByStatus(adminIdx, "답변완료"));
+
+		Integer selectedIdx = idx != null ? idx : (inquiryList.isEmpty() ? null : inquiryList.get(0).getInquiryIdx());
+		if (selectedIdx != null) {
+			model.addAttribute("selectedInquiry", inquiryService.getInquiry(selectedIdx, adminIdx));
+		}
+
+		return "Admin/admin_inquiry";
+	}
+
+	/**
+	 * 문의 답변 등록. 답변 내용을 저장하면서 상태를 '답변완료'로 갱신한다.
+	 */
+	@PostMapping("inquiry_answer")
+	public String inquiryAnswer(@RequestParam("inquiryIdx") Integer inquiryIdx,
+			@RequestParam("inquiryAnswerContent") String inquiryAnswerContent,
+			HttpSession session) {
+		AdminDTO loginAdmin = (AdminDTO) session.getAttribute("admin");
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
+		inquiryService.answerInquiry(inquiryIdx, loginAdmin.getAdmin_idx(), inquiryAnswerContent);
+
+		return "redirect:/Admin/admin_inquiry?idx=" + inquiryIdx;
 	}
 	@GetMapping("admin_reservation")
 	public String adminReservation() {
@@ -296,6 +344,36 @@ public class AdminController {
 		}
 		onsenService.deleteOnsen(onsenIdx, loginAdmin.getAdmin_idx());
 		return "redirect:/Admin/admin_info_register#section-onsen";
+	}
+
+	/**
+	 * 플랜 등록/수정 (upsert) : planDto.planIdx가 없으면 신규 등록, 있으면 수정
+	 * 사용자 예약 화면에 실제 노출/판매되는 가격 단위. 객실 가격은 플랜 기준가 대비 추가요금 계산에만 쓰인다.
+	 */
+	@PostMapping("plan_save")
+	public String planSave(PlanDto planDto,
+			@RequestParam(value = "planImageFiles", required = false) List<MultipartFile> planImageFiles,
+			HttpSession session) throws IOException {
+
+		AdminDTO loginAdmin = (AdminDTO) session.getAttribute("admin");
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
+		planDto.setAdminIdx(loginAdmin.getAdmin_idx());
+		planService.savePlan(planDto, planImageFiles);
+
+		return "redirect:/Admin/admin_info_register#section-plan";
+	}
+
+	@PostMapping("plan_delete")
+	public String planDelete(@RequestParam("planIdx") Integer planIdx, HttpSession session) {
+		AdminDTO loginAdmin = (AdminDTO) session.getAttribute("admin");
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		planService.deletePlan(planIdx, loginAdmin.getAdmin_idx());
+		return "redirect:/Admin/admin_info_register#section-plan";
 	}
 
 	/**

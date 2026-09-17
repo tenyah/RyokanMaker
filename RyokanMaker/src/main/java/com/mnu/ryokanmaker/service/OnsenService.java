@@ -25,9 +25,9 @@ public class OnsenService {
 
 	/**
 	 * onsenIdx가 없으면(0 또는 null) 신규 등록, 있으면 수정으로 처리 (upsert)
-	 * startTime/endTime : 화면의 이용 시작/종료 시간(input type=time) -> ONSEN_HOUR 문자열로 합쳐서 저장.
+	 * startTime/endTime : 화면의 이용 시작/종료 시간(1시간 단위 드롭다운) -> ONSEN_HOUR 문자열로 합쳐서 저장.
 	 *   둘 다 비어있으면 기존 값 유지(수정 시) / null로 저장(신규 등록 시).
-	 * onsenImageFiles : 최대 10장, base64로 변환해서 JSON 배열 문자열로 ONSEN_IMAGE(CLOB)에 저장.
+	 * onsenImageFiles : 최대 10장, 파일로 저장 후 경로 배열을 JSON 문자열로 ONSEN_IMAGE(CLOB)에 저장.
 	 * 수정 시 새 이미지를 올리지 않으면 기존 이미지를 그대로 유지함.
 	 */
 	public void saveOnsen(OnsenDto onsenDto, String startTime, String endTime, List<MultipartFile> onsenImageFiles) throws IOException {
@@ -46,7 +46,7 @@ public class OnsenService {
 			onsenDto.setOnsenHourFromRange(startTime, endTime);
 		}
 
-		String imageJson = ImageJsonUtil.toJson(onsenImageFiles, MAX_IMAGES);
+		String imageJson = ImageJsonUtil.toJson(onsenImageFiles, MAX_IMAGES, "onsen");
 		if (imageJson != null) {
 			onsenDto.setOnsenImage(imageJson);
 		}

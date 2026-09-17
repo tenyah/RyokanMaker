@@ -22,11 +22,13 @@
 		<result column="RYOKAN_IMAGE" property="ryokan_image"/>
 	</resultMap>
 
-	<select id="adminLogin" parameterType="com.mnu.ryokanmaker.domain.AdminDTO" resultMap="adminResultMap">
+	<!-- 아이디만으로 계정을 조회 (비밀번호 조건 없음). PW_RESET_YN을 먼저 확인해서
+	     초기 비밀번호(평문)인지 변경된 비밀번호(해시)인지 판단한 뒤, 그에 맞는 방식으로
+	     AdminService에서 비밀번호를 직접 비교한다. -->
+	<select id="findByAdminId" resultMap="adminResultMap">
 		SELECT *
 		FROM ADMIN
 		WHERE ADMIN_ID = #{admin_id}
-		  AND ADMIN_PASSWORD = #{admin_password}
 	</select>
 
 	<!--

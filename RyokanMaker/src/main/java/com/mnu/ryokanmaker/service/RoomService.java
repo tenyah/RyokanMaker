@@ -25,16 +25,12 @@ public class RoomService {
 
 	/**
 	 * roomIdx가 없으면(0 또는 null) 신규 등록, 있으면 수정으로 처리 (upsert)
-	 * roomImageFiles : 최대 10장, base64로 변환해서 JSON 배열 문자열로 ROOM_IMAGE(CLOB)에 저장.
+	 * roomImageFiles : 최대 10장, 파일로 저장 후 경로 배열을 JSON 문자열로 ROOM_IMAGE(CLOB)에 저장.
 	 * 수정 시 새 이미지를 올리지 않으면 기존 이미지를 그대로 유지함.
 	 */
 	public void saveRoom(RoomDto roomDto, List<MultipartFile> roomImageFiles) throws IOException {
 
-		if (roomDto.getRoomSaleYn() == null || roomDto.getRoomSaleYn().isEmpty()) {
-			roomDto.setRoomSaleYn("N");
-		}
-
-		String imageJson = ImageJsonUtil.toJson(roomImageFiles, MAX_IMAGES);
+		String imageJson = ImageJsonUtil.toJson(roomImageFiles, MAX_IMAGES, "room");
 		if (imageJson != null) {
 			roomDto.setRoomImage(imageJson);
 		}
