@@ -47,16 +47,20 @@
     <div class="form-row">
       <label class="field-label">영문 이름 (여권 표기 기준)</label>
       <div class="row-2">
-        <input type="text" name="userLastNameEn" th:value="${member?.userLastNameEn}" placeholder="Last Name" required>
-        <input type="text" name="userFirstNameEn" th:value="${member?.userFirstNameEn}" placeholder="First Name" required>
+        <input type="text" name="userLastNameEn" th:value="${member?.userLastNameEn}" placeholder="Last Name"
+               pattern="[A-Za-z][A-Za-z '\-]*" title="영문 알파벳만 입력해주세요." required>
+        <input type="text" name="userFirstNameEn" th:value="${member?.userFirstNameEn}" placeholder="First Name"
+               pattern="[A-Za-z][A-Za-z '\-]*" title="영문 알파벳만 입력해주세요." required>
       </div>
     </div>
 
     <div class="form-row">
-      <label class="field-label">일본어 이름 (선택)</label>
+      <label class="field-label">일본어 이름 (선택, 히라가나/가타카나만 - 한자 불가)</label>
       <div class="row-2">
-        <input type="text" name="userLastNameJp" th:value="${member?.userLastNameJp}" placeholder="姓">
-        <input type="text" name="userFirstNameJp" th:value="${member?.userFirstNameJp}" placeholder="名">
+        <input type="text" name="userLastNameJp" th:value="${member?.userLastNameJp}" placeholder="せい"
+               pattern="[぀-ゟ゠-ヿ]*" title="히라가나/가타카나로만 입력해주세요 (한자 불가).">
+        <input type="text" name="userFirstNameJp" th:value="${member?.userFirstNameJp}" placeholder="めい"
+               pattern="[぀-ゟ゠-ヿ]*" title="히라가나/가타카나로만 입력해주세요 (한자 불가).">
       </div>
     </div>
 

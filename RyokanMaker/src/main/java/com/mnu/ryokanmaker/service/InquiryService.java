@@ -25,4 +25,14 @@ public class InquiryService {
     public int write(InquiryDto inquiryDto) {
         return inquiryMapper.insert(inquiryDto);
     }
+
+    /** 문의 삭제 - 본인 글이 맞는지 확인 후 삭제. 본인 글이 아니거나 없으면 false. */
+    public boolean delete(int inquiryIdx, String userMail) {
+        InquiryDto inquiry = inquiryMapper.selectByIdx(inquiryIdx);
+        if (inquiry == null || !inquiry.getUserMail().equals(userMail)) {
+            return false;
+        }
+        inquiryMapper.deleteByIdx(inquiryIdx);
+        return true;
+    }
 }

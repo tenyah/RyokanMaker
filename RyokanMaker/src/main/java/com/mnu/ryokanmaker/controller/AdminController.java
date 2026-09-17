@@ -50,8 +50,11 @@ public class AdminController {
 		return"Admin/room_status";
 	}
 	@GetMapping("admin_inquiry")
-	public String adminInquiry() {
-		return"Admin/admin_inquiry";
+	public String adminInquiry(HttpSession session) {
+		if (currentAdmin(session) == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		return "Admin/admin_inquiry";
 	}
 	@GetMapping("admin_reservation")
 	public String adminReservation() {

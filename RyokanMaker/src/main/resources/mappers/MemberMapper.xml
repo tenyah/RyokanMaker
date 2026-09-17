@@ -40,4 +40,8 @@
         WHERE USER_MAIL = #{userMail}
     </update>
 
+    <delete id="deleteByUserMail" parameterType="string">
+        DELETE FROM MEMBER WHERE USER_MAIL = #{userMail}
+    </delete>
+
 </mapper>

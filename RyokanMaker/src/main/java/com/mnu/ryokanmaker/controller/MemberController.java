@@ -2,6 +2,7 @@ package com.mnu.ryokanmaker.controller;
 
 import com.mnu.ryokanmaker.dto.MemberDto;
 import com.mnu.ryokanmaker.service.MemberService;
+import com.mnu.ryokanmaker.util.NameValidationUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -29,11 +30,18 @@ public class MemberController {
                           @RequestParam String userPostalCode,
                           @RequestParam String userAddress1,
                           @RequestParam String userAddress2,
-                          HttpSession session,
                           Model model) {
 
         if (memberService.existsByUserMail(memberDto.getUserMail())) {
             model.addAttribute("error", "이미 가입된 이메일입니다.");
+            model.addAttribute("member", memberDto);
+            model.addAttribute("countries", memberService.listCountries());
+            return "member/signup";
+        }
+
+        String nameError = validateNames(memberDto);
+        if (nameError != null) {
+            model.addAttribute("error", nameError);
             model.addAttribute("member", memberDto);
             model.addAttribute("countries", memberService.listCountries());
             return "member/signup";
@@ -45,10 +53,8 @@ public class MemberController {
 
         memberService.signup(memberDto);
 
-        // 가입 직후 바로 로그인 상태로 만들어서, 이어서 문의 작성 등 로그인 필요한 기능을 바로 쓸 수 있게 함
-        memberDto.setUserPassword(null);
-        session.setAttribute("loginMember", memberDto);
-        return "redirect:/";
+        // 가입만 처리하고 자동 로그인은 시키지 않음 - 회원이 직접 로그인하도록 안내
+        return "redirect:/member/login?signup=success";
     }
 
     @GetMapping("/member/login")
@@ -77,6 +83,18 @@ public class MemberController {
         return "redirect:/";
     }
 
+    /** 회원탈퇴 - 내 문의/예약을 전부 지운 뒤 회원 정보를 삭제하고 로그아웃 처리 */
+    @PostMapping("/member/withdraw")
+    public String withdraw(HttpSession session) {
+        MemberDto loginMember = (MemberDto) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/member/login";
+        }
+        memberService.withdraw(loginMember.getUserMail());
+        session.invalidate();
+        return "redirect:/?withdraw=success";
+    }
+
     @GetMapping("/member/mypage")
     public String mypageForm(HttpSession session, Model model) {
         MemberDto loginMember = (MemberDto) session.getAttribute("loginMember");
@@ -85,6 +103,7 @@ public class MemberController {
         }
         model.addAttribute("member", memberService.findByUserMail(loginMember.getUserMail()));
         model.addAttribute("countries", memberService.listCountries());
+        model.addAttribute("reservations", memberService.getReservationHistory(loginMember.getUserMail()));
         return "member/mypage";
     }
 
@@ -100,13 +119,36 @@ public class MemberController {
         // 세션의 이메일을 그대로 쓰고, 폼에서 온 이메일은 무시 (본인 계정만 수정 가능하게)
         memberDto.setUserMail(loginMember.getUserMail());
 
+        String nameError = validateNames(memberDto);
+        if (nameError != null) {
+            model.addAttribute("member", memberDto);
+            model.addAttribute("countries", memberService.listCountries());
+            model.addAttribute("reservations", memberService.getReservationHistory(loginMember.getUserMail()));
+            model.addAttribute("error", nameError);
+            return "member/mypage";
+        }
+
         MemberDto updated = memberService.updateProfile(memberDto, newPassword);
         updated.setUserPassword(null);
         session.setAttribute("loginMember", updated);
 
         model.addAttribute("member", updated);
         model.addAttribute("countries", memberService.listCountries());
+        model.addAttribute("reservations", memberService.getReservationHistory(updated.getUserMail()));
         model.addAttribute("message", "정보가 수정되었습니다.");
         return "member/mypage";
+    }
+
+    /** 영문 이름은 알파벳만, 일본어 이름은 히라가나/가타카나만(한자 불가) 허용. 문제 없으면 null 반환. */
+    private String validateNames(MemberDto memberDto) {
+        if (!NameValidationUtil.isValidEnglishName(memberDto.getUserLastNameEn())
+                || !NameValidationUtil.isValidEnglishName(memberDto.getUserFirstNameEn())) {
+            return "영문 이름은 알파벳으로만 입력해주세요.";
+        }
+        if (!NameValidationUtil.isValidJapaneseNameOrBlank(memberDto.getUserLastNameJp())
+                || !NameValidationUtil.isValidJapaneseNameOrBlank(memberDto.getUserFirstNameJp())) {
+            return "일본어 이름은 히라가나/가타카나로만 입력해주세요 (한자 불가).";
+        }
+        return null;
     }
 }
