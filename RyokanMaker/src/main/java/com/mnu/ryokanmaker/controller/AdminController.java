@@ -1,13 +1,16 @@
 package com.mnu.ryokanmaker.controller;
 
+import com.mnu.ryokanmaker.dto.AdminDto;
 import com.mnu.ryokanmaker.dto.AdminReservationDetailDto;
 import com.mnu.ryokanmaker.dto.AdminReservationListItemDto;
 import com.mnu.ryokanmaker.service.AdminReservationService;
+import com.mnu.ryokanmaker.service.AdminService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -22,13 +25,16 @@ public class AdminController {
 	private static final Logger log =
 			LoggerFactory.getLogger(AdminController.class);
 
-	// TODO: 관리자 로그인/세션이 아직 없어 임시로 고정값 사용. 로그인 구현되면 세션의 AdminIdx로 교체.
-	private static final Integer TEMP_ADMIN_IDX = 1;
-
 	private final AdminReservationService adminReservationService;
+	private final AdminService adminService;
 
-	public AdminController(AdminReservationService adminReservationService) {
+	public AdminController(AdminReservationService adminReservationService, AdminService adminService) {
 		this.adminReservationService = adminReservationService;
+		this.adminService = adminService;
+	}
+
+	private AdminDto currentAdmin(HttpSession session) {
+		return (AdminDto) session.getAttribute("loginAdmin");
 	}
 
 	@GetMapping("admin_info_register")
@@ -54,9 +60,14 @@ public class AdminController {
 
 	/** 예약 현황 화면: 왼쪽 예약 목록 + 첫 번째 예약의 상세 패널을 함께 조회. */
 	@GetMapping("reservation_status")
-	public String reservationStatus(Model model) {
+	public String reservationStatus(HttpSession session, Model model) {
+		AdminDto admin = currentAdmin(session);
+		if (admin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
 		List<AdminReservationListItemDto> reservationList =
-				adminReservationService.getReservationList(TEMP_ADMIN_IDX);
+				adminReservationService.getReservationList(admin.getAdminIdx());
 		model.addAttribute("reservationList", reservationList);
 
 		if (!reservationList.isEmpty()) {
@@ -67,18 +78,64 @@ public class AdminController {
 
 		return "Admin/admin_reservation";
 	}
+
 	@GetMapping("admin_login")
+	public String adminLoginForm() {
+		return "Admin/admin_login";
+	}
+
+	@PostMapping("login")
 	public String adminLogin(@RequestParam String adminId,
-            @RequestParam String adminPassword,
-            HttpSession session, Model model){
-		return"Admin/admin_login";
+			@RequestParam String adminPassword,
+			HttpSession session, Model model) {
+		AdminDto admin = adminService.authenticate(adminId, adminPassword);
+		if (admin == null) {
+			model.addAttribute("error", "아이디 또는 비밀번호가 올바르지 않습니다.");
+			return "Admin/admin_login";
+		}
+		admin.setAdminPassword(null);
+		session.setAttribute("loginAdmin", admin);
+
+		if ("Y".equals(admin.getPwResetYn())) {
+			return "redirect:/Admin/admin_pwreset";
+		}
+		return "redirect:/Admin/reservation_status";
 	}
+
 	@GetMapping("admin_pwreset")
-	public String adminPwreset(){
-		return"Admin/admin_pwreset";
+	public String adminPwresetForm(HttpSession session) {
+		if (currentAdmin(session) == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		return "Admin/admin_pwreset";
 	}
+
+	@PostMapping("password_reset")
+	public String adminPasswordReset(@RequestParam String currentPassword,
+			@RequestParam String newPassword,
+			@RequestParam String newPasswordConfirm,
+			HttpSession session, Model model) {
+		AdminDto admin = currentAdmin(session);
+		if (admin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		if (!newPassword.equals(newPasswordConfirm)) {
+			model.addAttribute("error", "새 비밀번호가 서로 일치하지 않습니다.");
+			return "Admin/admin_pwreset";
+		}
+		boolean changed = adminService.changePassword(admin.getAdminIdx(), currentPassword, newPassword);
+		if (!changed) {
+			model.addAttribute("error", "현재 비밀번호가 올바르지 않습니다.");
+			return "Admin/admin_pwreset";
+		}
+		admin.setPwResetYn("N");
+		session.setAttribute("loginAdmin", admin);
+		return "redirect:/Admin/reservation_status";
+	}
+
 	@GetMapping("admin_logout")
-	public String adminLogout() {
-		return"Admin/admin_login";
+	public String adminLogout(HttpSession session) {
+		session.invalidate();
+		return "redirect:/Admin/admin_login";
 	}
 }
