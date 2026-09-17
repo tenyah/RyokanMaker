@@ -53,12 +53,9 @@ public class ReservationController {
                 .findFirst()
                 .orElseGet(() -> plans.get(0));
 
-        List<LocalDate> calendarDates = checkIn.datesUntil(checkIn.plusDays(7)).toList();
-
         model.addAttribute("selectedPlan", selectedPlan);
         model.addAttribute("searchCondition", new SearchConditionDto(checkIn, checkOut, adultCount, childCount, roomCount));
-        model.addAttribute("calendarDates", calendarDates);
-        model.addAttribute("rooms", reservationService.getRoomAvailability(calendarDates));
+        model.addAttribute("rooms", reservationService.getRoomAvailability(checkIn, checkOut, adultCount, childCount));
         model.addAttribute("courses", reservationService.getCourses());
         model.addAttribute("baths", reservationService.getBathAvailability());
 

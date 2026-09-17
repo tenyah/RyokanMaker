@@ -2,10 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mappers.RoomMapper">
 <select id="findAll" resultType="com.mnu.ryokanmaker.domain.RoomDTO">
-    SELECT "RoomIdx", "AdminIdx", "RoomName", "RoomLevel", "RoomInfo",
-           "RoomPrice", "RoomPeople", "RoomImage", "RoomMemo", "RoomSaleYN"
+    SELECT room_idx AS roomIdx, admin_idx AS adminIdx, room_name AS roomName, room_level AS roomLevel,
+           room_info AS roomInfo, room_price AS roomPrice, room_people AS roomPeople,
+           room_image AS roomImage, room_memo AS roomMemo, room_sale_yn AS roomSaleYN
     FROM "ROOM"
-    WHERE "RoomSaleYN" = 'Y'
-    ORDER BY "RoomIdx"
+    WHERE room_sale_yn = 'Y'
+    ORDER BY room_idx
 </select>
+
+<select id="findById" resultType="com.mnu.ryokanmaker.domain.RoomDTO">
+    SELECT room_idx AS roomIdx, admin_idx AS adminIdx, room_name AS roomName, room_level AS roomLevel,
+           room_info AS roomInfo, room_price AS roomPrice, room_people AS roomPeople,
+           room_image AS roomImage, room_memo AS roomMemo, room_sale_yn AS roomSaleYN
+    FROM "ROOM"
+    WHERE room_idx = #{roomIdx}
+</select>
+
+<select id="findMinPriceByLevel" resultType="java.lang.Long">
+    SELECT MIN(room_price)
+    FROM "ROOM"
+    WHERE room_level = #{roomLevel}
+      AND room_sale_yn = 'Y'
+</select>
+
+
 </mapper>

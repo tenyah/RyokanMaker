@@ -4,13 +4,22 @@
 
 
 <select id="findAll" resultType="com.mnu.ryokanmaker.domain.PlanDTO">
-    SELECT "PlanIdx", "AdminIdx", "PlanName", "PlanImage", "PlanIncludesMeal",
-           "PlanIncludesOnsen", "PlanInfo", "PlanPrice", "PlanSaleYN"
+    SELECT plan_idx AS planIdx, admin_idx AS adminIdx, plan_name AS planName, plan_image AS planImage,
+           plan_includes_meal AS planIncludesMeal, plan_includes_onsen AS planIncludesOnsen,
+           plan_info AS planInfo, plan_price AS planPrice, plan_sale_yn AS planSaleYN
     FROM "PLAN"
-    WHERE "PlanSaleYN" = 'Y'
-    ORDER BY "PlanIdx"
+    WHERE plan_sale_yn = 'Y'
+    ORDER BY plan_idx
 </select>
 
+<!-- PlanMapper.xml에 추가 -->
+<select id="findById" resultType="com.mnu.ryokanmaker.domain.PlanDTO">
+    SELECT plan_idx AS planIdx, admin_idx AS adminIdx, plan_name AS planName, plan_image AS planImage,
+           plan_includes_meal AS planIncludesMeal, plan_includes_onsen AS planIncludesOnsen,
+           plan_info AS planInfo, plan_price AS planPrice, plan_sale_yn AS planSaleYN
+    FROM "PLAN"
+    WHERE plan_idx = #{planIdx}
+</select>
 
 </mapper>
 

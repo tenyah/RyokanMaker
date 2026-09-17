@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mappers.OnsenMapper">
+<select id="findAll" resultType="com.mnu.ryokanmaker.domain.OnsenDTO">
+    SELECT onsen_idx AS onsenIdx, onsen_name AS onsenName, onsen_image AS onsenImage,
+           onsen_info AS onsenInfo, admin_idx AS adminIdx, onsen_sale_yn AS onsenSaleYN,
+           onsen_memo AS onsenMemo, onsen_hour AS onsenHour
+    FROM "ONSEN"
+    WHERE onsen_sale_yn = 'Y'
+    ORDER BY onsen_idx
+</select>
+</mapper>
