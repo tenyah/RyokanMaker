@@ -20,10 +20,18 @@
         SELECT * FROM ADMIN WHERE ADMIN_ID = #{adminId}
     </select>
 
+    <select id="selectByAdminIdx" parameterType="int" resultMap="adminResultMap">
+        SELECT * FROM ADMIN WHERE ADMIN_IDX = #{adminIdx}
+    </select>
+
     <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminDto"
             useGeneratedKeys="true" keyProperty="adminIdx" keyColumn="ADMIN_IDX">
-        INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME)
-        VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName})
+        INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME, PW_RESET_YN)
+        VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName}, #{pwResetYn})
     </insert>
+
+    <update id="updatePassword">
+        UPDATE ADMIN SET ADMIN_PASSWORD = #{adminPassword}, PW_RESET_YN = 'N' WHERE ADMIN_IDX = #{adminIdx}
+    </update>
 
 </mapper>

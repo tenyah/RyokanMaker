@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +15,9 @@
     </symbol>
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="m5 12.5 5 5L19 7"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.3" r="0.9" fill="currentColor" stroke="none"/>
     </symbol>
   </defs>
 </svg>
@@ -33,8 +36,12 @@
       초기 비밀번호 상태입니다. 비밀번호를 변경해야 관리자 화면을 계속 이용할 수 있습니다.
     </div>
 
-    <!-- 실제 연동 시 method="post" th:action="@{/Admin/password_reset}" 로 바꿔주세요 -->
-    <form class="auth-form" action="/Admin/password_reset" method="post">
+    <div class="auth-error" th:if="${error}">
+      <svg width="16" height="16"><use href="#i-alert"/></svg>
+      <span th:text="${error}"></span>
+    </div>
+
+    <form class="auth-form" th:action="@{/Admin/password_reset}" method="post">
       <div class="field">
         <label>현재 비밀번호</label>
         <input type="password" name="currentPassword" placeholder="비밀번호를 입력하세요">
