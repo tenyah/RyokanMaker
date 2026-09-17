@@ -36,4 +36,16 @@ public class MemberService {
         memberDto.setUserPassword(PasswordUtil.sha256(memberDto.getUserPassword()));
         memberMapper.insert(memberDto);
     }
+
+    /** 로그인 : 이메일/비밀번호가 맞으면 회원 정보를, 아니면 null을 반환 */
+    public MemberDto authenticate(String userMail, String userPassword) {
+        MemberDto member = memberMapper.selectByUserMail(userMail);
+        if (member == null) {
+            return null;
+        }
+        if (!member.getUserPassword().equals(PasswordUtil.sha256(userPassword))) {
+            return null;
+        }
+        return member;
+    }
 }
