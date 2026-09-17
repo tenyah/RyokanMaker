@@ -18,6 +18,12 @@
     <p class="desc">예약, 문의 이용을 위해 로그인해주세요.</p>
   </section>
 
+  <div th:if="${param.signup != null}" class="form-card" style="padding-bottom:0;">
+    <div class="answer-block">
+      <div class="answer-body" style="color:var(--gold-deep);">회원가입이 완료되었습니다. 로그인해주세요.</div>
+    </div>
+  </div>
+
   <div th:if="${error}" class="form-card" style="padding-bottom:0;">
     <div class="answer-block">
       <div class="answer-body" th:text="${error}" style="color:var(--warn);"></div>

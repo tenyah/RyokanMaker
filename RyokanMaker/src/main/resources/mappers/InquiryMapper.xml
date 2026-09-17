@@ -29,4 +29,12 @@
         VALUES (#{adminIdx}, #{userMail}, #{inquiryTitle}, #{inquiryContent}, '답변대기', SYSTIMESTAMP)
     </insert>
 
+    <delete id="deleteByIdx" parameterType="int">
+        DELETE FROM INQUIRY WHERE INQUIRY_IDX = #{inquiryIdx}
+    </delete>
+
+    <delete id="deleteByUserMail" parameterType="string">
+        DELETE FROM INQUIRY WHERE USER_MAIL = #{userMail}
+    </delete>
+
 </mapper>

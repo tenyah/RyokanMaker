@@ -1,12 +1,16 @@
 package com.mnu.ryokanmaker.service;
 
+import com.mnu.ryokanmaker.dto.AdminReservationListItemDto;
 import com.mnu.ryokanmaker.dto.CountryCodeDto;
 import com.mnu.ryokanmaker.dto.MemberDto;
 import com.mnu.ryokanmaker.mapper.CountryCodeMapper;
+import com.mnu.ryokanmaker.mapper.InquiryMapper;
 import com.mnu.ryokanmaker.mapper.MemberMapper;
+import com.mnu.ryokanmaker.mapper.ReservationMapper;
 import com.mnu.ryokanmaker.util.PasswordUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,6 +22,17 @@ public class MemberService {
 
     @Autowired
     private CountryCodeMapper countryCodeMapper;
+
+    @Autowired
+    private ReservationMapper reservationMapper;
+
+    @Autowired
+    private InquiryMapper inquiryMapper;
+
+    /** 마이페이지 - 내 예약 현황 */
+    public List<AdminReservationListItemDto> getReservationHistory(String userMail) {
+        return reservationMapper.selectReservationListByUserMail(userMail);
+    }
 
     public boolean existsByUserMail(String userMail) {
         return memberMapper.selectByUserMail(userMail) != null;
@@ -68,5 +83,20 @@ public class MemberService {
         memberDto.setUserPassword(passwordToSave);
         memberMapper.update(memberDto);
         return memberDto;
+    }
+
+    /**
+     * 회원탈퇴 - 이 회원과 관련된 문의/예약을 전부 지운 뒤 회원 정보를 삭제한다.
+     * FK 순서: ROOM/ONSEN/RESTAURANT_RESERVATION -> RESERVATION -> INQUIRY -> MEMBER
+     * 도중에 하나라도 실패하면 전체 롤백되도록 트랜잭션으로 묶는다.
+     */
+    @Transactional
+    public void withdraw(String userMail) {
+        reservationMapper.deleteRoomReservationsByUserMail(userMail);
+        reservationMapper.deleteOnsenReservationsByUserMail(userMail);
+        reservationMapper.deleteRestaurantReservationsByUserMail(userMail);
+        reservationMapper.deleteReservationsByUserMail(userMail);
+        inquiryMapper.deleteByUserMail(userMail);
+        memberMapper.deleteByUserMail(userMail);
     }
 }
