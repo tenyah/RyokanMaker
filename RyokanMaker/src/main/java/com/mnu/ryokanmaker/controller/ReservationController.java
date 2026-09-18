@@ -16,18 +16,33 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.mnu.ryokanmaker.dto.AdminPlanDto;
 import com.mnu.ryokanmaker.dto.SearchConditionDto;
 import com.mnu.ryokanmaker.service.NoticeService;
+import com.mnu.ryokanmaker.service.OnsenService;
 import com.mnu.ryokanmaker.service.ReservationService;
+import com.mnu.ryokanmaker.service.RestaurantCourseService;
+import com.mnu.ryokanmaker.service.RoomService;
 
 @Controller
 public class ReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(ReservationController.class);
 
+    // 사이트가 단일 료칸(清流庵) 기준이라 메인 화면 캐러셀은 이 관리자 소유 데이터로 고정 조회
+    private static final int MAIN_ADMIN_IDX = 1;
+
     @Autowired
     private NoticeService noticeService;
 
     @Autowired
     private ReservationService reservationService;
+
+    @Autowired
+    private RoomService roomService;
+
+    @Autowired
+    private OnsenService onsenService;
+
+    @Autowired
+    private RestaurantCourseService restaurantCourseService;
 
     @GetMapping("/")
     public String mainIndex(Model model) {
@@ -41,7 +56,31 @@ public class ReservationController {
             notices = Collections.emptyList();
         }
         model.addAttribute("notices", notices);
+
+        // 객실/온천/식사 캐러셀 : 각 카테고리에 등록된 모든 항목의 이미지를 하나의 목록으로 합쳐서 전달
+        model.addAttribute("roomImages", collectImages(safeList(() -> roomService.getRoomList(MAIN_ADMIN_IDX)),
+                com.mnu.ryokanmaker.dto.RoomDto::getImageUrls));
+        model.addAttribute("onsenImages", collectImages(safeList(() -> onsenService.getOnsenList(MAIN_ADMIN_IDX)),
+                com.mnu.ryokanmaker.dto.OnsenDto::getImageUrls));
+        model.addAttribute("courseImages", collectImages(safeList(() -> restaurantCourseService.getCourseList(MAIN_ADMIN_IDX)),
+                com.mnu.ryokanmaker.dto.RestaurantCourseDto::getImageUrls));
+
         return "index";
+    }
+
+    private <T> List<T> safeList(java.util.function.Supplier<List<T>> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            log.warn("메인 화면 캐러셀용 목록 조회 실패 - 빈 목록으로 표시합니다.", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private <T> List<String> collectImages(List<T> items, java.util.function.Function<T, List<String>> imageUrlsGetter) {
+        return items.stream()
+                .flatMap(item -> imageUrlsGetter.apply(item).stream())
+                .toList();
     }
 
     /** 플랜 선택 화면 : templates/reservation/planSelect.html */

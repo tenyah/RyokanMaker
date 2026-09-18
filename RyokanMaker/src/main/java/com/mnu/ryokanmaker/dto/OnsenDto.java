@@ -1,5 +1,7 @@
 package com.mnu.ryokanmaker.dto;
 
+import java.util.List;
+
 import lombok.Data;
 
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
@@ -26,6 +28,11 @@ public class OnsenDto {
     /** 목록 화면 썸네일용. onsenImage(경로 JSON 배열)에서 첫 번째 이미지 경로만 뽑는다. */
     public String getThumbnailUrl() {
         return ImageJsonUtil.firstPath(onsenImage);
+    }
+
+    /** 메인 페이지 캐러셀용. onsenImage(경로 JSON 배열)의 전체 이미지 경로 목록. */
+    public List<String> getImageUrls() {
+        return ImageJsonUtil.parsePaths(onsenImage);
     }
 
     /** ONSEN_HOUR를 "시작–종료"로 합쳐서 세팅 (둘 다 비어있으면 null) */
