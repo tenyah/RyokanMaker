@@ -14,16 +14,16 @@
       <div class="addr">[주소를 입력하세요], 오타루시, 홋카이도<br>TEL. [전화번호를 입력하세요]</div>
     </div>
     <nav>
-      <a th:href="@{/rooms}">객실</a>
-      <a th:href="@{/onsen}">온천</a>
-      <a th:href="@{/dining}">식사</a>
-      <a th:href="@{/facility}">시설</a>
-      <a th:href="@{/access}">교통안내</a>
-      <a th:href="@{/contact}">문의하기</a>
+      <a th:href="@{/rooms}" th:text="#{nav.rooms}">객실</a>
+      <a th:href="@{/onsen}" th:text="#{nav.onsen}">온천</a>
+      <a th:href="@{/dining}" th:text="#{nav.dining}">식사</a>
+      <a th:href="@{/facility}" th:text="#{nav.facility}">시설</a>
+      <a th:href="@{/access}" th:text="#{nav.access}">교통안내</a>
+      <a th:href="@{/inquiry/list}" th:text="#{nav.contact}">문의하기</a>
     </nav>
   </div>
   <div class="divider"></div>
-  <div class="copyright">© 2026 오타루 후루카와. All rights reserved.</div>
+  <div class="copyright" th:text="#{footer.copyright}">© 2026 오타루 후루카와. All rights reserved.</div>
 </footer>
 
 </body>

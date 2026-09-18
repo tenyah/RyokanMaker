@@ -18,22 +18,27 @@
     <span class="romaji">OTARU FURUKAWA</span>
   </a>
   <nav>
-    <a class="navlink" th:classappend="${activePage == 'rooms'} ? 'active' : ''" th:href="@{/rooms}">객실</a>
-    <a class="navlink" th:classappend="${activePage == 'onsen'} ? 'active' : ''" th:href="@{/onsen}">온천</a>
-    <a class="navlink" th:classappend="${activePage == 'dining'} ? 'active' : ''" th:href="@{/dining}">식사</a>
-    <a class="navlink" th:classappend="${activePage == 'facility'} ? 'active' : ''" th:href="@{/facility}">시설</a>
-    <a class="navlink" th:classappend="${activePage == 'access'} ? 'active' : ''" th:href="@{/access}">교통안내</a>
-    <a class="navlink" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/inquiry/list}">문의하기</a>
+    <a class="navlink" th:classappend="${activePage == 'rooms'} ? 'active' : ''" th:href="@{/rooms}" th:text="#{nav.rooms}">객실</a>
+    <a class="navlink" th:classappend="${activePage == 'onsen'} ? 'active' : ''" th:href="@{/onsen}" th:text="#{nav.onsen}">온천</a>
+    <a class="navlink" th:classappend="${activePage == 'dining'} ? 'active' : ''" th:href="@{/dining}" th:text="#{nav.dining}">식사</a>
+    <a class="navlink" th:classappend="${activePage == 'facility'} ? 'active' : ''" th:href="@{/facility}" th:text="#{nav.facility}">시설</a>
+    <a class="navlink" th:classappend="${activePage == 'access'} ? 'active' : ''" th:href="@{/access}" th:text="#{nav.access}">교통안내</a>
+    <a class="navlink" th:classappend="${activePage == 'contact'} ? 'active' : ''" th:href="@{/inquiry/list}" th:text="#{nav.contact}">문의하기</a>
     <th:block th:if="${loginMember == null}">
-      <a class="navlink" th:classappend="${activePage == 'login'} ? 'active' : ''" th:href="@{/member/login}">로그인</a>
-      <a class="navlink" th:classappend="${activePage == 'signup'} ? 'active' : ''" th:href="@{/member/signup}">회원가입</a>
+      <a class="navlink" th:classappend="${activePage == 'login'} ? 'active' : ''" th:href="@{/member/login}" th:text="#{nav.login}">로그인</a>
+      <a class="navlink" th:classappend="${activePage == 'signup'} ? 'active' : ''" th:href="@{/member/signup}" th:text="#{nav.signup}">회원가입</a>
     </th:block>
     <th:block th:unless="${loginMember == null}">
       <a class="navlink" th:classappend="${activePage == 'mypage'} ? 'active' : ''" th:href="@{/member/mypage}"
-         th:text="${loginMember.userNickname} + '님'"></a>
-      <a class="navlink" th:href="@{/member/logout}">로그아웃</a>
+         th:text="#{nav.greeting(${loginMember.userNickname})}"></a>
+      <a class="navlink" th:href="@{/member/logout}" th:text="#{nav.logout}">로그아웃</a>
     </th:block>
-    <a class="btn-gold" style="padding:11px 28px; font-size:13px; text-decoration:none;" th:href="@{/reservation/plan}">숙박예약</a>
+    <span class="navlink" style="display:inline-flex; gap:8px;">
+      <a href="?lang=ko" style="font-size:12px;">KO</a>
+      <a href="?lang=en" style="font-size:12px;">EN</a>
+      <a href="?lang=ja" style="font-size:12px;">JA</a>
+    </span>
+    <a class="btn-gold" style="padding:11px 28px; font-size:13px; text-decoration:none;" th:href="@{/reservation/plan}" th:text="#{nav.booking}">숙박예약</a>
   </nav>
 </header>
 
