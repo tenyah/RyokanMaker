@@ -187,7 +187,7 @@ public class AdminController {
 		session.setAttribute("admin", admin);
 		session.setMaxInactiveInterval(60 * 20);
 
-		if ("Y".equals(admin.getPwResetYn())) {
+		if (!"Y".equals(admin.getPwResetYn())) {
 			return "redirect:/Admin/admin_pwreset";
 		}
 		return "redirect:/Admin/admin_info_register";
@@ -204,8 +204,8 @@ public class AdminController {
 	}
 
 	/**
-	 * 비밀번호 변경. 현재 비밀번호가 일치할 때만 변경하며, 성공 시 PW_RESET_YN이 'N'으로 갱신되어
-	 * 초기 비밀번호 상태가 해제된다.
+	 * 비밀번호 변경. 현재 비밀번호가 일치할 때만 변경하며, 성공 시 PW_RESET_YN이 'Y'로 갱신되어
+	 * 초기 비밀번호 상태가 해제된다(이후 로그인은 해시 비교).
 	 */
 	@PostMapping("password_reset")
 	public String passwordReset(@RequestParam("currentPassword") String currentPassword,
@@ -231,7 +231,7 @@ public class AdminController {
 			return "Admin/admin_pwreset";
 		}
 
-		loginAdmin.setPwResetYn("N");
+		loginAdmin.setPwResetYn("Y");
 		session.setAttribute("admin", loginAdmin);
 
 		return "redirect:/Admin/admin_info_register";
