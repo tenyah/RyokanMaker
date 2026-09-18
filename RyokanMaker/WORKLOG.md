@@ -1,5 +1,43 @@
 # 작업 기록
 
+## 회원가입/로그인/문의 기능 구현 + 4개 팀 브랜치 로컬 통합 (2026-09-18)
+
+**배경:** 이 세션은 빌드가 깨진 상태(컴파일 에러)에서 시작. 패키지명 표기(대문자 vs 소문자)부터 팀원 4명(Choiyeongsu13/eartth21/june47087-byte/yeseong) 브랜치 통합, 당일 목표 기능(회원가입·로그인·문의작성, 비밀번호 해시) 구현까지 진행.
+
+**초기 빌드 에러 수정:**
+- `Inquiryservice.java` 파일명/클래스명 불일치, `com.mnu.Ryokanmaker.service` 패키지 오타, `mybatis.mapper-locations`가 존재하지 않는 `mappers/` 폴더를 가리키던 것을 `mapper/`로 수정.
+
+**작업 중 대형 사고 및 복구:** 추적되지 않은 파일에 대한 `git mv`가 실패하면서 작업 트리 전체가 디스크에서 삭제되는 사고 발생. `git restore --source=HEAD -- .`으로 추적 파일은 복구하고, 미추적 파일(공지/문의 사용자 화면 등)은 대화 맥락과 다운로드 폴더에서 발견한 백업 zip으로 수동 재구성함. 이후로는 위험한 git 작업 전에 항상 `git add -A`로 먼저 스테이징해두는 방식으로 안전장치를 마련.
+
+**패키지명 표기 정리:** 처음엔 `com.mnu.RyokanMaker`(대문자)로 통일하려 했으나, 팀원들이 이미 `com.mnu.ryokanmaker`(소문자)로 작업 중인 것을 확인하고 소문자로 재통일. Windows NTFS가 대소문자를 구분하지 않아 `git status`에 같은 경로가 다른 대소문자로 중복 추적되는 문제가 발생 → `git rm -r --cached .` 후 `git add -A`로 캐시를 초기화하고, 디렉터리명 변경은 전부 임시 이름을 거치는 2단계 rename(`mv X X_tmp && mv X_tmp Y`)으로 처리해 충돌을 피함.
+
+**4개 팀 브랜치(마스터 제외) 로컬 통합:** 원격 저장소를 조사해 팀원별 구현 페이지/테이블을 파악하고, 사용자 지시대로 **원격에는 반영하지 않고 로컬 작업 트리에만** 각 브랜치의 내용을 순차적으로 반영. 통합 후 `mvnw clean compile` 성공 확인, Claude Browser로 홈/로그인/회원가입 등 주요 화면 직접 열람 테스트.
+
+**DB 스키마 실측:** 기존 ERDCloud SQL 덤프가 실제 운영 DB와 다른 부분이 있어(예: `AdminDto`에 실존하지 않는 `ryokanFacility` 필드가 있던 것 등), SQL Developer Data Modeler로 실제 라이브 Oracle DB에서 DDL을 역공학(export)해 `sql/ryokan_schema_current.sql`로 저장하고 이를 기준 진실로 채택. 이 과정에서 DB 접속 호스트가 `54.180.103.132`(타임아웃)가 아니라 `3.36.211.118`로 바뀐 것도 팀원 커밋 메시지를 통해 발견해 반영.
+
+**회원가입/로그인/문의 핵심 기능:**
+- 비밀번호는 `PasswordUtil.sha256()`(레거시 `UserSHA256`과 동일한 해시 방식)로 해시 저장.
+- 영문 이름은 알파벳만, 일본어 이름은 히라가나·가타카나만(한자 불가) 허용하도록 `NameValidationUtil`을 새로 만들어 서버 측 검증에 사용하고, `signup.html`/`mypage.html`의 이름 입력란에도 `pattern`/`title` 속성으로 동일한 제약을 추가(이중 방어).
+- 회원가입 완료 후 **자동 로그인을 제거**하고 `/member/login?signup=success`로 리다이렉트, 로그인 화면에 가입완료 안내 배너 추가. 로그인은 반드시 회원이 직접 하도록 함.
+- 마이페이지에 예약 현황(객실/온천/식당 예약 내역) 섹션 추가 — `ReservationMapper`(+xml)를 신규 작성해 `MemberService.getReservationHistory()`에서 사용.
+- 1:1 문의 작성 폼의 내용 입력란을 라벨을 박스 위로 옮기고, 글씨를 더 크게, 박스도 직사각형으로 더 크게 조정(`common.css`의 `.form-row textarea`).
+- 1:1 문의 관리자 화면(`/Admin/admin_inquiry`)에 관리자 로그인 여부 가드를 추가해 관리자만 열람 가능하도록 제한.
+- 목록/상세 화면에서 제목·상태·등록일이 너무 붙어 보이던 문제를 `.content-actions`에 `gap` 추가 등으로 개선.
+- 팀 공용 `common.css` 교체 과정에서 유실됐던 `.form-row`, `.field-label`, `.qna-table`, `.content-card` 등 클래스들을 다시 채워 넣어 폼/표 스타일 깨짐을 복구.
+
+**회원탈퇴 + 문의 삭제 기능 신규 구현:** SQL Developer에서 테스트 계정을 지우려다 `ORA-02292`(FK 제약 위반, `FK_MEMBER_TO_ROOM_RESERVATION`/`FK_MEMBER_TO_INQUIRY`)가 발생한 것을 계기로, 자식 레코드부터 지우는 회원탈퇴 기능이 필요하다고 판단해 구현.
+- `MemberController.withdraw()` (POST `/member/withdraw`) → `MemberService.withdraw()`가 `@Transactional`로 ROOM/ONSEN/RESTAURANT_RESERVATION → RESERVATION → INQUIRY → MEMBER 순서로 cascade 삭제 후 세션 무효화.
+- `InquiryController`/`InquiryService`에 본인 소유 확인 후 개별 문의를 삭제하는 `delete()` 추가, `inquiry/view.html`에 확인창(`confirm()`)이 있는 삭제 버튼 추가.
+- 마이페이지에 확인창이 있는 회원탈퇴 버튼 추가.
+
+**Eclipse Lombok 미동작 문제 해결:** `mvn compile`은 성공하는데 Eclipse에서는 롬복 생성자가 인식 안 되는 문제 → 원인은 재설치 누락이 아니라 `SpringToolsForEclipse.ini`에 `-javaagent` 줄이 잘못 병합되어 있던 것(앞의 `-javaagent:...lombok.jar`와 뒤의 `-javaagent:...lombok.jar`가 한 줄에 붙어 있고 앞쪽엔 `-`가 빠져 있었음). 올바른 한 줄로 교체해 해결.
+
+**git push 실패("↑8 ↓20") 해결:** 원인은 실제 커밋 충돌이 아니라, 앞서 "전체 삭제 후 새 파일 복사"로 통합하는 과정에서 로컬 브랜치의 커밋 그래프가 원격과 구조적으로 단절된 것이었음. `origin/Choiyeongsu13`을 기준으로 새 브랜치를 만들고, `git checkout <기존 커밋> -- <17개 파일>`로 이 세션에서 만든 고유 변경분만 다시 적용해 커밋 → `git rev-list --left-right --count`로 순수 fast-forward임을 확인 후 강제 push 없이 정상 push (`b05db9d..0feb1fe`) 완료.
+
+**결과:** `mvnw clean compile` BUILD SUCCESS. Claude Browser로 회원가입(`finalcheck@example.com` 등 테스트 계정) → 가입완료 배너 → 로그인 → 마이페이지 예약현황/탈퇴 버튼 → 문의 작성/삭제까지 전체 플로우 직접 테스트 완료. 이후 다른 세션에서 push한 23개 커밋(다국어 지원, 교통안내 페이지, 결제/예약 전체 플로우, 방/플랜/온천/식당코스/시설 관리자 CRUD)을 fast-forward로 병합해 최신 상태 확인, 기존에 구현한 회원가입 기능이 병합 후에도 정상 동작함을 재확인.
+
+---
+
 ## june47087-byte 브랜치 병합 + 교통안내(access) 페이지 개선 (2026-09-18)
 
 **목표:** `origin/june47087-byte`(방/플랜/온천/시설/공지/문의답변 CRUD, 이미지 업로드, 실제 DB 연동 예약 화면이 대폭 구현된 브랜치)를 `Choiyeongsu13`으로 가져와서 로컬에서 통합 테스트.
