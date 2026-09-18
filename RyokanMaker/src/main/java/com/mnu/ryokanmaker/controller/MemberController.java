@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.dto.MemberDto;
+import com.mnu.ryokanmaker.domain.MemberDto;
 import com.mnu.ryokanmaker.service.MemberService;
 import com.mnu.ryokanmaker.util.NameValidationUtil;
 import jakarta.servlet.http.HttpSession;

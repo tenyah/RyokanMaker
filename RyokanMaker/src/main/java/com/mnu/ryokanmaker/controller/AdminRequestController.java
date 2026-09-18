@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.dto.AdminRequestDto;
+import com.mnu.ryokanmaker.domain.AdminRequestDto;
 import com.mnu.ryokanmaker.service.AdminRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

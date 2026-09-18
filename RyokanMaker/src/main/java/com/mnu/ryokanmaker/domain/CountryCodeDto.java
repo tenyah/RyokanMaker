@@ -1,4 +1,4 @@
-package com.mnu.ryokanmaker.dto;
+package com.mnu.ryokanmaker.domain;
 
 /**
  * COUNTRY_CODE 테이블 매핑 DTO (회원가입 국가/전화번호 국가코드 선택용)

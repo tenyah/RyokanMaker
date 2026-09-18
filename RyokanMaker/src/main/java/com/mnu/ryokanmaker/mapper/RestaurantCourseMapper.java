@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.mnu.ryokanmaker.dto.RestaurantCourseDto;
+import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
 
 @Mapper
 public interface RestaurantCourseMapper {

@@ -13,8 +13,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.mnu.ryokanmaker.dto.AdminPlanDto;
-import com.mnu.ryokanmaker.dto.SearchConditionDto;
+import com.mnu.ryokanmaker.domain.AdminPlanDto;
+import com.mnu.ryokanmaker.domain.SearchConditionDto;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.ReservationService;
 
@@ -33,9 +33,9 @@ public class ReservationController {
 
     @GetMapping("/")
     public String mainIndex(Model model) {
-        List<com.mnu.ryokanmaker.dto.NoticeDto> notices;
+        List<com.mnu.ryokanmaker.domain.NoticeDto> notices;
         try {
-            List<com.mnu.ryokanmaker.dto.NoticeDto> all = noticeService.list();
+            List<com.mnu.ryokanmaker.domain.NoticeDto> all = noticeService.list();
             notices = all.size() > 3 ? all.subList(0, 3) : all;
         } catch (Exception e) {
             // 공지사항 미리보기는 부가 기능이라, DB 연결 문제로 메인 화면 전체가 죽지 않도록 방어

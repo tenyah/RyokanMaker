@@ -1,8 +1,8 @@
 package com.mnu.ryokanmaker.service;
 
-import com.mnu.ryokanmaker.dto.AdminReservationListItemDto;
-import com.mnu.ryokanmaker.dto.CountryCodeDto;
-import com.mnu.ryokanmaker.dto.MemberDto;
+import com.mnu.ryokanmaker.domain.AdminReservationListItemDto;
+import com.mnu.ryokanmaker.domain.CountryCodeDto;
+import com.mnu.ryokanmaker.domain.MemberDto;
 import com.mnu.ryokanmaker.mapper.CountryCodeMapper;
 import com.mnu.ryokanmaker.mapper.InquiryMapper;
 import com.mnu.ryokanmaker.mapper.MemberMapper;

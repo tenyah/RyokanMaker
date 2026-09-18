@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import com.mnu.ryokanmaker.dto.AdminDto;
-import com.mnu.ryokanmaker.dto.MemberDto;
+import com.mnu.ryokanmaker.domain.AdminDto;
+import com.mnu.ryokanmaker.domain.MemberDto;
 import com.mnu.ryokanmaker.service.InquiryService;
 
 import jakarta.servlet.http.HttpSession;

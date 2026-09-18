@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.dto.AdminDto;
+import com.mnu.ryokanmaker.domain.AdminDto;
 import com.mnu.ryokanmaker.service.AdminService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

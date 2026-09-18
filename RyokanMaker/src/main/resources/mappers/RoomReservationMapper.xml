@@ -3,7 +3,7 @@
 <mapper namespace="com.mnu.ryokanmaker.mapper.RoomReservationMapper">
 
 	<!-- 체크인/체크아웃 구간이 [rangeStart, rangeEnd)와 겹치는 예약 조회 -->
-	<select id="findOverlapping" resultType="com.mnu.ryokanmaker.dto.RoomReservationDto">
+	<select id="findOverlapping" resultType="com.mnu.ryokanmaker.domain.RoomReservationDto">
 		SELECT *
 		FROM ROOM_RESERVATION
 		WHERE RESV_CHECK_IN &lt; #{rangeEnd}

@@ -8,7 +8,7 @@
         useGeneratedKeys로 채번된 값을 다시 dto(resvNum / roomResvNum)에 담아온다.
         컬럼명은 실제 Oracle DB 스키마(user_tab_columns 조회 결과) 기준 SCREAMING_SNAKE_CASE.
     -->
-    <insert id="insertReservation" parameterType="com.mnu.ryokanmaker.dto.ReservationDto"
+    <insert id="insertReservation" parameterType="com.mnu.ryokanmaker.domain.ReservationDto"
             useGeneratedKeys="true" keyProperty="resvNum" keyColumn="RESV_NUM">
         INSERT INTO RESERVATION (
             ADMIN_IDX, USER_MAIL, RESV_PRICE, RESV_PEOPLE,
@@ -21,7 +21,7 @@
         )
     </insert>
 
-    <insert id="insertRoomReservation" parameterType="com.mnu.ryokanmaker.dto.RoomReservationDto"
+    <insert id="insertRoomReservation" parameterType="com.mnu.ryokanmaker.domain.RoomReservationDto"
             useGeneratedKeys="true" keyProperty="roomResvNum" keyColumn="ROOM_RESV_NUM">
         INSERT INTO ROOM_RESERVATION (
             USER_MAIL, ADMIN_IDX, ROOM_IDX, RESV_NUM, PLAN_IDX,

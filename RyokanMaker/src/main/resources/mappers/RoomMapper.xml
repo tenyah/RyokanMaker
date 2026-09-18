@@ -4,7 +4,7 @@
 
 	<!-- ROOM_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외. ROOM_SALE_YN은 화면 입력 항목이 아니라
 	     컬럼 목록에서 빼고 DB 기본값('Y')에 맡긴다. -->
-	<insert id="insertRoom" parameterType="com.mnu.ryokanmaker.dto.RoomDto">
+	<insert id="insertRoom" parameterType="com.mnu.ryokanmaker.domain.RoomDto">
 		INSERT INTO ROOM (
 			ADMIN_IDX,
 			ROOM_NAME,
@@ -27,7 +27,7 @@
 	</insert>
 
 	<!-- 로그인한 관리자(adminIdx) 소유의 객실만 조회 -->
-	<select id="selectRoomsByAdmin" resultType="com.mnu.ryokanmaker.dto.RoomDto">
+	<select id="selectRoomsByAdmin" resultType="com.mnu.ryokanmaker.domain.RoomDto">
 		SELECT *
 		FROM ROOM
 		WHERE ADMIN_IDX = #{adminIdx}
@@ -38,7 +38,7 @@
 		roomImage는 화면에서 새 이미지를 올렸을 때만 값이 채워짐(null이면 기존 이미지 유지).
 		WHERE절에 adminIdx도 같이 걸어서, 다른 관리자의 객실을 수정하지 못하도록 함.
 	-->
-	<update id="updateRoom" parameterType="com.mnu.ryokanmaker.dto.RoomDto">
+	<update id="updateRoom" parameterType="com.mnu.ryokanmaker.domain.RoomDto">
 		UPDATE ROOM
 		<set>
 			ROOM_NAME = #{roomName},
@@ -60,14 +60,14 @@
 	</delete>
 
 	<!-- 사용자 예약 화면(객실 선택)에 노출할 판매중 객실 전체 조회 -->
-	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.RoomDto">
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.RoomDto">
 		SELECT *
 		FROM ROOM
 		WHERE ROOM_SALE_YN = 'Y'
 		ORDER BY ROOM_IDX
 	</select>
 
-	<select id="findById" resultType="com.mnu.ryokanmaker.dto.RoomDto">
+	<select id="findById" resultType="com.mnu.ryokanmaker.domain.RoomDto">
 		SELECT *
 		FROM ROOM
 		WHERE ROOM_IDX = #{roomIdx}
