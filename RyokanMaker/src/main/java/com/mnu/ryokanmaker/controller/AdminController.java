@@ -141,4 +141,29 @@ public class AdminController {
 		session.invalidate();
 		return "redirect:/Admin/admin_login";
 	}
+
+	/** 교통안내(RYOKAN_ACCESS) 수정 화면. 정보등록 화면이 아직 실제 연동 전이라 우선 이것만 별도로 뺌. */
+	@GetMapping("access_edit")
+	public String accessEditForm(HttpSession session, Model model) {
+		AdminDto admin = currentAdmin(session);
+		if (admin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
+		return "Admin/access_edit";
+	}
+
+	@PostMapping("access_edit")
+	public String accessEditSave(HttpSession session,
+			@RequestParam String ryokanAccess,
+			Model model) {
+		AdminDto admin = currentAdmin(session);
+		if (admin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		adminService.updateAccess(admin.getAdminIdx(), ryokanAccess);
+		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
+		model.addAttribute("message", "교통안내가 저장되었습니다.");
+		return "Admin/access_edit";
+	}
 }

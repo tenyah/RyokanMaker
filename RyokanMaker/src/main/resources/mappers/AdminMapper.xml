@@ -34,4 +34,8 @@
         UPDATE ADMIN SET ADMIN_PASSWORD = #{adminPassword}, PW_RESET_YN = 'N' WHERE ADMIN_IDX = #{adminIdx}
     </update>
 
+    <update id="updateAccess">
+        UPDATE ADMIN SET RYOKAN_ACCESS = #{ryokanAccess} WHERE ADMIN_IDX = #{adminIdx}
+    </update>
+
 </mapper>

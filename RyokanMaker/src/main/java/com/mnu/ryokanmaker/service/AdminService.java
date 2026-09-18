@@ -33,4 +33,12 @@ public class AdminService {
         adminMapper.updatePassword(adminIdx, PasswordUtil.sha256(newPassword));
         return true;
     }
+
+    public AdminDto findByAdminIdx(Integer adminIdx) {
+        return adminMapper.selectByAdminIdx(adminIdx);
+    }
+
+    public void updateAccess(Integer adminIdx, String ryokanAccess) {
+        adminMapper.updateAccess(adminIdx, ryokanAccess);
+    }
 }

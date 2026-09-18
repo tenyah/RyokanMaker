@@ -16,4 +16,6 @@ public interface AdminMapper {
     int insert(AdminDto adminDto);
 
     int updatePassword(@Param("adminIdx") Integer adminIdx, @Param("adminPassword") String adminPassword);
+
+    int updateAccess(@Param("adminIdx") Integer adminIdx, @Param("ryokanAccess") String ryokanAccess);
 }
