@@ -16,8 +16,8 @@
             RESV_ARRIVAL_TIME, RESV_REQUEST, RESV_DAY, RESV_ORDER_ID
         ) VALUES (
             #{adminIdx}, #{userMail}, #{resvPrice}, #{resvPeople},
-            #{resvStatus}, #{resvPayStatus}, #{resvPayMethod},
-            #{resvArrivalTime}, #{resvRequest}, #{resvDay}, #{resvOrderId}
+            #{resvStatus}, #{resvPayStatus}, #{resvPayMethod,jdbcType=VARCHAR},
+            #{resvArrivalTime,jdbcType=VARCHAR}, #{resvRequest,jdbcType=VARCHAR}, #{resvDay}, #{resvOrderId}
         )
     </insert>
 
@@ -30,7 +30,7 @@
         ) VALUES (
             #{userMail}, #{adminIdx}, #{roomIdx}, #{resvNum}, #{planIdx},
             #{resvCheckIn}, #{resvCheckOut}, #{resvPrice}, #{resvPeople},
-            #{resvStatus}, #{resvPayStatus}, #{resvPayMethod}
+            #{resvStatus}, #{resvPayStatus}, #{resvPayMethod,jdbcType=VARCHAR}
         )
     </insert>
 
@@ -40,6 +40,19 @@
             RESV_PAY_METHOD = #{resvPayMethod}
         WHERE RESV_ORDER_ID = #{resvOrderId}
     </update>
+
+    <update id="updateRoomPayStatusByResvNum">
+        UPDATE ROOM_RESERVATION
+        SET RESV_PAY_STATUS = #{resvPayStatus},
+            RESV_PAY_METHOD = #{resvPayMethod}
+        WHERE RESV_NUM = #{resvNum}
+    </update>
+
+    <select id="selectResvNumByOrderId" resultType="Integer">
+        SELECT RESV_NUM
+        FROM RESERVATION
+        WHERE RESV_ORDER_ID = #{resvOrderId}
+    </select>
 
     <select id="selectResvPriceByOrderId" resultType="Integer">
         SELECT RESV_PRICE

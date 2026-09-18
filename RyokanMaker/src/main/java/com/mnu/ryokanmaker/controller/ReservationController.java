@@ -18,6 +18,8 @@ import com.mnu.ryokanmaker.dto.SearchConditionDto;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.ReservationService;
 
+import jakarta.servlet.http.HttpSession;
+
 @Controller
 public class ReservationController {
 
@@ -44,14 +46,18 @@ public class ReservationController {
         return "index";
     }
 
-    /** 플랜 선택 화면 : templates/reservation/planSelect.html */
+    /** 플랜 선택 화면 : templates/reservation/planSelect.html (비회원도 열람 가능) */
     @GetMapping("/reservation/plan")
     public String planSelect(Model model) {
         model.addAttribute("plans", reservationService.getAllPlans());
         return "reservation/planSelect";
     }
 
-    /** 숙박예약(객실 + 식사 + 온천 선택) 화면 : templates/reservation/reservation.html */
+    /**
+     * 숙박예약(객실 + 식사 + 온천 선택) 화면 : templates/reservation/reservation.html
+     * 플랜 선택까지는 비회원도 볼 수 있지만, 실제 예약 단계인 이 화면부터는 로그인이 필요하다
+     * (RESERVATION.USER_MAIL이 MEMBER를 FK로 참조하므로 회원만 예약 가능).
+     */
     @GetMapping("/reservation/reservation")
     public String reservation(@RequestParam(defaultValue = "1") String planCode,
                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
@@ -59,7 +65,11 @@ public class ReservationController {
                            @RequestParam(defaultValue = "2") int adultCount,
                            @RequestParam(defaultValue = "0") int childCount,
                            @RequestParam(defaultValue = "1") int roomCount,
-                           Model model) {
+                           Model model, HttpSession session) {
+
+        if (session.getAttribute("loginMember") == null) {
+            return "redirect:/member/login";
+        }
 
         if (checkIn == null) {
             checkIn = LocalDate.now().plusDays(1);

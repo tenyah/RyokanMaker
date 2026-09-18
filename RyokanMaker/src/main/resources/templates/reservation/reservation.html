@@ -227,6 +227,9 @@
                          data-plan-price=${selectedPlan.planPrice},
                          data-check-in=${searchCondition.checkIn},
                          data-check-out=${searchCondition.checkOut},
+                         data-adult-count=${searchCondition.adultCount},
+                         data-child-count=${searchCondition.childCount},
+                         data-room-count=${searchCondition.roomCount},
                          data-meal-required=${selectedPlan.planIncludesMeal},
                          data-onsen-required=${selectedPlan.planIncludesOnsen}">결제 페이지로
 				이동</button>
@@ -265,6 +268,9 @@
 				params.set('checkIn', this.getAttribute('data-check-in'));
 				params.set('checkOut', this.getAttribute('data-check-out'));
 				params.set('totalAmount', totalAmount);
+				params.set('adultCount', this.getAttribute('data-adult-count'));
+				params.set('childCount', this.getAttribute('data-child-count'));
+				params.set('roomCount', this.getAttribute('data-room-count'));
 				if (selectedCourse) params.set('courseIdx', selectedCourse.value);
 				if (selectedOnsen) {
 					params.set('onsenIdx', selectedOnsen.value);

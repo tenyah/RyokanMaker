@@ -84,13 +84,13 @@
 
     <select id="selectRestaurantItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRestaurantItemDto">
         SELECT
-            c.COURSE_NAME              AS courseName,
+            c.RESTAURANT_COURSE_NAME   AS courseName,
             rr.RESTAURANT_USE_DATE     AS restaurantUseDate,
             rr.RESTAURANT_TIME_SLOT    AS restaurantTimeSlot,
             rr.RESTAURANT_HEADCOUNT    AS restaurantHeadcount,
             rr.RESTAURANT_SIDEMENU     AS restaurantSidemenu
         FROM RESTAURANT_RESERVATION rr
-        LEFT JOIN RESTAURANT_COURSE c ON c.COURSE_IDX = rr.COURSE_IDX
+        LEFT JOIN RESTAURANT_COURSE c ON c.RESTAURANT_COURSE_IDX = rr.COURSE_IDX
         WHERE rr.RESV_NUM = #{resvNum}
         ORDER BY rr.RESTAURANT_FACILITY_IDX
     </select>

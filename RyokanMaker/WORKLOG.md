@@ -1,5 +1,85 @@
 # 작업 기록
 
+## ORA-00904: 관리자 예약현황 상세(식사 코스) 조회 오류 수정 (2026-09-18)
+
+**증상:** 관리자 예약현황(`/Admin/reservation_status`) 상세 조회 시 `ORA-00904: "C"."COURSE_IDX": 부적합한 식별자`.
+
+**원인:** `AdminReservationMapper.xml`의 `selectRestaurantItems`가 `RESTAURANT_COURSE`를 `c`로 조인하면서 `c.COURSE_IDX`/`c.COURSE_NAME`을 참조했는데, 실제 컬럼명은 `RESTAURANT_COURSE_IDX`/`RESTAURANT_COURSE_NAME`임(사용자가 제공한 DB 익스포트 DDL로 확인). `RESTAURANT_RESERVATION` 쪽의 FK 컬럼명은 `COURSE_IDX`가 맞으므로 그쪽은 그대로 둠.
+
+**수정:** `mappers/AdminReservationMapper.xml`의 조인 조건을 `c.RESTAURANT_COURSE_IDX = rr.COURSE_IDX`로, SELECT 절을 `c.RESTAURANT_COURSE_NAME AS courseName`으로 수정.
+
+`mvnw clean compile` BUILD SUCCESS 확인. 이 파일의 다른 쿼리(ROOM/PLAN/ONSEN/MEMBER 조인)는 DDL과 대조해 이상 없음을 확인함.
+
+---
+
+## ORA-17004: 예약 저장(prepare) 실패 수정 (2026-09-18)
+
+**증상:** payment.html에서 결제 버튼을 누르면 "예약 저장에 실패했습니다" 알림. Eclipse 콘솔에 `ORA-17004: 열 유형이 부적합합니다` 예외.
+
+**원인:** `PaymentReservationService.saveAsWaiting()`은 `RESV_PAY_METHOD`를 세팅하지 않아 항상 `null`로 INSERT되는데(결제 전 '결제대기' 단계라 결제수단을 아직 모름), `PaymentMapper.xml`의 `#{resvPayMethod}`에 `jdbcType`을 지정 안 해서 MyBatis가 Oracle JDBC 드라이버에 `setNull(..., JdbcType.OTHER)`로 넘김 → Oracle 드라이버가 이 타입을 못 받아서 예외 발생. (`resvArrivalTime`/`resvRequest`도 같은 이유로 null이 될 수 있어 함께 방어.)
+
+**수정:** `mappers/PaymentMapper.xml`의 `insertReservation`/`insertRoomReservation`에서 `#{resvPayMethod}` → `#{resvPayMethod,jdbcType=VARCHAR}`로 변경 (`resvArrivalTime`, `resvRequest`도 동일하게 `jdbcType=VARCHAR` 명시).
+
+`mvnw clean compile` BUILD SUCCESS 확인. **아직 실제 예약 저장 재시도로 검증 안 함 — 다음에 결제 버튼 눌러서 RESERVATION/ROOM_RESERVATION에 행이 생기는지 확인 필요.**
+
+---
+
+## 예약 단계 로그인 체크 위치 확정 (2026-09-18)
+
+**확정된 동작:**
+- `/reservation/plan` (플랜 선택) — **비회원도 열람 가능.** 어떤 플랜이 있는지는 로그인 없이 볼 수 있어야 함.
+- `/reservation/reservation` (객실·식사·온천 선택) — **로그인 필수.** 없으면 `/member/login`으로 리다이렉트.
+- `/payment` — 로그인 필수 (앞 항목에서 이미 적용됨).
+
+즉 플랜 카드를 눌러 다음 단계로 넘어가는 시점에 비회원이 로그인 페이지로 이동한다.
+
+**수정:** `ReservationController.reservation()`에 `session.getAttribute("loginMember")` 체크 추가. `planSelect()`는 체크 없음.
+
+**참고:** 처음엔 `/reservation/plan`에도 체크를 넣었다가, 플랜 목록은 비회원에게도 보여야 한다는 요구로 되돌림.
+
+`mvnw clean compile` BUILD SUCCESS 확인.
+
+---
+
+## 예약 내용이 DB에 저장되지 않던 문제 해결 (2026-09-18)
+
+**증상:** 결제까지 진행해도 RESERVATION / ROOM_RESERVATION 테이블에 아무 행도 안 생김.
+
+**원인:** `PaymentMapper`(+xml)에 `insertReservation` / `insertRoomReservation`이 이미 다 구현돼 있었는데 **컨트롤러 어디에서도 호출하지 않았음.** `PaymentController.payment()`에 `TODO: 결제 담당자 - ... RESERVATION/ROOM_RESERVATION 등 INSERT 로직 추가` 주석만 남아 있는 상태였고, `/payment/prepare`도 "지금은 화면 확인용이라 세션에만 보관" 상태였음.
+
+**DB 실측(사용자 제공 익스포트 DDL)으로 확정한 제약 — 기존 WORKLOG의 ERD 기록과 다름:**
+- `RESERVATION.USER_MAIL` → `MEMBER.USER_MAIL` **FK 존재** (NOT NULL)
+- `ROOM_RESERVATION.USER_MAIL` → `MEMBER.USER_MAIL` **FK 존재** (NOT NULL)
+- `ROOM_RESERVATION.RESV_NUM` → `RESERVATION.RESV_NUM` FK, `ROOM_IDX`/`PLAN_IDX`/`ADMIN_IDX`도 전부 FK
+- 즉 **비회원 예약은 DB 구조상 불가능** (MEMBER에 없는 이메일은 FK 위반). 사용자와 협의해 **로그인 필수**로 확정.
+- 저장 순서는 반드시 RESERVATION → ROOM_RESERVATION (FK 때문).
+
+**구현한 흐름 (사용자가 선택한 방식: prepare에서 먼저 저장 → success에서 갱신):**
+1. `/payment` 진입 시: 로그인(`session.loginMember`) 확인, 없으면 `/member/login`으로 리다이렉트. 선택값(플랜/객실/날짜/인원/코스/온천)을 `ReservationContext`로 묶어 `RESERVATION_CONTEXT_<orderId>` 키로 세션에 저장.
+2. `/payment/prepare`(결제창 띄우기 직전): 세션의 컨텍스트 + 예약자 폼으로 **RESERVATION과 ROOM_RESERVATION을 `결제대기` 상태로 INSERT**.
+3. `/payment/success`(토스 콜백): 서버 신뢰 금액을 **세션이 아니라 DB(`selectResvPriceByOrderId`)에서 조회**해 위변조 검증 → `confirm()` 호출 → 두 테이블을 `결제완료` + 결제수단으로 UPDATE.
+
+**새로 만든 파일:**
+- `dto/ReservationContext.java` — /payment에서 확정된 선택값을 세션에 담는 객체.
+- `service/PaymentReservationService.java` — `@Transactional`로 RESERVATION→ROOM_RESERVATION 저장(`saveAsWaiting`), 결제완료 갱신(`markAsPaid`), 신뢰금액 조회(`findTrustedAmount`). 상태 문자열 상수(`예약완료`/`결제대기`/`결제완료`)도 여기 모음.
+
+**수정한 파일:**
+- `controller/PaymentController.java` — 위 1~3 흐름 구현. `prepare`를 `ResponseEntity`로 바꿔 401(로그인 만료)/400(세션 만료)/500(저장 실패)을 구분해 응답. 기존 `SESSION_ORDER_AMOUNT_PREFIX` 세션 금액 검증은 DB 조회로 대체해 제거.
+- `mapper/PaymentMapper.java` + `mappers/PaymentMapper.xml` — `updateRoomPayStatusByResvNum`, `selectResvNumByOrderId` 추가 (기존 `updatePayStatusByOrderId`는 RESERVATION만 갱신해서 ROOM_RESERVATION이 `결제대기`로 남는 문제가 있었음).
+- `templates/reservation/reservation.html` — "결제 페이지로 이동" JS가 `adultCount`/`childCount`/`roomCount`를 쿼리에 실어 보내도록 추가 (기존엔 안 넘겨서 결제 화면 인원이 항상 하드코딩 2명/0명이었음 — 미해결 항목 "결제페이지 객실수·인원" 도 이걸로 함께 해소).
+- `templates/payment/payment.html` — prepare 응답이 401이면 로그인 페이지로 보내도록 분기.
+- `controller/PaymentController.payment()` — `ReservationSummary`의 roomCount/adultCount/childCount 하드코딩(1,2,0)을 실제 파라미터 값으로 교체.
+
+**`mvnw clean compile` BUILD SUCCESS 확인 완료.**
+
+**아직 실제 동작 확인 안 됨 — 다음에 할 일:**
+- 실제 로그인 → 플랜선택 → 예약 → 결제(토스 테스트키) 골든패스로 RESERVATION/ROOM_RESERVATION에 행이 생기는지 확인 필요.
+- 결제창을 띄웠다가 취소하면 `결제대기` 행이 남는다(선택한 방식의 트레이드오프). 나중에 미결제 예약 정리 배치나 관리자 화면에서의 처리 방법 논의 필요.
+- 온천/식사 선택값(`courseIdx`/`onsenIdx`/`onsenTimeSlot`)은 `ReservationContext`에 담아두긴 했지만 `ONSEN_RESERVATION`/`RESTAURANT_RESERVATION` 테이블에는 아직 저장 안 함. (두 테이블 모두 `RESTAURANT_SIDEMENU` NOT NULL 등 추가 입력값이 필요해서 화면 설계 확인 후 별도 작업 필요.)
+- DB의 `MEMBER` 테스트 데이터 중 `tanaka.yuki@example.jp`는 비밀번호가 평문(`testpass`)이라 로그인 불가. `june47087@gmail.com`은 sha256이라 정상. 테스트 시 후자 사용할 것.
+
+---
+
 ## PW_RESET_YN 방향 재정정 (2026-09-18, 바로 아래 "로그인 실패 버그 수정" 항목의 후속 수정)
 
 **바로 아래 섹션에서 정한 N=평문/Y=해시 분기 조건 자체는 맞았지만, N↔Y가 언제 세팅되는지를 반대로 적용했었음.** 사용자가 명확히 확정한 실제 규칙:

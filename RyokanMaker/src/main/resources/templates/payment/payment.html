@@ -297,7 +297,12 @@
     });
 
     if (!prepareResponse.ok) {
-      alert('예약자 정보를 확인해주세요.');
+      if (prepareResponse.status === 401) {
+        alert('로그인이 필요합니다. 다시 로그인해주세요.');
+        window.location.href = '/member/login';
+      } else {
+        alert('예약 저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
       return;
     }
 
