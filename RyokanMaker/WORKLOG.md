@@ -1,5 +1,28 @@
 # 작업 기록
 
+## june47087-byte 브랜치 병합 + 교통안내(access) 페이지 개선 (2026-09-18)
+
+**목표:** `origin/june47087-byte`(방/플랜/온천/시설/공지/문의답변 CRUD, 이미지 업로드, 실제 DB 연동 예약 화면이 대폭 구현된 브랜치)를 `Choiyeongsu13`으로 가져와서 로컬에서 통합 테스트.
+
+**충돌 15개 파일 처리:**
+- **세션 속성 키 재통일**: `Choiyeongsu13`은 `"loginAdmin"`, june 쪽은 `"admin"`을 쓰고 있었음. june 쪽이 방/플랜/온천/시설/공지/문의답변 등 훨씬 많은 화면이 `"admin"`에 의존하고 있어 `"admin"`으로 통일 (`AdminController`, `GlobalModelAdvice`, 관련 템플릿).
+- **PW_RESET_YN 의미가 또 반전되어 있던 것 발견**: `Choiyeongsu13` 쪽 최신 코드는 `'Y'=초기 비밀번호(변경 필요)`로 되어 있었는데, june 쪽 최신 구현과 템플릿(`admin_pwreset.html`)은 `'Y'=비밀번호 변경 완료`로 정반대. june 쪽 의미로 통일 (`AdminService.authenticate/changePassword`, `AdminRequestService.approve`, `AdminMapper.xml`의 `updatePassword`).
+- `WebConfig`(i18n LocaleResolver + 업로드 리소스 핸들러), `header.html`(i18n 유지), `InquiryMapper`/`InquiryService`(관리자 문의 답변 기능 추가) 등은 서로 다른 기능을 더한 것이라 양쪽 다 유지.
+- 제가 만든 `/access`, `/Admin/access_edit`(교통안내 단독 수정 화면)은 june 쪽의 `admin_info_register` 내 "section-route"와 기능이 겹치지만 컬럼이 같아 충돌 없이 둘 다 남겨둠 (중복이지만 무해함).
+- `mvnw compile` BUILD SUCCESS 확인. 로컬 구동 후 메인/plan/access/admin_login/admin_inquiry 리다이렉트까지 브라우저로 확인, 서버 로그에 에러 없음.
+
+**교통안내(`access.html`) 개선:**
+- 버스 노선 예시(오타루역앞 3번 승강장 → 순환버스 → '후루카와' 정류장, 약 10분·210엔), 택시 예상 요금(1,500~1,800엔), 도보 소요시간(약 15분)을 3칸 카드로 추가.
+- 지도 SVG의 오타루역/清流庵 지점을 원형 마커 대신 지도 핀(물방울) 모양으로, 순환버스 정류장은 버스 아이콘으로 교체.
+- 사용자 피드백으로 지도 그림 크기를 max-width 640px → 420px로 축소.
+- 로컬 개발 편의를 위해 `spring.thymeleaf.cache=false` 추가 (서버 재시작 없이 html 수정 바로 반영).
+
+**push 완료:** 병합 커밋 + 위 access 개선 커밋을 `origin/Choiyeongsu13`, `origin/Test` 양쪽에 fast-forward로 push 완료 (강제 push 없음).
+
+**참고 — 히스토리 정리 관련:** june47087-byte 브랜치가 과거(제가 커밋 attribution을 정리하기 전)에 `Choiyeongsu13`을 한 번 병합해둔 적이 있어서, 이번 병합으로 attribution이 붙은 예전 커밋 6개가 `Test`/`Choiyeongsu13`에 다시 딸려 들어옴. 사용자 확인 결과 지금은 그대로 두기로 함 (필요시 나중에 정리 대상).
+
+---
+
 ## ORA-00904: 관리자 예약현황 상세(식사 코스) 조회 오류 수정 (2026-09-18)
 
 **증상:** 관리자 예약현황(`/Admin/reservation_status`) 상세 조회 시 `ORA-00904: "C"."COURSE_IDX": 부적합한 식별자`.
