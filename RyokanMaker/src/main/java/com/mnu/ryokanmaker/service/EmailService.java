@@ -21,6 +21,26 @@ public class EmailService {
     @Value("${spring.mail.username:}")
     private String mailFrom;
 
+    @Value("${admin.notify.email:}")
+    private String adminNotifyEmail;
+
+    /** 관리자 계정 신청이 새로 들어왔을 때 운영자에게 알림 발송 */
+    public void sendAdminRequestNotification(String ryokanName, String applicantName, String applicantEmail,
+            String applicantTel, String requestMessage) {
+        if (adminNotifyEmail == null || adminNotifyEmail.isBlank()) {
+            return;
+        }
+        String subject = "[清流庵 플랫폼] 새 관리자 계정 신청이 접수되었습니다";
+        String text = "새로운 관리자 계정 신청이 접수되었습니다.\n\n"
+                + "료칸(업체) 이름 : " + ryokanName + "\n"
+                + "담당자 이름 : " + applicantName + "\n"
+                + "이메일 : " + applicantEmail + "\n"
+                + "연락처 : " + (applicantTel != null && !applicantTel.isBlank() ? applicantTel : "-") + "\n"
+                + "신청 내용 : " + (requestMessage != null && !requestMessage.isBlank() ? requestMessage : "-") + "\n\n"
+                + "관리자 페이지의 '계정 신청 관리'에서 승인/반려할 수 있습니다.";
+        send(adminNotifyEmail, subject, text);
+    }
+
     /** 관리자 계정 승인 시 아이디/임시 비밀번호 발송 */
     public void sendAdminCredentials(String toEmail, String ryokanName, String adminId, String tempPassword) {
         String subject = "[清流庵 플랫폼] 관리자 계정이 발급되었습니다";

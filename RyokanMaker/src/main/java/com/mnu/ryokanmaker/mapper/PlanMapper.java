@@ -19,4 +19,8 @@ public interface PlanMapper {
 
 	/** 예약 시 선택한 플랜 상세 조회 */
 	public AdminPlanDto findById(@Param("planIdx") Integer planIdx);
+
+	/** 판매 여부(PLAN_SALE_YN)만 토글 */
+	public int updateSaleYn(@Param("planIdx") Integer planIdx, @Param("adminIdx") Integer adminIdx,
+			@Param("planSaleYn") String planSaleYn);
 }

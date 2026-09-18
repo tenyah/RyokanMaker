@@ -5,6 +5,8 @@ import com.mnu.ryokanmaker.domain.AdminRequestDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
 import com.mnu.ryokanmaker.mapper.AdminRequestMapper;
 import com.mnu.ryokanmaker.util.PasswordUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.List;
 @Service
 public class AdminRequestService {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminRequestService.class);
+
     @Autowired
     private AdminRequestMapper adminRequestMapper;
 
@@ -28,6 +32,13 @@ public class AdminRequestService {
 
     public void submit(AdminRequestDto requestDto) {
         adminRequestMapper.insert(requestDto);
+        try {
+            emailService.sendAdminRequestNotification(requestDto.getRyokanName(), requestDto.getApplicantName(),
+                    requestDto.getApplicantEmail(), requestDto.getApplicantTel(), requestDto.getRequestMessage());
+        } catch (Exception e) {
+            // 알림 메일 발송 실패로 신청 접수 자체가 실패하면 안 되므로 로그만 남기고 넘어간다.
+            log.warn("관리자 계정 신청 알림 메일 발송 실패", e);
+        }
     }
 
     public List<AdminRequestDto> listPending() {

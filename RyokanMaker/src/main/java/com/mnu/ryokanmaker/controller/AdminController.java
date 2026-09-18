@@ -1,11 +1,13 @@
 package com.mnu.ryokanmaker.controller;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,17 +24,21 @@ import com.mnu.ryokanmaker.domain.FacilityDto;
 import com.mnu.ryokanmaker.domain.InquiryDto;
 import com.mnu.ryokanmaker.domain.NoticeDto;
 import com.mnu.ryokanmaker.domain.OnsenDto;
+import com.mnu.ryokanmaker.domain.PlanSalesRowDto;
 import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
 import com.mnu.ryokanmaker.domain.RoomDto;
+import com.mnu.ryokanmaker.domain.RoomStatusRowDto;
 import com.mnu.ryokanmaker.service.AdminReservationService;
 import com.mnu.ryokanmaker.service.AdminService;
 import com.mnu.ryokanmaker.service.FacilityService;
 import com.mnu.ryokanmaker.service.InquiryService;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.OnsenService;
+import com.mnu.ryokanmaker.service.PlanSalesService;
 import com.mnu.ryokanmaker.service.PlanService;
 import com.mnu.ryokanmaker.service.RestaurantCourseService;
 import com.mnu.ryokanmaker.service.RoomService;
+import com.mnu.ryokanmaker.service.RoomStatusService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -72,8 +78,37 @@ public class AdminController {
 	@Autowired
 	private InquiryService inquiryService;
 
+	@Autowired
+	private RoomStatusService roomStatusService;
+
+	@Autowired
+	private PlanSalesService planSalesService;
+
+	private static final int STATUS_RANGE_DAYS = 7;
+
 	private AdminDto currentAdmin(HttpSession session) {
 		return (AdminDto) session.getAttribute("admin");
+	}
+
+	/** 객실/플랜은 admin_info_register 외에 room_status/plan_sales 화면에서도 CRUD 폼을 쓰므로,
+	 *  제출한 화면으로 되돌아가도록 redirectTo를 받는다. 화이트리스트 밖 값은 무시한다(open redirect 방지). */
+	private static final java.util.Set<String> ROOM_SAVE_REDIRECT_TARGETS = java.util.Set.of(
+			"admin_info_register", "room_status");
+	private static final java.util.Set<String> PLAN_SAVE_REDIRECT_TARGETS = java.util.Set.of(
+			"admin_info_register", "plan_sales");
+
+	private String roomRedirect(String redirectTo) {
+		String target = ROOM_SAVE_REDIRECT_TARGETS.contains(redirectTo) ? redirectTo : "admin_info_register";
+		return "admin_info_register".equals(target)
+				? "redirect:/Admin/admin_info_register#section-room"
+				: "redirect:/Admin/room_status";
+	}
+
+	private String planRedirect(String redirectTo) {
+		String target = PLAN_SAVE_REDIRECT_TARGETS.contains(redirectTo) ? redirectTo : "admin_info_register";
+		return "admin_info_register".equals(target)
+				? "redirect:/Admin/admin_info_register#section-plan"
+				: "redirect:/Admin/plan_sales";
 	}
 
 	@GetMapping("admin_info_register")
@@ -91,12 +126,43 @@ public class AdminController {
 		return "Admin/admin_info_register";
 	}
 	@GetMapping("plan_sales")
-	public String planSales() {
-		return"Admin/plan_sales";
+	public String planSales(@RequestParam(value = "rangeStart", required = false)
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rangeStart,
+			HttpSession session, Model model) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		if (rangeStart == null) {
+			rangeStart = LocalDate.now();
+		}
+
+		List<PlanSalesRowDto> salesGrid = planSalesService.getSalesGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
+		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdminIdx()));
+		model.addAttribute("salesGrid", salesGrid);
+		model.addAttribute("rangeStart", rangeStart);
+		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
+		return "Admin/plan_sales";
 	}
+
 	@GetMapping("room_status")
-	public String roomStatus() {
-		return"Admin/room_status";
+	public String roomStatus(@RequestParam(value = "rangeStart", required = false)
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate rangeStart,
+			HttpSession session, Model model) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		if (rangeStart == null) {
+			rangeStart = LocalDate.now();
+		}
+
+		List<RoomStatusRowDto> statusGrid = roomStatusService.getStatusGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
+		model.addAttribute("roomList", roomService.getRoomList(loginAdmin.getAdminIdx()));
+		model.addAttribute("statusGrid", statusGrid);
+		model.addAttribute("rangeStart", rangeStart);
+		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
+		return "Admin/room_status";
 	}
 	@GetMapping("admin_inquiry")
 	public String adminInquiry(@RequestParam(value = "idx", required = false) Integer idx,
@@ -297,6 +363,7 @@ public class AdminController {
 	@PostMapping("room_save")
 	public String roomSave(RoomDto roomDto,
 			@RequestParam(value = "roomImageFiles", required = false) List<MultipartFile> roomImageFiles,
+			@RequestParam(value = "redirectTo", required = false, defaultValue = "admin_info_register") String redirectTo,
 			HttpSession session) throws IOException {
 
 		AdminDto loginAdmin = currentAdmin(session);
@@ -307,17 +374,32 @@ public class AdminController {
 		roomDto.setAdminIdx(loginAdmin.getAdminIdx());
 		roomService.saveRoom(roomDto, roomImageFiles);
 
-		return "redirect:/Admin/admin_info_register#section-room";
+		return roomRedirect(redirectTo);
 	}
 
 	@PostMapping("room_delete")
-	public String roomDelete(@RequestParam("roomIdx") Integer roomIdx, HttpSession session) {
+	public String roomDelete(@RequestParam("roomIdx") Integer roomIdx,
+			@RequestParam(value = "redirectTo", required = false, defaultValue = "admin_info_register") String redirectTo,
+			HttpSession session) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
 		roomService.deleteRoom(roomIdx, loginAdmin.getAdminIdx());
-		return "redirect:/Admin/admin_info_register#section-room";
+		return roomRedirect(redirectTo);
+	}
+
+	@PostMapping("room_toggle_sale")
+	public String roomToggleSale(@RequestParam("roomIdx") Integer roomIdx,
+			@RequestParam("roomSaleYn") String roomSaleYn,
+			@RequestParam(value = "redirectTo", required = false, defaultValue = "room_status") String redirectTo,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		roomService.toggleSale(roomIdx, loginAdmin.getAdminIdx(), "Y".equals(roomSaleYn));
+		return roomRedirect(redirectTo);
 	}
 
 	/**
@@ -388,6 +470,7 @@ public class AdminController {
 	@PostMapping("plan_save")
 	public String planSave(AdminPlanDto planDto,
 			@RequestParam(value = "planImageFiles", required = false) List<MultipartFile> planImageFiles,
+			@RequestParam(value = "redirectTo", required = false, defaultValue = "admin_info_register") String redirectTo,
 			HttpSession session) throws IOException {
 
 		AdminDto loginAdmin = currentAdmin(session);
@@ -398,17 +481,32 @@ public class AdminController {
 		planDto.setAdminIdx(loginAdmin.getAdminIdx());
 		planService.savePlan(planDto, planImageFiles);
 
-		return "redirect:/Admin/admin_info_register#section-plan";
+		return planRedirect(redirectTo);
 	}
 
 	@PostMapping("plan_delete")
-	public String planDelete(@RequestParam("planIdx") Integer planIdx, HttpSession session) {
+	public String planDelete(@RequestParam("planIdx") Integer planIdx,
+			@RequestParam(value = "redirectTo", required = false, defaultValue = "admin_info_register") String redirectTo,
+			HttpSession session) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
 		planService.deletePlan(planIdx, loginAdmin.getAdminIdx());
-		return "redirect:/Admin/admin_info_register#section-plan";
+		return planRedirect(redirectTo);
+	}
+
+	@PostMapping("plan_toggle_sale")
+	public String planToggleSale(@RequestParam("planIdx") Integer planIdx,
+			@RequestParam("planSaleYn") String planSaleYn,
+			@RequestParam(value = "redirectTo", required = false, defaultValue = "plan_sales") String redirectTo,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		planService.toggleSale(planIdx, loginAdmin.getAdminIdx(), "Y".equals(planSaleYn));
+		return planRedirect(redirectTo);
 	}
 
 	/**

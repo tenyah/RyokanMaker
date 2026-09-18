@@ -22,4 +22,8 @@ public interface RoomMapper {
 
 	/** 특정 등급(roomLevel) 중 최저가 조회 -> 플랜 기준가(작은방)로 사용 */
 	public Long findMinPriceByLevel(@Param("roomLevel") String roomLevel);
+
+	/** 판매 여부(ROOM_SALE_YN)만 토글 */
+	public int updateSaleYn(@Param("roomIdx") Integer roomIdx, @Param("adminIdx") Integer adminIdx,
+			@Param("roomSaleYn") String roomSaleYn);
 }

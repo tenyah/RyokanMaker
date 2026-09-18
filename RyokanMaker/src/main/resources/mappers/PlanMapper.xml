@@ -66,4 +66,11 @@
 		WHERE PLAN_IDX = #{planIdx}
 	</select>
 
+	<update id="updateSaleYn">
+		UPDATE PLAN
+		SET PLAN_SALE_YN = #{planSaleYn}
+		WHERE PLAN_IDX = #{planIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
 </mapper>

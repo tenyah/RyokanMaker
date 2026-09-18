@@ -46,4 +46,8 @@ public class RoomService {
 	public void deleteRoom(Integer roomIdx, Integer adminIdx) {
 		roomMapper.deleteRoom(roomIdx, adminIdx);
 	}
+
+	public void toggleSale(Integer roomIdx, Integer adminIdx, boolean onSale) {
+		roomMapper.updateSaleYn(roomIdx, adminIdx, onSale ? "Y" : "N");
+	}
 }
