@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BathAvailabilityDto {
 
+    private Integer onsenIdx;
     private String bathName;
     private List<SlotDto> slots;
 }

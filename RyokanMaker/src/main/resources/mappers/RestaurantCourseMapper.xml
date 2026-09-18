@@ -48,4 +48,12 @@
 		  AND ADMIN_IDX = #{adminIdx}
 	</delete>
 
+	<!-- 사용자 예약 화면(식사 코스 선택)에 노출할 판매중 코스 전체 조회 -->
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+		SELECT *
+		FROM RESTAURANT_COURSE
+		WHERE RESTAURANT_SALE_YN = 'Y'
+		ORDER BY RESTAURANT_COURSE_IDX
+	</select>
+
 </mapper>

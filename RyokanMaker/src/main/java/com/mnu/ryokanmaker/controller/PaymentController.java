@@ -1,10 +1,18 @@
 package com.mnu.ryokanmaker.controller;
 
+import com.mnu.ryokanmaker.dto.AdminPlanDto;
 import com.mnu.ryokanmaker.dto.GuestInfoForm;
 import com.mnu.ryokanmaker.dto.ReservationSummary;
+import com.mnu.ryokanmaker.dto.RestaurantCourseDto;
+import com.mnu.ryokanmaker.dto.RoomDto;
+import com.mnu.ryokanmaker.mapper.PlanMapper;
+import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;
+import com.mnu.ryokanmaker.mapper.RoomMapper;
 import com.mnu.ryokanmaker.service.TossPaymentService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,6 +41,15 @@ public class PaymentController {
 
     private final TossPaymentService tossPaymentService;
 
+    @Autowired
+    private PlanMapper planMapper;
+
+    @Autowired
+    private RoomMapper roomMapper;
+
+    @Autowired
+    private RestaurantCourseMapper restaurantCourseMapper;
+
     @Value("${tosspayments.client-key}")
     private String tossClientKey;
 
@@ -39,29 +57,65 @@ public class PaymentController {
         this.tossPaymentService = tossPaymentService;
     }
 
-    /** 예약 정보 입력 · 결제 화면 : templates/payment/payment.html */
+    /**
+     * 예약 정보 입력 · 결제 화면 진입 : templates/payment/payment.html
+     * reservation/reservation.html(숙박예약 화면)에서 객실·플랜·코스·온천을 선택하고
+     * "결제 페이지로 이동"을 누르면 그 선택값이 쿼리 파라미터로 여기에 전달된다.
+     */
     @GetMapping("/payment")
-    public String payment(Model model) {
+    public String payment(@RequestParam String planCode,
+                           @RequestParam Long roomIdx,
+                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
+                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
+                           @RequestParam Long totalAmount,
+                           @RequestParam(required = false) Long courseIdx,
+                           @RequestParam(required = false) Long onsenIdx,
+                           @RequestParam(required = false) String onsenTimeSlot,
+                           Model model, HttpSession session) {
 
-        LocalDate checkIn = LocalDate.of(2026, 9, 13);
-        LocalDate checkOut = checkIn.plusDays(1);
+        AdminPlanDto plan = planMapper.findById(Integer.valueOf(planCode));
+        RoomDto room = roomMapper.findById(roomIdx.intValue());
+        RestaurantCourseDto course = courseIdx != null
+                ? restaurantCourseMapper.findAllOnSale().stream()
+                        .filter(c -> c.getRestaurantCourseIdx().equals(courseIdx.intValue()))
+                        .findFirst().orElse(null)
+                : null;
+
+        int nights = (int) ChronoUnit.DAYS.between(checkIn, checkOut);
+        int roomFee = room != null ? room.getRoomPrice() : 0;
+        int mealFee = totalAmount.intValue() - roomFee;
+
+        StringBuilder planDescription = new StringBuilder();
+        if (course != null) {
+            planDescription.append(course.getRestaurantCourseName()).append(" 포함");
+        }
+        if (onsenTimeSlot != null) {
+            if (planDescription.length() > 0) planDescription.append(" · ");
+            planDescription.append("온천 ").append(onsenTimeSlot).append(" 이용");
+        }
 
         GuestInfoForm guestInfoForm = new GuestInfoForm();
         // 토스페이먼츠 orderId 규칙: 영문/숫자/-_, 6~64자, 결제마다 고유해야 함
         guestInfoForm.setOrderId("RYOKAN-" + UUID.randomUUID().toString().replace("-", ""));
 
+        // 예약 화면에서 계산된 총 결제 금액을 서버 신뢰 값으로 세션에 저장 (prepare가 사용)
+        session.setAttribute(SESSION_ORDER_AMOUNT_PREFIX + guestInfoForm.getOrderId(), totalAmount.intValue());
+
         model.addAttribute("guestInfoForm", guestInfoForm);
         model.addAttribute("reservation", new ReservationSummary(
-                "객실 + 식사 플랜",
+                plan != null ? plan.getPlanName() : "",
                 checkIn, checkOut,
-                1, 1, 2, 0,
-                "사쿠라", "달 코스『계절의 맛 가이세키』포함",
-                780000, 68508, 848508,
+                nights, 1, 2, 0,
+                room != null ? room.getRoomName() : "",
+                planDescription.toString(),
+                roomFee, mealFee, totalAmount.intValue(),
                 3
         ));
         model.addAttribute("countryOptions", buildCountryOptions());
         model.addAttribute("arrivalTimeOptions", buildArrivalTimeOptions());
         model.addAttribute("tossClientKey", tossClientKey);
+
+        // TODO: 결제 담당자 - 여기서 회원 정보 조회, 결제 수단 처리, RESERVATION/ROOM_RESERVATION 등 INSERT 로직 추가
 
         return "payment/payment";
     }
@@ -73,10 +127,9 @@ public class PaymentController {
         //       예약 정보를 DB에 저장해야 함. 지금은 화면 확인용이라 세션에만 보관.
         session.setAttribute("guestInfoForm", guestInfoForm);
 
-        // 결제 요청 시점의 총 결제 금액을 서버 신뢰 값으로 세션에 저장해둔다.
+        // 결제 요청 시점의 총 결제 금액은 /payment 진입 시 이미 세션에 저장해뒀다(위조 방지).
         // successUrl에서 돌아온 amount는 클라이언트가 위변조할 수 있으므로,
         // confirm API 호출 전 반드시 이 값과 대조해야 한다.
-        session.setAttribute(SESSION_ORDER_AMOUNT_PREFIX + guestInfoForm.getOrderId(), 848508);
 
         return "ok";
     }

@@ -52,4 +52,18 @@
 		  AND ADMIN_IDX = #{adminIdx}
 	</delete>
 
+	<!-- 사용자 예약 화면(플랜 선택)에 노출할 판매중 플랜 전체 조회 -->
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+		SELECT *
+		FROM PLAN
+		WHERE PLAN_SALE_YN = 'Y'
+		ORDER BY PLAN_IDX
+	</select>
+
+	<select id="findById" resultType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+		SELECT *
+		FROM PLAN
+		WHERE PLAN_IDX = #{planIdx}
+	</select>
+
 </mapper>

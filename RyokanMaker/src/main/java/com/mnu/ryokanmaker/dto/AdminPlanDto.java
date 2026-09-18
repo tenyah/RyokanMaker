@@ -22,6 +22,7 @@ public class AdminPlanDto {
     private String planIncludesOnsen;  // PLAN_INCLUDES_ONSEN, 기본값 'N'
     private String planInfo;
     private Integer planPrice;
+    private String planSaleYn;         // PLAN_SALE_YN, 기본값 'Y'
 
     /** 목록 화면 썸네일용. planImage(경로 JSON 배열)에서 첫 번째 이미지 경로만 뽑는다. */
     public String getThumbnailUrl() {
