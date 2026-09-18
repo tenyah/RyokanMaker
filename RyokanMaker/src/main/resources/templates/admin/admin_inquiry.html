@@ -65,7 +65,7 @@
     <a class="navlink" th:href="@{/Admin/room_status}" href="/Admin/room_status">객실 현황</a>
     <a class="navlink" th:href="@{/Admin/plan_sales}" href="/Admin/plan_sales">판매 관리</a>
     <a class="navlink active" href="/Admin/admin_inquiry">문의 관리</a>
-    <span class="btn-line" style="padding:10px 20px;font-size:12px;gap:7px;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</span>
+    <a class="btn-line" th:href="@{/}" target="_blank" style="padding:10px 20px;font-size:12px;gap:7px;text-decoration:none;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</a>
     <div class="account-menu" id="accountMenu">
       <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">관</button>
       <div class="account-dropdown">
@@ -151,32 +151,27 @@
       <p>사이트 문의하기를 통해 접수된 고객 문의를 확인하고 답변합니다.</p>
     </div>
 
-    <div class="notice-banner">
-      신규 메뉴입니다 — 사이트에서 접수된 문의를 확인·답변하는 문의 관리함 시안입니다.
-    </div>
-
     <!-- 통계 타일 -->
     <div class="stat-grid cols-4" style="margin:0 56px 20px;">
-      <div class="stat-tile"><div class="label">전체 문의</div><div class="value">12</div></div>
-      <div class="stat-tile accent-warn"><div class="label">미답변</div><div class="value">3</div></div>
-      <div class="stat-tile accent-gold"><div class="label">답변완료</div><div class="value">9</div></div>
-      <div class="stat-tile accent-muted"><div class="label">평균 응답 시간</div><div class="value">2.4시간</div></div>
+      <div class="stat-tile"><div class="label">전체 문의</div><div class="value" th:text="${totalCount}">0</div></div>
+      <div class="stat-tile accent-warn"><div class="label">미답변</div><div class="value" th:text="${pendingCount}">0</div></div>
+      <div class="stat-tile accent-gold"><div class="label">답변완료</div><div class="value" th:text="${answeredCount}">0</div></div>
     </div>
 
     <!-- 필터 바 -->
     <div class="search-bar" style="margin:0 56px 18px;">
-      <div class="search-field">
-        <div class="field-label">상태</div>
-        <div class="field-value">전체</div>
-      </div>
-      <div class="search-field">
-        <div class="field-label">기간</div>
-        <div class="field-value">최근 30일</div>
-      </div>
-      <div class="search-field" style="flex:1;">
-        <div class="field-label">검색</div>
-        <div class="field-value" style="color:var(--ink-faint);display:flex;align-items:center;gap:6px;"><svg width="13" height="13"><use href="#i-search"/></svg>이름, 이메일, 내용으로 검색</div>
-      </div>
+      <a class="search-field" th:href="@{/Admin/admin_inquiry}" style="text-decoration:none;">
+        <div class="field-label">전체</div>
+        <div class="field-value" th:style="${statusFilter == null} ? 'color:var(--gold-deep);font-weight:500;' : ''" th:text="${totalCount} + '건'">0건</div>
+      </a>
+      <a class="search-field" th:href="@{/Admin/admin_inquiry(status='답변대기')}" style="text-decoration:none;">
+        <div class="field-label">미답변</div>
+        <div class="field-value" th:style="${statusFilter == '답변대기'} ? 'color:var(--gold-deep);font-weight:500;' : ''" th:text="${pendingCount} + '건'">0건</div>
+      </a>
+      <a class="search-field" th:href="@{/Admin/admin_inquiry(status='답변완료')}" style="text-decoration:none;">
+        <div class="field-label">답변완료</div>
+        <div class="field-value" th:style="${statusFilter == '답변완료'} ? 'color:var(--gold-deep);font-weight:500;' : ''" th:text="${answeredCount} + '건'">0건</div>
+      </a>
     </div>
 
     <div style="margin:0 56px;display:grid;grid-template-columns:1fr 1.35fr;gap:20px;">
@@ -185,95 +180,70 @@
       <div class="form-card" style="padding:0;">
         <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
           <span class="sub-label" style="margin:0;">문의 목록</span>
-          <span style="font-size:11.5px;color:var(--ink-faint);">12건</span>
+          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="${#lists.size(inquiryList)} + '건'">0건</span>
         </div>
 
-        <div style="padding:14px 16px;border-bottom:1px solid var(--line);background:var(--gold-pale);display:flex;gap:12px;align-items:flex-start;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">다나카 유키</span>
-              <span style="font-size:10.5px;font-weight:600;color:#fff;background:var(--warn);padding:3px 9px;flex:0 0 auto;">미답변</span>
-            </div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">10/3 체크인 예정인데 반려동물 동반이 가능한가요?</div>
-            <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">2026.09.14 14:22</div>
-          </div>
-        </div>
+        <div class="img-hint" style="padding:16px 18px;" th:if="${#lists.isEmpty(inquiryList)}">접수된 문의가 없습니다.</div>
 
-        <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">이서연</span>
-              <span style="font-size:10.5px;font-weight:600;color:#fff;background:var(--warn);padding:3px 9px;flex:0 0 auto;">미답변</span>
+        <a th:each="inquiry : ${inquiryList}"
+           th:href="@{/Admin/admin_inquiry(idx=${inquiry.inquiryIdx}, status=${statusFilter})}"
+           style="text-decoration:none;color:inherit;display:block;"
+           th:style="${selectedInquiry != null and selectedInquiry.inquiryIdx == inquiry.inquiryIdx} ? 'text-decoration:none;color:inherit;display:block;background:var(--gold-pale);' : 'text-decoration:none;color:inherit;display:block;'">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;"
+               th:style="${inquiry.inquiryStatus == '답변완료'} ? 'padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;opacity:.65;' : 'padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;'">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <span style="font-family:var(--serif);font-size:14px;color:var(--ink);" th:text="${inquiry.userMail}">user@example.com</span>
+                <span th:if="${inquiry.inquiryStatus == '답변완료'}" style="font-size:10.5px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:3px 9px;flex:0 0 auto;">답변완료</span>
+                <span th:unless="${inquiry.inquiryStatus == '답변완료'}" style="font-size:10.5px;font-weight:600;color:#fff;background:var(--warn);padding:3px 9px;flex:0 0 auto;">미답변</span>
+              </div>
+              <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" th:text="${inquiry.inquiryTitle}">문의 제목</div>
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;" th:text="${#temporals.format(inquiry.inquiryCreatedAt, 'yyyy.MM.dd HH:mm')}">2026.01.01 00:00</div>
             </div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">단체 12명 예약 시 별도 할인이 있을까요?</div>
-            <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">2026.09.14 09:47</div>
           </div>
-        </div>
-
-        <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">Sarah Chen</span>
-              <span style="font-size:10.5px;font-weight:600;color:#fff;background:var(--warn);padding:3px 9px;flex:0 0 auto;">미답변</span>
-            </div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Is airport pickup available from New Chitose?</div>
-            <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">2026.09.13 21:05</div>
-          </div>
-        </div>
-
-        <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;opacity:.65;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">박민준</span>
-              <span style="font-size:10.5px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:3px 9px;flex:0 0 auto;">답변완료</span>
-            </div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">노천탕 전세탕 예약은 별도로 해야 하나요?</div>
-            <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">2026.09.12 16:30</div>
-          </div>
-        </div>
-
-        <div style="padding:14px 16px;display:flex;gap:12px;align-items:flex-start;opacity:.65;">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">Yamada Kenji</span>
-              <span style="font-size:10.5px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:3px 9px;flex:0 0 auto;">답변완료</span>
-            </div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">駐車場の台数を教えてください</div>
-            <div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">2026.09.11 11:12</div>
-          </div>
-        </div>
+        </a>
       </div>
 
       <!-- 상세 / 답변 -->
-      <div class="form-card">
+      <div class="form-card" th:if="${selectedInquiry != null}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
-            <div style="font-family:var(--serif);font-size:19px;color:var(--ink);">다나카 유키</div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">tanaka.yuki@example.jp &nbsp;·&nbsp; 2026.09.14 14:22 접수</div>
+            <div style="font-family:var(--serif);font-size:19px;color:var(--ink);" th:text="${selectedInquiry.inquiryTitle}">문의 제목</div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;">
+              <span th:text="${selectedInquiry.userMail}">user@example.com</span> &nbsp;·&nbsp;
+              <span th:text="${#temporals.format(selectedInquiry.inquiryCreatedAt, 'yyyy.MM.dd HH:mm')}">2026.01.01 00:00</span> 접수
+            </div>
           </div>
-          <span style="font-size:10.5px;font-weight:600;color:#fff;background:var(--warn);padding:4px 11px;flex:0 0 auto;">미답변</span>
+          <span th:if="${selectedInquiry.inquiryStatus == '답변완료'}" style="font-size:10.5px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:4px 11px;flex:0 0 auto;">답변완료</span>
+          <span th:unless="${selectedInquiry.inquiryStatus == '답변완료'}" style="font-size:10.5px;font-weight:600;color:#fff;background:var(--warn);padding:4px 11px;flex:0 0 auto;">미답변</span>
         </div>
 
         <div class="divider"></div>
 
-        <div style="background:var(--bg-soft);padding:18px 20px;font-size:13.5px;line-height:1.85;color:var(--ink);">
-          안녕하세요, 10월 3일 1박 체크인 예정인 다나카입니다. 반려동물(소형견 1마리) 동반 숙박이 가능한지, 가능하다면 추가 요금이 있는지 문의드립니다. 답변 부탁드립니다.
+        <div style="background:var(--bg-soft);padding:18px 20px;font-size:13.5px;line-height:1.85;color:var(--ink);" th:text="${selectedInquiry.inquiryContent}">
+          문의 내용
         </div>
 
-        <div class="field" style="margin-top:20px;">
-          <label>답변 작성</label>
-          <textarea style="min-height:130px;" placeholder="답변 내용을 입력하세요...">안녕하세요, 清流庵입니다. 문의 주셔서 감사합니다. 저희 여관은 반려동물 동반이 불가능한 점 양해 부탁드립니다...</textarea>
+        <div class="answer-block" th:if="${selectedInquiry.inquiryAnswerContent != null}" style="margin-top:16px;padding:18px 20px;background:var(--gold-pale);font-size:13.5px;line-height:1.85;color:var(--ink);">
+          <div style="font-size:11.5px;font-weight:500;color:var(--gold-deep);margin-bottom:8px;">등록된 답변</div>
+          <div th:text="${selectedInquiry.inquiryAnswerContent}">답변 내용</div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
-          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft);">
-            <input type="checkbox" checked style="width:15px;height:15px;">이메일로 답변 발송
-          </label>
-          <div style="display:flex;gap:10px;">
-            <button type="button" class="btn-line" style="padding:11px 20px;font-size:12.5px;"><svg width="14" height="14"><use href="#i-check"/></svg>&nbsp;답변완료로 표시</button>
-            <button type="button" class="btn-gold" style="padding:11px 22px;font-size:12.5px;"><svg width="14" height="14"><use href="#i-send"/></svg>&nbsp;답변 등록</button>
+        <form th:action="@{/Admin/inquiry_answer}" method="post">
+          <input type="hidden" name="inquiryIdx" th:value="${selectedInquiry.inquiryIdx}">
+          <div class="field" style="margin-top:20px;">
+            <label th:text="${selectedInquiry.inquiryAnswerContent != null} ? '답변 수정' : '답변 작성'">답변 작성</label>
+            <textarea name="inquiryAnswerContent" style="min-height:130px;" placeholder="답변 내용을 입력하세요..." required th:text="${selectedInquiry.inquiryAnswerContent}"></textarea>
           </div>
-        </div>
+
+          <div style="display:flex;justify-content:flex-end;align-items:center;margin-top:16px;">
+            <button type="submit" class="btn-gold" style="padding:11px 22px;font-size:12.5px;"><svg width="14" height="14"><use href="#i-send"/></svg>&nbsp;<span th:text="${selectedInquiry.inquiryAnswerContent != null} ? '답변 수정' : '답변 등록'">답변 등록</span></button>
+          </div>
+        </form>
+      </div>
+
+      <div class="form-card" th:if="${selectedInquiry == null}">
+        <div class="img-hint">왼쪽에서 문의를 선택해 주세요.</div>
       </div>
 
     </div>

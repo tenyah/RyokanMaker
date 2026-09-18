@@ -5,6 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>清流庵 관리자 - 로그인</title>
 <link rel="stylesheet" th:href="@{/css/common.css}"> 
+<script type="text/javascript">
+ function send(){
+	 if(!loginForm.adminId.value){
+		 alert("아이디가 입력되지 않았습니다");
+		 loginForm.adminId.focus();
+		 return false;
+	 }
+	 if(!loginForm.adminPassword.value){
+		 alert("비밀번호가 입력되지 않았습니다");
+		 loginForm.adminPassword.focus();
+		 return false;
+	 }
+	 loginForm.submit();
+ }
+</script>
 </head>
 <body>
 
@@ -27,14 +42,13 @@
     </div>
 
     <div class="auth-title">관리자 로그인</div>
-    <div class="auth-sub">발급받으신 관리자 아이디와 초기 비밀번호로<br>로그인해 주세요.</div>
 
     <div class="auth-error" th:if="${error}">
       <svg width="16" height="16"><use href="#i-alert"/></svg>
       <span th:text="${error}"></span>
     </div>
 
-    <form class="auth-form" th:action="@{/Admin/login}" method="post">
+    <form class="auth-form" name="loginForm" th:action="@{/Admin/admin_login}" method="post">
       <div class="field">
         <label>아이디</label>
         <input type="text" name="adminId" placeholder="관리자 아이디를 입력하세요">
@@ -44,7 +58,7 @@
         <input type="password" name="adminPassword" placeholder="비밀번호를 입력하세요">
       </div>
 
-      <button type="submit" class="btn-gold">로그인</button>
+      <input type="button" class="btn-gold" onclick="send()" value="로그인">
     </form>
 
     <div class="auth-footnote">

@@ -1,9 +1,11 @@
 package com.mnu.ryokanmaker.mapper;
 
-import com.mnu.ryokanmaker.dto.NoticeDto;
-import org.apache.ibatis.annotations.Mapper;
-
 import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.mnu.ryokanmaker.dto.NoticeDto;
 
 @Mapper
 public interface NoticeMapper {
@@ -13,4 +15,12 @@ public interface NoticeMapper {
 
     /** 공지사항 단건 조회 */
     NoticeDto selectByIdx(int noticeIdx);
+
+    int insertNotice(NoticeDto noticeDto);
+
+    List<NoticeDto> selectNoticesByAdmin(@Param("adminIdx") Integer adminIdx);
+
+    int updateNotice(NoticeDto noticeDto);
+
+    int deleteNotice(@Param("noticeIdx") Integer noticeIdx, @Param("adminIdx") Integer adminIdx);
 }

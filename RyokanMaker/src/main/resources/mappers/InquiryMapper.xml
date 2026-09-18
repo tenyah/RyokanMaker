@@ -37,4 +37,38 @@
         DELETE FROM INQUIRY WHERE USER_MAIL = #{userMail}
     </delete>
 
+    <!-- 미답변을 위로, 그 다음 최신순으로 정렬해서 관리자가 처리할 문의를 먼저 보게 함.
+         status가 null이거나 빈 문자열이면(전체) 상태 조건 없이 전부 조회.
+         Thymeleaf가 @{...(status=${nullValue})}를 렌더링할 때 빈 문자열("")로 넘어오는 경우가 있어 둘 다 체크한다. -->
+    <select id="selectInquiriesByAdmin" resultMap="inquiryResultMap">
+        SELECT *
+        FROM INQUIRY
+        WHERE ADMIN_IDX = #{adminIdx}
+        <if test="status != null and status != ''">AND INQUIRY_STATUS = #{status}</if>
+        ORDER BY CASE WHEN INQUIRY_STATUS = '답변완료' THEN 1 ELSE 0 END, INQUIRY_IDX DESC
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM INQUIRY
+        WHERE ADMIN_IDX = #{adminIdx}
+        <if test="status != null and status != ''">AND INQUIRY_STATUS = #{status}</if>
+    </select>
+
+    <select id="selectInquiry" resultMap="inquiryResultMap">
+        SELECT *
+        FROM INQUIRY
+        WHERE INQUIRY_IDX = #{inquiryIdx}
+          AND ADMIN_IDX = #{adminIdx}
+    </select>
+
+    <!-- 답변 등록/수정. 등록과 동시에 상태를 '답변완료'로 갱신 -->
+    <update id="answerInquiry" parameterType="com.mnu.ryokanmaker.dto.InquiryDto">
+        UPDATE INQUIRY
+        SET INQUIRY_ANSWER_CONTENT = #{inquiryAnswerContent},
+            INQUIRY_STATUS = '답변완료'
+        WHERE INQUIRY_IDX = #{inquiryIdx}
+          AND ADMIN_IDX = #{adminIdx}
+    </update>
+
 </mapper>

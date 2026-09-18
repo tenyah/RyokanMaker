@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>숙박예약 | 清流庵 오타루 후루카와</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+	<div class="page-wrap">
+
+		<!-- 공통 헤더 include (현재 메뉴 = booking) -->
+		<div th:replace="~{include/header :: header(activePage='booking')}"></div>
+
+		<!-- 타이틀 -->
+		<section class="page-title">
+			<div class="crumb">HOME &nbsp;/&nbsp; 숙박예약 &nbsp;/&nbsp; 날짜 선택</div>
+			<h1>숙박예약</h1>
+			<div class="rule"></div>
+			<span class="plan-badge" style="margin-top: 4px;"> 선택하신 플랜 : <span
+				th:text="${selectedPlan.planName}">객실 + 식사 플랜</span>
+			</span>
+		</section>
+
+		<!-- 검색 조건 바 -->
+		<section style="padding: 32px 56px 0;">
+			<form class="search-bar" th:action="@{/reservation/reservation}" method="get">
+				<input type="hidden" name="planCode" th:value="${selectedPlan.planIdx}">
+
+				<div class="search-field">
+					<span class="field-label">체크인 - 체크아웃</span>
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<input type="date" name="checkIn" th:value="${searchCondition.checkIn}"
+							style="border:none; font-family:var(--serif); font-size:15px; color:var(--ink); background:transparent;">
+						<span>—</span>
+						<input type="date" name="checkOut" th:value="${searchCondition.checkOut}"
+							style="border:none; font-family:var(--serif); font-size:15px; color:var(--ink); background:transparent;">
+					</div>
+				</div>
+
+				<div class="search-field" style="border-right: none;">
+					<span class="field-label">객실 1개당 이용 인원</span>
+					<div style="display: flex; align-items: center; gap: 10px;">
+						성인 <input type="number" name="adultCount" min="1" th:value="${searchCondition.adultCount}" style="width:44px; border:none; background:transparent;">
+						어린이 <input type="number" name="childCount" min="0" th:value="${searchCondition.childCount}" style="width:44px; border:none; background:transparent;">
+					</div>
+				</div>
+
+				<button type="submit" class="btn-gold" style="margin-left: 24px;">검색</button>
+			</form>
+		</section>
+
+		<!-- ① 객실 선택 : 날짜별 예약 현황 캘린더 (모든 플랜 공통 — 항상 표시) -->
+		<div class="section-tag">
+			<span class="num">1</span><span class="label">객실 선택 — 날짜별 예약
+				현황</span><span class="line"></span>
+		</div>
+
+		<section style="padding: 0 56px 40px;">
+			<div
+				style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px;">
+				<div
+					style="font-family: var(--serif); font-weight: 400; font-size: 19px; color: var(--ink);">객실별
+					예약 가능 현황</div>
+				<p style="font-size: 12px; color: var(--ink-faint); margin: 0;" th:text="|${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')} ~ ${#temporals.format(searchCondition.checkOut, 'yyyy.MM.dd')} 전체 기간 기준 (인원수에 맞는 객실만 표시됩니다)|">2026.09.01 ~ 2026.09.02 전체 기간 기준</p>
+			</div>
+
+			<div style="overflow-x: auto;">
+				<table class="cal-table">
+					<thead>
+						<tr>
+							<th style="text-align: left; padding-left: 16px;">객실</th>
+							<th>최대 인원</th>
+							<th>1박 요금 (플랜 대비 추가요금)</th>
+							<th>예약 현황</th>
+							<th>선택</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="room : ${rooms}">
+							<td class="roomname" th:text="${room.roomName}">사쿠라</td>
+							<td class="cal-cell" th:text="${room.roomPeople} + '명'">7명</td>
+							<td class="cal-cell">
+								<span th:text="'₩' + ${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">₩300,000</span>
+								<span class="price" th:if="${room.extraCharge > 0}"
+									th:text="'(+₩' + ${#numbers.formatInteger(room.extraCharge, 0, 'COMMA')} + ' 추가)'">(+₩200,000 추가)</span>
+								<span class="price" th:unless="${room.extraCharge > 0}">(기준 객실)</span>
+							</td>
+							<td class="cal-cell"><span class="status"
+								th:classappend="${room.available} ? 'status-ok' : 'status-no'"
+								th:text="${room.available} ? '○ 예약 가능' : '− 마감'">예약 가능</span>
+							</td>
+							<td class="cal-cell">
+								<input type="radio" name="roomIdx" class="room-select"
+									th:value="${room.roomIdx}"
+									th:attr="data-extra=${room.extraCharge}"
+									th:disabled="${!room.available}">
+							</td>
+						</tr>
+						<tr th:if="${#lists.isEmpty(rooms)}">
+							<td colspan="5" style="color: var(--ink-faint);">인원수에 맞는 객실이 없습니다. 인원을 조정해 다시 검색해주세요.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="cal-legend">
+				<span><span class="status status-ok">○</span>&nbsp;예약 가능</span> <span><span
+					class="status status-no">−</span>&nbsp;마감</span>
+			</div>
+		</section>
+
+		<!-- ②③ 번호를 플랜 구성에 맞게 동적으로 계산 -->
+		<div
+			th:with="mealStep=${selectedPlan.planIncludesMeal == 'Y'} ? 2 : 0,
+                onsenStep=${selectedPlan.planIncludesOnsen == 'Y'} ? (${selectedPlan.planIncludesMeal == 'Y'} ? 3 : 2) : 0">
+
+			<!-- ② 식사(플랜) 선택 : 이 플랜에 식사가 포함된 경우에만 표시 -->
+			<div th:if="${selectedPlan.planIncludesMeal == 'Y'}">
+				<div class="section-tag">
+					<span class="num" th:text="${mealStep}">2</span><span class="label">식사(플랜)
+						선택</span><span class="line"></span>
+				</div>
+
+				<section style="padding: 0 56px 0;">
+					<div class="search-bar" style="margin-bottom: 28px;">
+						<div class="search-field" style="padding-left: 0;">
+							<span class="field-label">이용일</span> <span class="field-value"
+								th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')}">2026.09.13</span>
+						</div>
+						<div class="search-field" style="border-right: none;">
+							<span class="field-label">인원</span> <span class="field-value">성인
+								<span th:text="${searchCondition.adultCount}">2</span>명
+							</span>
+						</div>
+						<button class="btn-gold" style="margin-left: auto;">검색</button>
+					</div>
+				</section>
+
+				<section class="course-grid">
+					<div class="course-card" th:each="course : ${courses}">
+						<div class="thumb">
+							<img th:src="@{${course.restaurantCourseImage}}" alt="">
+						</div>
+						<div class="body">
+							<h4 th:text="${course.restaurantCourseName}">달 코스 『계절의 맛
+								가이세키』</h4>
+							<p th:if="${course.restaurantSaleYn == 'Y'}"
+								th:text="${course.restaurantCourseInfo}">코스 설명</p>
+							<p class="tbd"
+								th:unless="${course.restaurantSaleYn == 'Y'}">[코스 상세
+								설명 준비 중입니다]</p>
+							<input type="radio" name="courseIdx" style="display:none;"
+								th:value="${course.restaurantCourseIdx}"
+								th:disabled="${course.restaurantSaleYn != 'Y'}">
+							<button type="button" class="btn-gold" style="margin-top: 8px;"
+								th:disabled="${course.restaurantSaleYn != 'Y'}"
+								onclick="this.previousElementSibling.click()">이
+								코스로 선택</button>
+						</div>
+					</div>
+				</section>
+			</div>
+
+			<!-- ③ 온천 선택 : 이 플랜에 온천이 포함된 경우에만 표시 -->
+			<div th:if="${selectedPlan.planIncludesOnsen == 'Y'}">
+				<div class="section-tag">
+					<span class="num" th:text="${onsenStep}">3</span><span
+						class="label">온천 선택</span><span class="line"></span>
+				</div>
+
+				<section style="padding: 0 56px 0;">
+					<div class="search-bar" style="margin-bottom: 24px;">
+						<div class="search-field"
+							style="padding-left: 0; border-right: none;">
+							<span class="field-label">이용일</span> <span class="field-value"
+								th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')}">2026.09.13</span>
+						</div>
+						<p
+							style="font-size: 12px; color: var(--ink-faint); margin: 0 0 0 24px;">전세탕(대절)
+							예약 — 원하시는 시간대를 선택해주세요.</p>
+					</div>
+				</section>
+
+				<section style="padding: 0 56px 40px;">
+					<div style="overflow-x: auto;">
+						<table class="slot-table">
+							<thead>
+								<tr>
+									<th style="text-align: left; padding-left: 16px;">전세탕</th>
+									<th th:each="slot : ${baths[0].slots}" th:text="${slot.time}">15:00</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:each="bath : ${baths}">
+									<td class="roomname" th:text="${bath.bathName}">노천탕
+										(露天湯)</td>
+									<td th:each="slot : ${bath.slots}">
+										<input type="radio" name="onsenIdx" style="display:none;"
+											th:value="${bath.onsenIdx}"
+											th:attr="data-time=${slot.time}"
+											th:disabled="${!slot.available}">
+										<button type="button" class="slot-btn"
+											th:classappend="${slot.available} ? '' : 'taken'"
+											th:disabled="${!slot.available}"
+											th:text="${slot.available} ? '예약가능' : '마감'"
+											onclick="this.previousElementSibling.click()">예약가능</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<p
+						style="font-size: 12px; color: var(--ink-faint); margin-top: 14px;">시간대를
+						선택하시면 선택하신 전세탕과 시간이 하단 예약 요약에 담깁니다.</p>
+				</section>
+			</div>
+
+		</div>
+
+		<!-- 결제 페이지로 이동 : 선택한 객실(+추가요금)을 함께 넘김 -->
+		<section
+			style="padding: 24px 56px 56px; display: flex; justify-content: center;">
+			<button type="button" id="goPaymentBtn" class="btn-gold"
+				style="border: none; cursor: pointer; padding: 18px 56px; font-size: 15px;"
+				th:attr="data-plan-code=${selectedPlan.planIdx},
+                         data-plan-price=${selectedPlan.planPrice},
+                         data-check-in=${searchCondition.checkIn},
+                         data-check-out=${searchCondition.checkOut},
+                         data-adult-count=${searchCondition.adultCount},
+                         data-child-count=${searchCondition.childCount},
+                         data-room-count=${searchCondition.roomCount},
+                         data-meal-required=${selectedPlan.planIncludesMeal},
+                         data-onsen-required=${selectedPlan.planIncludesOnsen}">결제 페이지로
+				이동</button>
+		</section>
+
+		<script th:inline="none">
+			document.getElementById('goPaymentBtn').addEventListener('click', function () {
+				var selectedRoom = document.querySelector('input[name="roomIdx"]:checked');
+				if (!selectedRoom) {
+					alert('객실을 선택해주세요.');
+					return;
+				}
+
+				var mealRequired = this.getAttribute('data-meal-required') === 'Y';
+				var onsenRequired = this.getAttribute('data-onsen-required') === 'Y';
+
+				var selectedCourse = document.querySelector('input[name="courseIdx"]:checked');
+				if (mealRequired && !selectedCourse) {
+					alert('식사 코스를 선택해주세요.');
+					return;
+				}
+
+				var selectedOnsen = document.querySelector('input[name="onsenIdx"]:checked');
+				if (onsenRequired && !selectedOnsen) {
+					alert('온천 시간대를 선택해주세요.');
+					return;
+				}
+
+				var planPrice = parseInt(this.getAttribute('data-plan-price'), 10);
+				var extraCharge = parseInt(selectedRoom.getAttribute('data-extra'), 10);
+				var totalAmount = planPrice + extraCharge;
+
+				var params = new URLSearchParams();
+				params.set('planCode', this.getAttribute('data-plan-code'));
+				params.set('roomIdx', selectedRoom.value);
+				params.set('checkIn', this.getAttribute('data-check-in'));
+				params.set('checkOut', this.getAttribute('data-check-out'));
+				params.set('totalAmount', totalAmount);
+				params.set('adultCount', this.getAttribute('data-adult-count'));
+				params.set('childCount', this.getAttribute('data-child-count'));
+				params.set('roomCount', this.getAttribute('data-room-count'));
+				if (selectedCourse) params.set('courseIdx', selectedCourse.value);
+				if (selectedOnsen) {
+					params.set('onsenIdx', selectedOnsen.value);
+					params.set('onsenTimeSlot', selectedOnsen.getAttribute('data-time'));
+				}
+
+				window.location.href = '/payment?' + params.toString();
+			});
+
+			// 선택된 코스/온천 시간대 버튼에 시각적 표시
+			document.querySelectorAll('input[name="courseIdx"], input[name="onsenIdx"]').forEach(function (radio) {
+				radio.addEventListener('change', function () {
+					document.querySelectorAll('input[name="' + this.name + '"]').forEach(function (r) {
+						if (r.nextElementSibling) r.nextElementSibling.classList.remove('btn-selected');
+					});
+					if (this.checked && this.nextElementSibling) this.nextElementSibling.classList.add('btn-selected');
+				});
+			});
+		</script>
+
+		<!-- 공통 푸터 include -->
+		<div th:replace="~{include/footer :: footer}"></div>
+
+	</div>
+</body>
+</html>

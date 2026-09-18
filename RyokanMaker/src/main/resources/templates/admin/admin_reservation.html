@@ -75,7 +75,7 @@
     <a class="navlink" th:href="@{/Admin/room_status}" href="/Admin/room_status">객실 현황</a>
     <a class="navlink" th:href="@{/Admin/plan_sales}" href="/Admin/plan_sales">판매 관리</a>
     <a class="navlink" th:href="@{/Admin/admin_inquiry}">문의 관리</a>
-    <span class="btn-line" style="padding:10px 20px;font-size:12px;gap:7px;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</span>
+    <a class="btn-line" th:href="@{/}" target="_blank" style="padding:10px 20px;font-size:12px;gap:7px;text-decoration:none;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</a>
     <div class="account-menu" id="accountMenu">
       <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">관</button>
       <div class="account-dropdown">
@@ -136,7 +136,7 @@
       <a class="admin-nav-item" th:href="@{/Admin/admin_inquiry}">
         <svg width="17" height="17"><use href="#i-mail"/></svg>
         <span>문의 관리</span>
-        <span style="margin-left:auto;background:var(--warn);color:#fff;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 7px;">3</span>
+        <span th:if="${pendingInquiryCount > 0}" style="margin-left:auto;background:var(--warn);color:#fff;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 7px;" th:text="${pendingInquiryCount}">3</span>
       </a>
     </nav>
 
