@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.RestaurantCourseMapper">
+
+	<!-- RESTAURANT_COURSE_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
+	<insert id="insertCourse" parameterType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+		INSERT INTO RESTAURANT_COURSE (
+			RESTAURANT_COURSE_NAME,
+			RESTAURANT_COURSE_IMAGE,
+			RESTAURANT_COURSE_INFO,
+			ADMIN_IDX,
+			RESTAURANT_SALE_YN,
+			RESTAURANT_COURSE_MEMO
+		) VALUES (
+			#{restaurantCourseName},
+			#{restaurantCourseImage},
+			#{restaurantCourseInfo},
+			#{adminIdx},
+			#{restaurantSaleYn},
+			#{restaurantCourseMemo}
+		)
+	</insert>
+
+	<select id="selectCoursesByAdmin" resultType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+		SELECT *
+		FROM RESTAURANT_COURSE
+		WHERE ADMIN_IDX = #{adminIdx}
+		ORDER BY RESTAURANT_COURSE_IDX DESC
+	</select>
+
+	<!-- restaurantCourseImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
+	<update id="updateCourse" parameterType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+		UPDATE RESTAURANT_COURSE
+		<set>
+			RESTAURANT_COURSE_NAME = #{restaurantCourseName},
+			RESTAURANT_COURSE_INFO = #{restaurantCourseInfo},
+			RESTAURANT_SALE_YN = #{restaurantSaleYn},
+			RESTAURANT_COURSE_MEMO = #{restaurantCourseMemo},
+			<if test="restaurantCourseImage != null">RESTAURANT_COURSE_IMAGE = #{restaurantCourseImage},</if>
+		</set>
+		WHERE RESTAURANT_COURSE_IDX = #{restaurantCourseIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
+	<delete id="deleteCourse">
+		DELETE FROM RESTAURANT_COURSE
+		WHERE RESTAURANT_COURSE_IDX = #{restaurantCourseIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</delete>
+
+</mapper>

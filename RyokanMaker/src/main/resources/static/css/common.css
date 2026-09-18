@@ -406,7 +406,7 @@ img { max-width: 100%; display: block; }
 
 /* ---------------- 등록된 항목 리스트 ---------------- */
 .list-item { border: 1px solid var(--line); padding: 14px 16px; display: flex; align-items: center; gap: 16px; }
-.list-item .thumb { width: 54px; height: 54px; background: var(--bg-soft); flex: 0 0 auto; display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.list-item .thumb { width: 54px; height: 54px; background: var(--bg-soft); flex: 0 0 auto; display: flex; align-items: center; justify-content: center; color: var(--ink-faint); overflow: hidden; }
 .list-item .info { flex: 1; min-width: 0; }
 .list-item .info .name { font-size: 14px; font-weight: 400; font-family: var(--serif); color: var(--ink); }
 .list-item .info .desc { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }

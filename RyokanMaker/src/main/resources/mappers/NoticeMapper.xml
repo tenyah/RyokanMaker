@@ -19,4 +19,46 @@
         SELECT * FROM NOTICE WHERE NOTICE_IDX = #{noticeIdx}
     </select>
 
+    <!--
+        NOTICE_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외.
+        NOTICE_CREATED_AT은 DB에 DEFAULT가 없어서 등록 시 SYSTIMESTAMP로 직접 채움 (자바에서 값을 안 보냄).
+    -->
+    <insert id="insertNotice" parameterType="com.mnu.ryokanmaker.dto.NoticeDto">
+        INSERT INTO NOTICE (
+            ADMIN_IDX,
+            NOTICE_TITLE,
+            NOTICE_CONTENT,
+            NOTICE_CREATED_AT
+        ) VALUES (
+            #{adminIdx},
+            #{noticeTitle},
+            #{noticeContent},
+            SYSTIMESTAMP
+        )
+    </insert>
+
+    <select id="selectNoticesByAdmin" resultMap="noticeResultMap">
+        SELECT *
+        FROM NOTICE
+        WHERE ADMIN_IDX = #{adminIdx}
+        ORDER BY NOTICE_IDX DESC
+    </select>
+
+    <!-- 수정 시 NOTICE_CREATED_AT은 건드리지 않음(최초 등록 시각 그대로 유지) -->
+    <update id="updateNotice" parameterType="com.mnu.ryokanmaker.dto.NoticeDto">
+        UPDATE NOTICE
+        <set>
+            NOTICE_TITLE = #{noticeTitle},
+            NOTICE_CONTENT = #{noticeContent},
+        </set>
+        WHERE NOTICE_IDX = #{noticeIdx}
+          AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <delete id="deleteNotice">
+        DELETE FROM NOTICE
+        WHERE NOTICE_IDX = #{noticeIdx}
+          AND ADMIN_IDX = #{adminIdx}
+    </delete>
+
 </mapper>

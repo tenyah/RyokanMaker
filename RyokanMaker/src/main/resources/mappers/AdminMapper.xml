@@ -14,6 +14,7 @@
         <result column="RYOKAN_ACCESS"  property="ryokanAccess"/>
         <result column="RYOKAN_LOGO"    property="ryokanLogo"/>
         <result column="PW_RESET_YN"    property="pwResetYn"/>
+        <result column="RYOKAN_IMAGE"   property="ryokanImage"/>
     </resultMap>
 
     <select id="selectByAdminId" parameterType="string" resultMap="adminResultMap">
@@ -25,5 +26,37 @@
         INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME)
         VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName})
     </insert>
+
+    <!--
+        여관 기본정보 수정 (1 관리자 = 1 여관이라 등록/삭제 없이 수정만 있음).
+        ryokanLogo / ryokanImage는 새 이미지를 올렸을 때만 값이 채워짐(null이면 기존 이미지 유지).
+    -->
+    <update id="updateRyokanInfo" parameterType="com.mnu.ryokanmaker.dto.AdminDto">
+        UPDATE ADMIN
+        <set>
+            RYOKAN_NAME = #{ryokanName},
+            RYOKAN_TEL = #{ryokanTel},
+            ADMIN_MAIL = #{adminMail},
+            ADMIN_LOC = #{adminLoc},
+            <if test="ryokanLogo != null">RYOKAN_LOGO = #{ryokanLogo},</if>
+            <if test="ryokanImage != null">RYOKAN_IMAGE = #{ryokanImage},</if>
+        </set>
+        WHERE ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <!-- 교통안내(RYOKAN_ACCESS) 단독 수정용. 인덱스 화면 본체와 별도 폼이라 전용 update로 분리 -->
+    <update id="updateRyokanAccess" parameterType="com.mnu.ryokanmaker.dto.AdminDto">
+        UPDATE ADMIN
+        SET RYOKAN_ACCESS = #{ryokanAccess}
+        WHERE ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <!-- 비밀번호 변경 시 PW_RESET_YN도 'Y'로 같이 갱신 (초기 비밀번호 상태 해제) -->
+    <update id="updatePassword" parameterType="com.mnu.ryokanmaker.dto.AdminDto">
+        UPDATE ADMIN
+        SET ADMIN_PASSWORD = #{adminPassword},
+            PW_RESET_YN = 'Y'
+        WHERE ADMIN_IDX = #{adminIdx}
+    </update>
 
 </mapper>
