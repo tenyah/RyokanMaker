@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>清流庵 | 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+  <style>
+    .hero {
+      position: relative; min-height: 480px; display: flex; align-items: flex-end;
+      padding: 64px 56px; background: linear-gradient(160deg, var(--gold-deep), var(--ink));
+    }
+    .hero .hero-inner { color: #fff; max-width: 640px; }
+    .hero .eyebrow { font-size: 12px; letter-spacing: 0.2em; color: var(--gold-pale); margin-bottom: 18px; }
+    .hero h1 { font-family: var(--serif); font-size: 44px; font-weight: 400; margin: 0 0 12px; }
+    .hero .tagline { font-size: 15px; font-weight: 300; color: #F1E7D3; margin: 0 0 32px; }
+    .hero .hero-actions { display: flex; gap: 12px; }
+    .hero .btn-line { border-color: rgba(255,255,255,0.5); color: #fff; }
+    .hero .btn-line:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.1); }
+
+    .intro { padding: 72px 56px 48px; text-align: center; }
+    .intro .rule { width: 36px; height: 1px; background: var(--gold); margin: 0 auto 20px; }
+    .intro h2 { font-family: var(--serif); font-size: 26px; font-weight: 400; color: var(--ink); margin: 0 0 16px; line-height: 1.5; }
+    .intro p { font-size: 14px; color: var(--ink-soft); line-height: 1.9; max-width: 560px; margin: 0 auto; }
+
+    .feature-grid { padding: 24px 56px 64px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 32px; }
+    .feature-card { border: 1px solid var(--line); }
+    .feature-card .thumb {
+      height: 160px; display: flex; align-items: center; justify-content: center;
+      background: var(--bg-soft); color: var(--gold-deep); font-family: var(--serif); font-size: 15px;
+    }
+    .feature-card .body { padding: 22px 24px; }
+    .feature-card h3 { font-family: var(--serif); font-weight: 400; font-size: 18px; color: var(--ink); margin: 0 0 8px; }
+    .feature-card p { font-size: 13px; color: var(--ink-soft); line-height: 1.8; margin: 0; }
+
+    .admin-cta { background: var(--bg-soft); border-top: 1px solid var(--line); margin-top: 40px; padding: 40px 56px; text-align: center; }
+    .admin-cta p { font-size: 13px; color: var(--ink-soft); margin: 0 0 16px; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='index')}"></div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">OTARU FURUKAWA</div>
+      <h1>清流庵</h1>
+      <p class="tagline">오타루 운하가 내려다보이는, 하룻밤의 고요</p>
+      <div class="hero-actions">
+        <a class="btn-gold" th:href="@{/reservation/plan}">숙박예약</a>
+        <a class="btn-line" th:href="@{/reservation/plan}">플랜 둘러보기</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="intro">
+    <div class="rule"></div>
+    <h2>일상의 피로를 풀어주는<br>따뜻한 휴식의 공간</h2>
+    <p>다다미의 부드러운 감촉과 이그사 향, 오타루 연석을 두른 욕탕, 제철 식재료로 빚은 가이세키까지 — 하나하나에 정성을 담았습니다.</p>
+  </section>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="thumb">객실</div>
+      <div class="body">
+        <h3>객실</h3>
+        <p>다다미와 도코노마가 어우러진 전통 객실에서 마음 편히 머무르세요.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="thumb">온천</div>
+      <div class="body">
+        <h3>온천</h3>
+        <p>오타루 연석을 두른 실내탕과 대나무 정원이 보이는 창가의 시간.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="thumb">식사</div>
+      <div class="body">
+        <h3>식사</h3>
+        <p>오타루 인근 식재료로 빚은 계절의 맛 가이세키를 한 품씩 내어드립니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="section-tag" style="margin-top:0;">
+    <div class="line"></div>
+    <div class="label">공지사항</div>
+    <div class="line"></div>
+  </section>
+
+  <div class="board-list">
+    <a class="board-row" th:each="notice : ${notices}" th:href="@{/notice/view(idx=${notice.noticeIdx})}">
+      <span class="board-date" th:text="${#temporals.format(notice.noticeCreatedAt, 'yyyy/MM/dd')}"></span>
+      <span class="board-title" th:text="${notice.noticeTitle}"></span>
+    </a>
+    <div th:if="${#lists.isEmpty(notices)}" class="board-empty">등록된 공지사항이 없습니다.</div>
+  </div>
+
+  <section class="admin-cta">
+    <p>료칸을 운영하고 계신가요? 관리자 계정을 신청해보세요.</p>
+    <a class="btn-line" th:href="@{/admin/apply}">관리자 계정 신청</a>
+  </section>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+</body>
+</html>

@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.mnu.ryokanmaker.domain.FacilityDto;
+import com.mnu.ryokanmaker.dto.FacilityDto;
 
 @Mapper
 public interface FacilityMapper {

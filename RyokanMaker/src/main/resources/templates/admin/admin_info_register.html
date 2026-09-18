@@ -223,9 +223,9 @@
 
         <div class="field" style="gap:10px;">
           <label style="font-size:12.5px;color:var(--ink);font-weight:500;letter-spacing:0;">여관 로고</label>
-          <div class="img-tile filled" th:style="${session.admin.logoUrl != null} ? 'cursor:default;background-image:url(' + @{${session.admin.logoUrl}} + ');background-size:cover;background-position:center;' : 'cursor:default;'">
+          <div class="img-tile filled" th:style="${admin.logoUrl != null} ? 'cursor:default;background-image:url(' + @{${admin.logoUrl}} + ');background-size:cover;background-position:center;' : 'cursor:default;'">
             <input type="file" name="ryokanLogoFile" accept="image/*" title="로고 이미지 업로드">
-            <th:block th:if="${session.admin.logoUrl == null}">
+            <th:block th:if="${admin.logoUrl == null}">
               <span style="font-family:var(--serif);color:var(--gold-deep);font-size:28px;font-weight:500;">淸</span>
               <span style="letter-spacing:.1em;">SEIRYUAN</span>
             </th:block>
@@ -237,18 +237,18 @@
         <div>
           <div class="img-field-head">
             <div class="sub-label">메인 화면 이미지</div>
-            <div class="count-badge" th:text="${#lists.size(session.admin.ryokanImageUrls)} + ' / 10'">0 / 10</div>
+            <div class="count-badge" th:text="${#lists.size(admin.ryokanImageUrls)} + ' / 10'">0 / 10</div>
           </div>
           <div class="img-grid">
-            <div class="img-tile filled" th:each="url : ${session.admin.ryokanImageUrls}"
+            <div class="img-tile filled" th:each="url : ${admin.ryokanImageUrls}"
                  th:style="'background-image:url(' + @{${url}} + ');background-size:cover;background-position:center;'">
               <input type="file" name="ryokanImageFiles" accept="image/*">
               <div class="remove"><svg width="10" height="10"><use href="#i-x"/></svg></div>
             </div>
-            <div class="img-tile" th:if="${#lists.size(session.admin.ryokanImageUrls) < 10}"
-                 th:each="i : ${#numbers.sequence(1, 10 - #lists.size(session.admin.ryokanImageUrls))}">
+            <div class="img-tile" th:if="${#lists.size(admin.ryokanImageUrls) < 10}"
+                 th:each="i : ${#numbers.sequence(1, 10 - #lists.size(admin.ryokanImageUrls))}">
               <input type="file" name="ryokanImageFiles" accept="image/*">
-              <th:block th:if="${#lists.isEmpty(session.admin.ryokanImageUrls)} and ${i == 1}">
+              <th:block th:if="${#lists.isEmpty(admin.ryokanImageUrls)} and ${i == 1}">
                 <svg width="19" height="19"><use href="#i-upload"/></svg>
                 <span>이미지 추가</span>
               </th:block>
@@ -260,10 +260,10 @@
         <div>
           <div class="sub-label" style="margin-bottom:12px;">여관 정보</div>
           <div class="field-row">
-            <div class="field"><label>여관 이름</label><input type="text" name="ryokan_name" th:value="${session.admin.ryokan_name}" placeholder="예: 清流庵 (세이류안)" required></div>
-            <div class="field"><label>연락처</label><input type="tel" name="ryokan_tel" th:value="${session.admin.ryokan_tel}" placeholder="예: 0134-XX-XXXX"></div>
-            <div class="field"><label>이메일</label><input type="email" name="admin_mail" th:value="${session.admin.admin_mail}" placeholder="예: info@example.com" required></div>
-            <div class="field"><label>주소</label><input type="text" name="admin_loc" th:value="${session.admin.admin_loc}" placeholder="[주소를 입력하세요]"></div>
+            <div class="field"><label>여관 이름</label><input type="text" name="ryokanName" th:value="${admin.ryokanName}" placeholder="예: 清流庵 (세이류안)" required></div>
+            <div class="field"><label>연락처</label><input type="tel" name="ryokanTel" th:value="${admin.ryokanTel}" placeholder="예: 0134-XX-XXXX"></div>
+            <div class="field"><label>이메일</label><input type="email" name="adminMail" th:value="${admin.adminMail}" placeholder="예: info@example.com" required></div>
+            <div class="field"><label>주소</label><input type="text" name="adminLoc" th:value="${admin.adminLoc}" placeholder="[주소를 입력하세요]"></div>
           </div>
         </div>
 
@@ -772,7 +772,7 @@
 
         <div class="field">
           <label>교통안내</label>
-          <input type="text" name="ryokanAccess" maxlength="33" placeholder="예: JR 오타루역 남쪽 출구에서 도보 15분" th:value="${session.admin.ryokan_access}">
+          <input type="text" name="ryokanAccess" maxlength="33" placeholder="예: JR 오타루역 남쪽 출구에서 도보 15분" th:value="${admin.ryokanAccess}">
           <div class="img-hint">여관 하나당 한 줄만 등록됩니다 (최대 약 33자 · DB 컬럼 제한 100byte). 자세한 안내가 필요하면 시설이나 공지사항을 활용해 주세요.</div>
         </div>
 

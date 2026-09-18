@@ -1,24 +1,19 @@
 package com.mnu.ryokanmaker.dto;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-/** 캘린더 표의 한 행(row) : 객실 하나 + 날짜별 상태 목록 */
+/** 검색한 체크인~체크아웃 전체 기간 기준, 객실 하나의 예약 가능 여부 */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RoomAvailabilityDto {
 
+    private Integer roomIdx;
     private String roomName;
-    private List<DayStatusDto> days;
-
-    public RoomAvailabilityDto() {
-    }
-
-    public RoomAvailabilityDto(String roomName, List<DayStatusDto> days) {
-        this.roomName = roomName;
-        this.days = days;
-    }
-
-    public String getRoomName() { return roomName; }
-    public void setRoomName(String roomName) { this.roomName = roomName; }
-
-    public List<DayStatusDto> getDays() { return days; }
-    public void setDays(List<DayStatusDto> days) { this.days = days; }
+    private Integer roomPeople;
+    private Integer roomPrice;
+    private Integer extraCharge;
+    private boolean available;
 }

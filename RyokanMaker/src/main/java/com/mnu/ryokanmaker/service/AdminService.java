@@ -7,10 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.mnu.ryokanmaker.domain.AdminDTO;
+import com.mnu.ryokanmaker.dto.AdminDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
-import com.mnu.ryokanmaker.util.UserSHA256;
+import com.mnu.ryokanmaker.util.PasswordUtil;
 
 @Service
 public class AdminService {
@@ -21,23 +21,22 @@ public class AdminService {
 	private AdminMapper adminMapper;
 
 	/**
-	 * PW_RESET_YN에 따라 비밀번호 비교 방식을 다르게 처리한다.
-	 * 'N'(초기 비밀번호, 아직 변경 안 함) : DB에 평문으로 저장돼 있으므로 입력값을 그대로 비교.
-	 * 'Y'(비밀번호 변경 완료) : DB에 SHA-256 해시로 저장돼 있으므로 입력값을 해시해서 비교.
-	 * 아이디가 존재하지 않거나 비밀번호가 일치하지 않으면 null을 반환한다.
+	 * 로그인 : 아이디/비밀번호가 맞으면 관리자 정보를, 아니면 null을 반환.
+	 * PW_RESET_YN='N'(가입 직후 초기 상태)이면 DB에 평문으로 저장되어 있어 평문 비교,
+	 * 'Y'(비밀번호 변경 완료 후)이면 DB에 sha256 해시로 저장되어 있어 해시 비교.
 	 */
-	public AdminDTO adminLogin(AdminDTO adminDTO) {
-		AdminDTO found = adminMapper.findByAdminId(adminDTO.getAdmin_id());
-		if (found == null) {
+	public AdminDto authenticate(String adminId, String adminPassword) {
+		AdminDto admin = adminMapper.selectByAdminId(adminId);
+		if (admin == null) {
 			return null;
 		}
-
-		String inputPassword = adminDTO.getAdmin_password();
-		boolean matches = "N".equals(found.getPw_reset_yn())
-				? found.getAdmin_password().equals(inputPassword)
-				: found.getAdmin_password().equals(UserSHA256.getSHA256(inputPassword));
-
-		return matches ? found : null;
+		boolean matched = "Y".equals(admin.getPwResetYn())
+				? admin.getAdminPassword().equals(PasswordUtil.sha256(adminPassword))
+				: admin.getAdminPassword().equals(adminPassword);
+		if (!matched) {
+			return null;
+		}
+		return admin;
 	}
 
 	/**
@@ -45,16 +44,16 @@ public class AdminService {
 	 * logoFile : 로고 1장 (선택) - 안 올리면 기존 로고 유지
 	 * ryokanImageFiles : 메인화면 슬라이드 이미지 최대 10장 (선택) - 안 올리면 기존 이미지 유지
 	 */
-	public void updateRyokanInfo(AdminDTO adminDto, MultipartFile logoFile, List<MultipartFile> ryokanImageFiles) throws IOException {
+	public void updateRyokanInfo(AdminDto adminDto, MultipartFile logoFile, List<MultipartFile> ryokanImageFiles) throws IOException {
 
 		if (logoFile != null && !logoFile.isEmpty()) {
 			String logoJson = ImageJsonUtil.toJson(List.of(logoFile), 1, "logo");
-			adminDto.setRyokan_logo(logoJson);
+			adminDto.setRyokanLogo(logoJson);
 		}
 
 		String imagesJson = ImageJsonUtil.toJson(ryokanImageFiles, MAX_MAIN_IMAGES, "ryokan");
 		if (imagesJson != null) {
-			adminDto.setRyokan_image(imagesJson);
+			adminDto.setRyokanImage(imagesJson);
 		}
 
 		adminMapper.updateRyokanInfo(adminDto);
@@ -64,25 +63,21 @@ public class AdminService {
 	 * 교통안내(RYOKAN_ACCESS) 단독 수정. 인덱스 화면 본체(여관명/전화/메일/위치/이미지) 폼과 별도라
 	 * 다른 필드를 건드리지 않도록 전용 update를 사용.
 	 */
-	public void updateRyokanAccess(AdminDTO adminDto) {
+	public void updateRyokanAccess(AdminDto adminDto) {
 		adminMapper.updateRyokanAccess(adminDto);
 	}
 
 	/**
-	 * 비밀번호 변경 (최초 로그인 강제 변경 포함). 세션에 있는 loginAdmin의 현재 해시와
-	 * 입력한 현재 비밀번호의 해시를 비교해서 일치할 때만 변경하고,
-	 * 변경 성공 시 PW_RESET_YN을 'Y'로 같이 갱신해서 초기 비밀번호 상태를 해제한다.
-	 * 현재 비밀번호가 틀리면 false를 반환한다.
+	 * 비밀번호 변경 : 현재 비밀번호가 맞으면 새 비밀번호로 바꾸고 true, 아니면 false.
+	 * 이 경로는 PW_RESET_YN='N'(가입 직후=평문 저장) 상태에서 호출되므로 현재 비밀번호는 평문으로 비교하고,
+	 * 변경 후에는 PW_RESET_YN이 'Y'(해시 저장)로 바뀌므로 새 비밀번호는 sha256 해시로 저장한다.
 	 */
-	public boolean resetPassword(AdminDTO loginAdmin, String currentPassword, String newPassword) {
-		if (!loginAdmin.getAdmin_password().equals(UserSHA256.getSHA256(currentPassword))) {
+	public boolean changePassword(Integer adminIdx, String currentPassword, String newPassword) {
+		AdminDto admin = adminMapper.selectByAdminIdx(adminIdx);
+		if (admin == null || !admin.getAdminPassword().equals(currentPassword)) {
 			return false;
 		}
-
-		AdminDTO adminDto = new AdminDTO();
-		adminDto.setAdmin_idx(loginAdmin.getAdmin_idx());
-		adminDto.setAdmin_password(UserSHA256.getSHA256(newPassword));
-		adminMapper.updatePassword(adminDto);
+		adminMapper.updatePassword(adminIdx, PasswordUtil.sha256(newPassword));
 		return true;
 	}
 }
