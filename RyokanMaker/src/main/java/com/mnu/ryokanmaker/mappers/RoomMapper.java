@@ -14,7 +14,7 @@ public interface RoomMapper {
     // 방 하나 상세 조회 (예약 시 선택한 방 정보 확인용)
     RoomDTO findById(@Param("roomIdx") Long roomIdx);
 
-    // 특정 등급(roomLevel) 중 최저가 조회 -> 기준가(작은방)로 사용
-    Long findMinPriceByLevel(@Param("roomLevel") String roomLevel);
+    // 판매중인 방 전체 중 최저가 조회 -> 플랜 가격에 포함된 기준 객실가로 사용 (특정 등급 고정 X)
+    Long findMinPrice();
 
 }

@@ -18,11 +18,10 @@
     WHERE room_idx = #{roomIdx}
 </select>
 
-<select id="findMinPriceByLevel" resultType="java.lang.Long">
+<select id="findMinPrice" resultType="java.lang.Long">
     SELECT MIN(room_price)
     FROM "ROOM"
-    WHERE room_level = #{roomLevel}
-      AND room_sale_yn = 'Y'
+    WHERE room_sale_yn = 'Y'
 </select>
 
 

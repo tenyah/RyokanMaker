@@ -52,7 +52,7 @@ public class ReservationService {
         long requestedPeople = adultCount + childCount;
         List<RoomReservationDTO> reserved = roomReservationMapper.findOverlapping(checkIn, checkOut);
 
-        Long basePrice = roomMapper.findMinPriceByLevel("3"); // 작은방 기준 — 플랜 가격에 이미 포함된 금액
+        Long basePrice = roomMapper.findMinPrice(); // 현재 판매중인 방 중 최저가 — 플랜 가격에 이미 포함된 금액
         if (basePrice == null) basePrice = 0L;
 
         List<RoomAvailabilityDto> rooms = new ArrayList<>();
@@ -88,12 +88,12 @@ public class ReservationService {
         }
         return baths;
     }
- // 최종 결제금액 = 플랜가격 + (선택한 방 가격 - 작은방 기준가)
+ // 최종 결제금액 = 플랜가격 + (선택한 방 가격 - 현재 최저가 방 기준가)
     public Long calculateFinalPrice(Long planIdx, Long roomIdx) {
         PlanDTO plan = planMapper.findById(planIdx);
         RoomDTO room = roomMapper.findById(roomIdx);
 
-        Long basePrice = roomMapper.findMinPriceByLevel("3"); // 작은방 기준
+        Long basePrice = roomMapper.findMinPrice();
         if (basePrice == null) basePrice = 0L;
 
         long extra = room.getRoomPrice() - basePrice;

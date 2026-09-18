@@ -88,7 +88,7 @@
 							</td>
 							<td class="cal-cell"><span class="status"
 								th:classappend="${room.available} ? 'status-ok' : 'status-no'"
-								th:text="${room.available} ? '○ 예약 가능' : '− 마감'">예약 가능</span>
+								th:text="${room.available} ? '예약 가능' : '− 마감'">예약 가능</span>
 							</td>
 							<td class="cal-cell">
 								<input type="radio" name="roomIdx" class="room-select"
@@ -104,10 +104,6 @@
 				</table>
 			</div>
 
-			<div class="cal-legend">
-				<span><span class="status status-ok">○</span>&nbsp;예약 가능</span> <span><span
-					class="status status-no">−</span>&nbsp;마감</span>
-			</div>
 		</section>
 
 		<!-- ②③ 번호를 플랜 구성에 맞게 동적으로 계산 -->
@@ -140,7 +136,8 @@
 				<section class="course-grid">
 					<div class="course-card" th:each="course : ${courses}">
 						<div class="thumb">
-							<img th:src="@{${course.restaurantCourseImage}}" alt="">
+							<img th:if="${course.restaurantCourseImage != null}"
+							th:src="@{'/upload/plan/course/' + ${course.restaurantCourseImage}}" alt="">
 						</div>
 						<div class="body">
 							<h4 th:text="${course.restaurantCourseName}">달 코스 『계절의 맛
