@@ -21,10 +21,14 @@
         SELECT * FROM ADMIN WHERE ADMIN_ID = #{adminId}
     </select>
 
+    <select id="selectByAdminIdx" parameterType="int" resultMap="adminResultMap">
+        SELECT * FROM ADMIN WHERE ADMIN_IDX = #{adminIdx}
+    </select>
+
     <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminDto"
             useGeneratedKeys="true" keyProperty="adminIdx" keyColumn="ADMIN_IDX">
-        INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME)
-        VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName})
+        INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME, PW_RESET_YN)
+        VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName}, #{pwResetYn})
     </insert>
 
     <!--
@@ -51,12 +55,9 @@
         WHERE ADMIN_IDX = #{adminIdx}
     </update>
 
-    <!-- 비밀번호 변경 시 PW_RESET_YN도 'Y'로 같이 갱신 (초기 비밀번호 상태 해제) -->
-    <update id="updatePassword" parameterType="com.mnu.ryokanmaker.dto.AdminDto">
-        UPDATE ADMIN
-        SET ADMIN_PASSWORD = #{adminPassword},
-            PW_RESET_YN = 'Y'
-        WHERE ADMIN_IDX = #{adminIdx}
+    <!-- 비밀번호 변경 시 PW_RESET_YN을 'N'으로 갱신 (초기 비밀번호 상태 해제) -->
+    <update id="updatePassword">
+        UPDATE ADMIN SET ADMIN_PASSWORD = #{adminPassword}, PW_RESET_YN = 'N' WHERE ADMIN_IDX = #{adminIdx}
     </update>
 
 </mapper>

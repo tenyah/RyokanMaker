@@ -2,12 +2,15 @@ package com.mnu.ryokanmaker.mapper;
 
 import com.mnu.ryokanmaker.dto.AdminDto;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface AdminMapper {
 
     /** 아이디 중복 확인 / 로그인 조회 겸용 */
     AdminDto selectByAdminId(String adminId);
+
+    AdminDto selectByAdminIdx(Integer adminIdx);
 
     /** 관리자 계정 등록 (계정 신청 승인 시 사용) */
     int insert(AdminDto adminDto);
@@ -18,6 +21,6 @@ public interface AdminMapper {
     /** 교통안내(RYOKAN_ACCESS) 단독 수정 */
     int updateRyokanAccess(AdminDto adminDto);
 
-    /** 비밀번호 변경. 변경 성공 시 PW_RESET_YN도 'Y'로 같이 갱신된다. */
-    int updatePassword(AdminDto adminDto);
+    /** 비밀번호 변경. 변경 성공 시 PW_RESET_YN도 'N'으로 같이 갱신된다(초기 비밀번호 상태 해제). */
+    int updatePassword(@Param("adminIdx") Integer adminIdx, @Param("adminPassword") String adminPassword);
 }

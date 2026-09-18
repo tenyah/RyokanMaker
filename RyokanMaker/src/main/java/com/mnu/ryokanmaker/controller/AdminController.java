@@ -34,7 +34,6 @@ import com.mnu.ryokanmaker.service.PlanService;
 import com.mnu.ryokanmaker.service.RestaurantCourseService;
 import com.mnu.ryokanmaker.service.RoomService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -73,9 +72,13 @@ public class AdminController {
 	@Autowired
 	private InquiryService inquiryService;
 
+	private AdminDto currentAdmin(HttpSession session) {
+		return (AdminDto) session.getAttribute("admin");
+	}
+
 	@GetMapping("admin_info_register")
 	public String adminInfoRegister(HttpSession session, Model model) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -99,7 +102,7 @@ public class AdminController {
 	public String adminInquiry(@RequestParam(value = "idx", required = false) Integer idx,
 			@RequestParam(value = "status", required = false) String status,
 			HttpSession session, Model model) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -132,7 +135,7 @@ public class AdminController {
 	public String inquiryAnswer(@RequestParam("inquiryIdx") Integer inquiryIdx,
 			@RequestParam("inquiryAnswerContent") String inquiryAnswerContent,
 			HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -143,9 +146,9 @@ public class AdminController {
 	}
 
 	/** 예약 현황 화면: 왼쪽 예약 목록 + 첫 번째 예약의 상세 패널을 함께 조회. */
-	@GetMapping("admin_reservation")
-	public String adminReservation(HttpSession session, Model model) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+	@GetMapping("reservation_status")
+	public String reservationStatus(HttpSession session, Model model) {
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -164,33 +167,35 @@ public class AdminController {
 	}
 
 	@GetMapping("admin_login")
-	public String adminLogin(HttpSession session){
-	    if (session.getAttribute("admin") == null)
-	        return "Admin/admin_login";
-	    else
-	        return "redirect:/Admin/admin_info_register";
+	public String adminLoginForm(HttpSession session) {
+		if (currentAdmin(session) == null) {
+			return "Admin/admin_login";
+		}
+		return "redirect:/Admin/admin_info_register";
 	}
 
 	@PostMapping("admin_login")
-	public String adminLoginPro(AdminDto adminDto, HttpServletRequest request, Model model){
-	    AdminDto admin = adminService.adminLogin(adminDto);
+	public String adminLogin(@RequestParam String adminId,
+			@RequestParam String adminPassword,
+			HttpSession session, Model model) {
+		AdminDto admin = adminService.authenticate(adminId, adminPassword);
+		if (admin == null) {
+			model.addAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
+			return "Admin/admin_login";
+		}
+		admin.setAdminPassword(null);
+		session.setAttribute("admin", admin);
+		session.setMaxInactiveInterval(60 * 20);
 
-	    if (admin == null) {
-	        model.addAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
-	        return "Admin/admin_login";
-	    }
-
-	    request.getSession().setAttribute("admin", admin);
-	    request.getSession().setMaxInactiveInterval(60 * 20);
-
-	    if ("N".equals(admin.getPwResetYn())) {
-	        return "redirect:/Admin/admin_pwreset";
-	    }
-	    return "redirect:/Admin/admin_info_register";
+		if ("Y".equals(admin.getPwResetYn())) {
+			return "redirect:/Admin/admin_pwreset";
+		}
+		return "redirect:/Admin/admin_info_register";
 	}
+
 	@GetMapping("admin_pwreset")
-	public String adminPwreset(HttpSession session, Model model){
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+	public String adminPwresetForm(HttpSession session, Model model) {
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -199,7 +204,7 @@ public class AdminController {
 	}
 
 	/**
-	 * 비밀번호 변경. 현재 비밀번호가 일치할 때만 변경하며, 성공 시 PW_RESET_YN이 'Y'로 갱신되어
+	 * 비밀번호 변경. 현재 비밀번호가 일치할 때만 변경하며, 성공 시 PW_RESET_YN이 'N'으로 갱신되어
 	 * 초기 비밀번호 상태가 해제된다.
 	 */
 	@PostMapping("password_reset")
@@ -208,7 +213,7 @@ public class AdminController {
 			@RequestParam("newPasswordConfirm") String newPasswordConfirm,
 			HttpSession session, Model model) {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -219,14 +224,14 @@ public class AdminController {
 			return "Admin/admin_pwreset";
 		}
 
-		boolean success = adminService.resetPassword(loginAdmin, currentPassword, newPassword);
+		boolean success = adminService.changePassword(loginAdmin.getAdminIdx(), currentPassword, newPassword);
 		if (!success) {
 			model.addAttribute("admin", loginAdmin);
 			model.addAttribute("error", "현재 비밀번호가 일치하지 않습니다.");
 			return "Admin/admin_pwreset";
 		}
 
-		loginAdmin.setPwResetYn("Y");
+		loginAdmin.setPwResetYn("N");
 		session.setAttribute("admin", loginAdmin);
 
 		return "redirect:/Admin/admin_info_register";
@@ -241,7 +246,7 @@ public class AdminController {
 			@RequestParam(value = "ryokanImageFiles", required = false) List<MultipartFile> ryokanImageFiles,
 			HttpSession session) throws IOException {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -270,7 +275,7 @@ public class AdminController {
 	 */
 	@PostMapping("admin_access_save")
 	public String adminAccessSave(@RequestParam("ryokanAccess") String ryokanAccess, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -294,7 +299,7 @@ public class AdminController {
 			@RequestParam(value = "roomImageFiles", required = false) List<MultipartFile> roomImageFiles,
 			HttpSession session) throws IOException {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -307,7 +312,7 @@ public class AdminController {
 
 	@PostMapping("room_delete")
 	public String roomDelete(@RequestParam("roomIdx") Integer roomIdx, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -323,7 +328,7 @@ public class AdminController {
 			@RequestParam(value = "courseImageFiles", required = false) List<MultipartFile> courseImageFiles,
 			HttpSession session) throws IOException {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -336,7 +341,7 @@ public class AdminController {
 
 	@PostMapping("course_delete")
 	public String courseDelete(@RequestParam("restaurantCourseIdx") Integer restaurantCourseIdx, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -355,7 +360,7 @@ public class AdminController {
 			@RequestParam(value = "onsenImageFiles", required = false) List<MultipartFile> onsenImageFiles,
 			HttpSession session) throws IOException {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -368,7 +373,7 @@ public class AdminController {
 
 	@PostMapping("onsen_delete")
 	public String onsenDelete(@RequestParam("onsenIdx") Integer onsenIdx, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -385,7 +390,7 @@ public class AdminController {
 			@RequestParam(value = "planImageFiles", required = false) List<MultipartFile> planImageFiles,
 			HttpSession session) throws IOException {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -398,7 +403,7 @@ public class AdminController {
 
 	@PostMapping("plan_delete")
 	public String planDelete(@RequestParam("planIdx") Integer planIdx, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -415,7 +420,7 @@ public class AdminController {
 			@RequestParam(value = "facilityImageFiles", required = false) List<MultipartFile> facilityImageFiles,
 			HttpSession session) throws IOException {
 
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -428,7 +433,7 @@ public class AdminController {
 
 	@PostMapping("facility_delete")
 	public String facilityDelete(@RequestParam("facilityIdx") Integer facilityIdx, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -441,7 +446,7 @@ public class AdminController {
 	 */
 	@PostMapping("notice_save")
 	public String noticeSave(NoticeDto noticeDto, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
@@ -454,7 +459,7 @@ public class AdminController {
 
 	@PostMapping("notice_delete")
 	public String noticeDelete(@RequestParam("noticeIdx") Integer noticeIdx, HttpSession session) {
-		AdminDto loginAdmin = (AdminDto) session.getAttribute("admin");
+		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}

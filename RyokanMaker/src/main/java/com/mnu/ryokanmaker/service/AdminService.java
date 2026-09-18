@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.mnu.ryokanmaker.dto.AdminDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
-import com.mnu.ryokanmaker.util.UserSHA256;
+import com.mnu.ryokanmaker.util.PasswordUtil;
 
 @Service
 public class AdminService {
@@ -20,24 +20,16 @@ public class AdminService {
 	@Autowired
 	private AdminMapper adminMapper;
 
-	/**
-	 * PW_RESET_YN에 따라 비밀번호 비교 방식을 다르게 처리한다.
-	 * 'N'(초기 비밀번호, 아직 변경 안 함) : DB에 평문으로 저장돼 있으므로 입력값을 그대로 비교.
-	 * 'Y'(비밀번호 변경 완료) : DB에 SHA-256 해시로 저장돼 있으므로 입력값을 해시해서 비교.
-	 * 아이디가 존재하지 않거나 비밀번호가 일치하지 않으면 null을 반환한다.
-	 */
-	public AdminDto adminLogin(AdminDto adminDto) {
-		AdminDto found = adminMapper.selectByAdminId(adminDto.getAdminId());
-		if (found == null) {
+	/** 로그인 : 아이디/비밀번호가 맞으면 관리자 정보를, 아니면 null을 반환 */
+	public AdminDto authenticate(String adminId, String adminPassword) {
+		AdminDto admin = adminMapper.selectByAdminId(adminId);
+		if (admin == null) {
 			return null;
 		}
-
-		String inputPassword = adminDto.getAdminPassword();
-		boolean matches = "N".equals(found.getPwResetYn())
-				? found.getAdminPassword().equals(inputPassword)
-				: found.getAdminPassword().equals(UserSHA256.getSHA256(inputPassword));
-
-		return matches ? found : null;
+		if (!admin.getAdminPassword().equals(PasswordUtil.sha256(adminPassword))) {
+			return null;
+		}
+		return admin;
 	}
 
 	/**
@@ -68,21 +60,13 @@ public class AdminService {
 		adminMapper.updateRyokanAccess(adminDto);
 	}
 
-	/**
-	 * 비밀번호 변경 (최초 로그인 강제 변경 포함). 세션에 있는 loginAdmin의 현재 해시와
-	 * 입력한 현재 비밀번호의 해시를 비교해서 일치할 때만 변경하고,
-	 * 변경 성공 시 PW_RESET_YN을 'Y'로 같이 갱신해서 초기 비밀번호 상태를 해제한다.
-	 * 현재 비밀번호가 틀리면 false를 반환한다.
-	 */
-	public boolean resetPassword(AdminDto loginAdmin, String currentPassword, String newPassword) {
-		if (!loginAdmin.getAdminPassword().equals(UserSHA256.getSHA256(currentPassword))) {
+	/** 비밀번호 변경 : 현재 비밀번호가 맞으면 새 비밀번호로 바꾸고 true, 아니면 false */
+	public boolean changePassword(Integer adminIdx, String currentPassword, String newPassword) {
+		AdminDto admin = adminMapper.selectByAdminIdx(adminIdx);
+		if (admin == null || !admin.getAdminPassword().equals(PasswordUtil.sha256(currentPassword))) {
 			return false;
 		}
-
-		AdminDto adminDto = new AdminDto();
-		adminDto.setAdminIdx(loginAdmin.getAdminIdx());
-		adminDto.setAdminPassword(UserSHA256.getSHA256(newPassword));
-		adminMapper.updatePassword(adminDto);
+		adminMapper.updatePassword(adminIdx, PasswordUtil.sha256(newPassword));
 		return true;
 	}
 }

@@ -82,4 +82,15 @@ public class InquiryController {
         model.addAttribute("inquiry", inquiry);
         return "inquiry/view";
     }
+
+    /** 문의 삭제 (본인 글만) */
+    @PostMapping("/inquiry/delete")
+    public String delete(HttpSession session, @RequestParam int idx) {
+        MemberDto member = loginMember(session);
+        if (member == null) {
+            return "redirect:/member/login";
+        }
+        inquiryService.delete(idx, member.getUserMail());
+        return "redirect:/inquiry/list";
+    }
 }

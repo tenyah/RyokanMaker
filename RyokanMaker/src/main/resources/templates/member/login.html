@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>로그인 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='login')}"></div>
+
+  <section class="page-title">
+    <div class="crumb">HOME &nbsp;/&nbsp; 로그인</div>
+    <h1>로그인</h1>
+    <div class="rule"></div>
+    <p class="desc">예약, 문의 이용을 위해 로그인해주세요.</p>
+  </section>
+
+  <div th:if="${param.signup != null}" class="form-card" style="padding-bottom:0;">
+    <div class="answer-block">
+      <div class="answer-body" style="color:var(--gold-deep);">회원가입이 완료되었습니다. 로그인해주세요.</div>
+    </div>
+  </div>
+
+  <div th:if="${error}" class="form-card" style="padding-bottom:0;">
+    <div class="answer-block">
+      <div class="answer-body" th:text="${error}" style="color:var(--warn);"></div>
+    </div>
+  </div>
+
+  <form class="form-card" th:action="@{/member/login}" method="post">
+
+    <div class="form-row">
+      <label class="field-label">이메일</label>
+      <input type="text" name="userMail" placeholder="you@example.com" required>
+    </div>
+
+    <div class="form-row">
+      <label class="field-label">비밀번호</label>
+      <input type="password" name="userPassword" placeholder="비밀번호" required>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-gold">로그인</button>
+      <a class="btn-line" th:href="@{/member/signup}">회원가입</a>
+    </div>
+  </form>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+</body>
+</html>

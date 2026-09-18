@@ -27,6 +27,16 @@ public class InquiryService {
         return inquiryMapper.insert(inquiryDto);
     }
 
+    /** 문의 삭제 - 본인 글이 맞는지 확인 후 삭제. 본인 글이 아니거나 없으면 false. */
+    public boolean delete(int inquiryIdx, String userMail) {
+        InquiryDto inquiry = inquiryMapper.selectByIdx(inquiryIdx);
+        if (inquiry == null || !inquiry.getUserMail().equals(userMail)) {
+            return false;
+        }
+        inquiryMapper.deleteByIdx(inquiryIdx);
+        return true;
+    }
+
     /** status가 null이면 전체 조회 (관리자 문의 목록) */
     public List<InquiryDto> getInquiryList(Integer adminIdx, String status) {
         return inquiryMapper.selectInquiriesByAdmin(adminIdx, status);

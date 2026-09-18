@@ -50,6 +50,7 @@ public class AdminRequestService {
         adminDto.setAdminName(request.getApplicantName());
         adminDto.setAdminMail(request.getApplicantEmail());
         adminDto.setRyokanName(request.getRyokanName());
+        adminDto.setPwResetYn("Y"); // 임시 비밀번호이므로 최초 로그인 시 비밀번호 변경을 강제
         adminMapper.insert(adminDto);
 
         adminRequestMapper.approve(requestIdx, adminDto.getAdminIdx());

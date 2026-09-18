@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +43,10 @@
 
     <div class="auth-title">관리자 로그인</div>
 
-    <div class="notice-banner" style="margin:0 0 24px;" th:if="${error}" th:text="${error}"></div>
+    <div class="auth-error" th:if="${error}">
+      <svg width="16" height="16"><use href="#i-alert"/></svg>
+      <span th:text="${error}"></span>
+    </div>
 
     <form class="auth-form" name="loginForm" th:action="@{/Admin/admin_login}" method="post">
       <div class="field">
