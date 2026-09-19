@@ -9,7 +9,6 @@ import com.mnu.ryokanmaker.util.ImageJsonUtil;
  * PK : planIdx (IDENTITY, 자동 채번) / FK : adminIdx -> ADMIN.ADMIN_IDX
  * 사용자 예약 화면(플랜 선택)에서 실제로 가격이 노출되는 단위. 객실 가격(roomPrice)은
  * 플랜 기준가 대비 추가요금 계산에만 쓰이고, 사이트에는 플랜 가격만 표시된다.
- * 이름이 같은 {@link PlanDto}는 사용자 예약 화면(플랜 선택) 전용 DTO로 별개이니 혼동하지 말 것.
  */
 @Data
 public class AdminPlanDto {

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.mnu.ryokanmaker.dto.AdminPlanDto;
 import com.mnu.ryokanmaker.dto.SearchConditionDto;
+import com.mnu.ryokanmaker.service.AdminService;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.OnsenService;
 import com.mnu.ryokanmaker.service.ReservationService;
@@ -44,6 +45,9 @@ public class ReservationController {
     @Autowired
     private RestaurantCourseService restaurantCourseService;
 
+    @Autowired
+    private AdminService adminService;
+
     @GetMapping("/")
     public String mainIndex(Model model) {
         List<com.mnu.ryokanmaker.dto.NoticeDto> notices;
@@ -56,6 +60,17 @@ public class ReservationController {
             notices = Collections.emptyList();
         }
         model.addAttribute("notices", notices);
+
+        // 히어로 배경 캐러셀 : 관리자가 등록한 메인화면 슬라이드 이미지(RYOKAN_IMAGE). 없으면 빈 목록 -> CSS 그라데이션으로 대체 표시
+        List<String> heroImages;
+        try {
+            com.mnu.ryokanmaker.dto.AdminDto ryokanInfo = adminService.getRyokanInfo(MAIN_ADMIN_IDX);
+            heroImages = ryokanInfo != null ? ryokanInfo.getRyokanImageUrls() : Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("메인 화면 히어로 캐러셀용 여관 정보 조회 실패 - 빈 목록으로 표시합니다.", e);
+            heroImages = Collections.emptyList();
+        }
+        model.addAttribute("heroImages", heroImages);
 
         // 객실/온천/식사 캐러셀 : 각 카테고리에 등록된 모든 항목의 이미지를 하나의 목록으로 합쳐서 전달
         model.addAttribute("roomImages", collectImages(safeList(() -> roomService.getRoomList(MAIN_ADMIN_IDX)),

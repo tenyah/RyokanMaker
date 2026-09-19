@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>예약 정보 입력 · 결제 | 清流庵 OTARU FURUKAWA</title>
+  <title th:text="'예약 정보 입력 · 결제 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">예약 정보 입력 · 결제 | 清流庵 OTARU FURUKAWA</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>

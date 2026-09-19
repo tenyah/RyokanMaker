@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="'객실 안내 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">객실 안내 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- 공통 헤더 include (현재 메뉴 = rooms) -->
+  <div th:replace="~{include/header :: header(activePage='rooms')}"></div>
+
+  <!-- 타이틀 -->
+  <section class="page-title">
+    <div class="crumb">Guestroom &nbsp;/&nbsp; お部屋</div>
+    <h1>객실 안내</h1>
+    <div class="rule"></div>
+  </section>
+
+  <!--
+    rooms는 DB의 ROOM 테이블에서 조회한 RoomDto 리스트입니다 (ROOM_SALE_YN='Y'인 항목만).
+    필드 : roomName, roomLevel, roomInfo, roomPrice, roomPeople, roomMemo, imageUrls(전체 이미지 경로 목록)
+    사진은 가운데 캐러셀로, 그 아래 텍스트(객실명 → 타입 → 소개 → 인원 → 비고)를 배치한다.
+  -->
+  <section class="detail-list">
+    <div class="detail-item" th:each="room : ${rooms}">
+      <div class="detail-thumb" data-carousel>
+        <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(room.imageUrls) > 1}">&#10094;</button>
+        <div class="slide" th:if="${!#lists.isEmpty(room.imageUrls)}">
+          <img th:each="url : ${room.imageUrls}" th:src="@{${url}}" alt="">
+        </div>
+        <th:block th:if="${#lists.isEmpty(room.imageUrls)}">
+          <img th:src="@{/images/sample/room.svg}" alt="" class="sample-img">
+          <span class="sample-badge">샘플 이미지</span>
+        </th:block>
+        <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(room.imageUrls) > 1}">&#10095;</button>
+        <div class="dots" th:if="${#lists.size(room.imageUrls) > 1}">
+          <span th:each="url, iter : ${room.imageUrls}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+        </div>
+      </div>
+      <div class="detail-body">
+        <h2 th:text="${room.roomName}"></h2>
+        <span class="type-tag" th:if="${room.roomLevel != null and !room.roomLevel.isEmpty()}">타입 <span th:text="${room.roomLevel}">1</span></span>
+        <p class="desc" th:text="${room.roomInfo}">넓은 다다미 객실, 최대 7인</p>
+        <div class="meta-row">
+          <span>최대 인원 <span th:text="${room.roomPeople}">7</span>명</span>
+        </div>
+        <p class="memo" th:if="${room.roomMemo != null and !room.roomMemo.isEmpty()}" th:text="${room.roomMemo}">비고</p>
+        <div class="price-row">
+          <div>
+            <span class="from">1박 기준</span>
+            <span class="amount">
+              <span th:text="${'₩' + #numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">₩300,000</span>
+              <span class="unit">부터</span>
+            </span>
+          </div>
+          <a class="btn-line" style="padding:11px 22px; font-size:13px;" th:href="@{/reservation/plan}">예약하기</a>
+        </div>
+      </div>
+    </div>
+    <div class="intro-empty" th:if="${#lists.isEmpty(rooms)}">등록된 객실 정보가 없습니다.</div>
+  </section>
+
+  <!-- 공통 푸터 include -->
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+<script th:src="@{/js/carousel.js}"></script>
+
+</body>
+</html>

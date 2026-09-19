@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>결제 실패 | 清流庵 OTARU FURUKAWA</title>
+  <title th:text="'결제 실패 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">결제 실패 | 清流庵 OTARU FURUKAWA</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>

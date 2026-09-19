@@ -8,10 +8,22 @@
   <div th:replace="~{fragments/footer :: footer}"></div>
 -->
 <footer class="site-footer" th:fragment="footer">
+  <!-- siteInfo는 GlobalModelAdvice에서 ADMIN(idx=1) 정보로 채워주는 전역 모델 속성입니다.
+       로고(RYOKAN_LOGO)가 있으면 이미지로, 없으면 기존 텍스트 로고로 표시합니다.
+       주소/연락처/이메일도 admin_loc / ryokan_tel / admin_mail 값을 그대로 보여주고,
+       비어 있으면 admin_info_register 입력폼과 동일한 안내 문구를 대신 보여줍니다. -->
   <div class="footer-top">
     <div class="brand">
-      <div class="kanji">清流庵</div>
-      <div class="addr">[주소를 입력하세요], 오타루시, 홋카이도<br>TEL. [전화번호를 입력하세요]</div>
+      <img th:if="${siteInfo != null and siteInfo.logoUrl != null}" th:src="@{${siteInfo.logoUrl}}"
+           th:alt="${siteInfo.ryokanName != null ? siteInfo.ryokanName : '清流庵'}">
+      <div class="kanji" th:if="${siteInfo == null or siteInfo.logoUrl == null}">清流庵</div>
+      <div class="addr">
+        <span th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.adminLoc)} ? ${siteInfo.adminLoc} : '[주소를 입력하세요]'"></span><br>
+        <span>TEL. <span th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.ryokanTel)} ? ${siteInfo.ryokanTel} : '[전화번호를 입력하세요]'"></span></span>
+        <th:block th:if="${siteInfo != null and !#strings.isEmpty(siteInfo.adminMail)}">
+          <br><span th:text="'MAIL. ' + ${siteInfo.adminMail}"></span>
+        </th:block>
+      </div>
     </div>
     <nav>
       <a th:href="@{/rooms}">객실</a>
@@ -23,7 +35,7 @@
     </nav>
   </div>
   <div class="divider"></div>
-  <div class="copyright">© 2026 오타루 후루카와. All rights reserved.</div>
+  <div class="copyright">© 2026 Ryokan Maker. All rights reserved.</div>
 </footer>
 
 </body>

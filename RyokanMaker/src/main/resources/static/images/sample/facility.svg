@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">
+  <rect width="480" height="360" fill="#F7F5F0"/>
+  <circle cx="240" cy="180" r="118" fill="#F1E7D3" opacity="0.55"/>
+  <circle cx="240" cy="180" r="118" fill="none" stroke="#B79966" stroke-width="1"/>
+
+  <!-- 다완(찻잔) -->
+  <g stroke="#8F7748" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 196 190 q -4 42 44 42 q 48 0 44 -42 Z"/>
+    <ellipse cx="240" cy="190" rx="44" ry="11"/>
+  </g>
+
+  <!-- 차선(찻솔) -->
+  <g stroke="#B79966" stroke-width="2" stroke-linecap="round">
+    <line x1="240" y1="185" x2="252" y2="120"/>
+    <line x1="246" y1="150" x2="256" y2="122"/>
+    <line x1="248" y1="158" x2="260" y2="128"/>
+    <line x1="250" y1="167" x2="264" y2="136"/>
+  </g>
+
+  <!-- 김(따뜻한 차) -->
+  <g stroke="#B79966" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M 205 168 q -8 -14 0 -26"/>
+  </g>
+</svg>

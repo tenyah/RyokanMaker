@@ -2,20 +2,39 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>清流庵 | 오타루 후루카와</title>
+  <title th:text="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵 | 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
   <style>
     .hero {
       position: relative; min-height: 480px; display: flex; align-items: flex-end;
       padding: 64px 56px; background: linear-gradient(160deg, var(--gold-deep), var(--ink));
+      overflow: hidden;
     }
-    .hero .hero-inner { color: #fff; max-width: 640px; }
-    .hero .eyebrow { font-size: 12px; letter-spacing: 0.2em; color: var(--gold-pale); margin-bottom: 18px; }
-    .hero h1 { font-family: var(--serif); font-size: 44px; font-weight: 400; margin: 0 0 12px; }
+    .hero .hero-bg { position: absolute; inset: 0; z-index: 0; }
+    .hero .hero-bg .slide { position: absolute; inset: 0; display: flex; transition: transform 0.6s ease; }
+    .hero .hero-bg .slide img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; }
+    .hero .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(160deg, rgba(143,119,72,0.55), rgba(38,35,31,0.78));
+    }
+    .hero .hero-inner { position: relative; z-index: 2; color: #fff; max-width: 640px; }
+    .hero h1 { font-family: var(--brush); font-size: 56px; font-weight: 400; margin: 0 0 12px; }
     .hero .tagline { font-size: 15px; font-weight: 300; color: #F1E7D3; margin: 0 0 32px; }
     .hero .hero-actions { display: flex; gap: 12px; }
     .hero .btn-line { border-color: rgba(255,255,255,0.5); color: #fff; }
     .hero .btn-line:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.1); }
+    .hero .nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.18); color: #fff; font-size: 16px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero .nav-btn:hover { background: rgba(255,255,255,0.32); }
+    .hero .nav-prev { left: 20px; }
+    .hero .nav-next { right: 20px; }
+    .hero .dots { position: absolute; bottom: 22px; right: 56px; z-index: 3; display: flex; gap: 6px; }
+    .hero .dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.45); }
+    .hero .dots span.active { background: #fff; }
 
     .intro { padding: 72px 56px 48px; text-align: center; }
     .intro .rule { width: 36px; height: 1px; background: var(--gold); margin: 0 auto 20px; }
@@ -66,10 +85,24 @@
 
   <div th:replace="~{include/header :: header(activePage='index')}"></div>
 
-  <section class="hero">
+  <!--
+    heroImages는 ADMIN.RYOKAN_IMAGE(메인화면 슬라이드 이미지)에서 뽑은 전체 경로 목록입니다.
+    등록된 사진이 있으면 배경 캐러셀로, 없으면 기존 골드~잉크 그라데이션이 그대로 보입니다(관리자 미등록 시 대체 표시).
+  -->
+  <section class="hero" data-carousel>
+    <div class="hero-bg" th:if="${!#lists.isEmpty(heroImages)}">
+      <div class="slide">
+        <img th:each="url : ${heroImages}" th:src="@{${url}}" alt="">
+      </div>
+    </div>
+    <div class="hero-overlay"></div>
+    <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(heroImages) > 1}">&#10094;</button>
+    <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(heroImages) > 1}">&#10095;</button>
+    <div class="dots" th:if="${#lists.size(heroImages) > 1}">
+      <span th:each="url, iter : ${heroImages}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+    </div>
     <div class="hero-inner">
-      <div class="eyebrow">OTARU FURUKAWA</div>
-      <h1>清流庵</h1>
+      <h1 th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵</h1>
       <p class="tagline">오타루 운하가 내려다보이는, 하룻밤의 고요</p>
       <div class="hero-actions">
         <a class="btn-gold" th:href="@{/reservation/plan}">숙박예약</a>
