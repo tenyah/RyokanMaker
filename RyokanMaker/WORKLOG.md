@@ -1,5 +1,25 @@
 # 작업 기록
 
+## 팀원 3개 브랜치 재통합 (june47087-byte / eartth21 / yeseong) (2026-09-19)
+
+**작업 방식:** `Choiyeongsu13`에서 갈라진 로컬 브랜치 `integrate-0919`에서 하나씩 병합. 원격에는 아직 push하지 않음.
+
+**june47087-byte (+4커밋):**
+- june가 `dto` 패키지를 `domain`으로 개명했으나 master/eartth21/기존 통합이 모두 `dto` 기준이라 병합 후 `domain → dto`로 되돌림 (85개 파일 import 정리). **june에게 dto 유지 공지 필요** (안 하면 다음 병합에서 또 충돌).
+- `application.properties`에 june가 **Gmail 계정과 앱 비밀번호를 평문으로 커밋**해둠 → 환경변수(`MAIL_USERNAME`/`MAIL_PASSWORD`) 방식 유지, `admin.notify.email`만 반영. **이미 원격 브랜치 히스토리에 노출됐으므로 해당 앱 비밀번호는 폐기/재발급 권장.**
+- Access/Notice/ReservationController는 june 쪽이 개명만 바꾼 것이라 우리 쪽(i18n·번역 포함) 채택.
+
+**eartth21 (+4커밋):**
+- 미사용 정리로 `PaymentMapper`(.java/.xml)를 삭제했으나 `PaymentReservationService`가 실제 사용 중이라 유지. (`CourseDto`, `DayStatusDto`, `PlanDto` 등 진짜 미사용 DTO 삭제는 그대로 반영)
+- `index.html`: eartth21의 동적 료칸명 + 이미지 캐러셀에 우리 i18n 문구 결합. 관리자 페이지는 공용 `admin_shell` 구조 채택, `room_status.html`에서 빠진 `i-pencil`/`i-upload` 아이콘 정의 복구.
+- 새 페이지 `/rooms`, `/onsen`, `/dining`, `/facility` 추가됨.
+
+**yeseong (+3커밋):** 신규 커밋(자체 `ReservationService`, `domain/*DTO`, `mappers/` 패키지, 예약 화면)은 우리 쪽에 이미 공용 dto/mapper 구조로 통합돼 있고 로그인/결제 연동까지 되어 있음(화면·CSS·extraCharge·DB 호스트 모두 반영 확인). 그대로 병합하면 동명 매퍼 빈 중복으로 앱 기동 실패 위험이라 `-s ours`로 **병합 이력만 기록**하고 내용은 가져오지 않음. yeseong은 앞으로 공용 `dto`/`mapper` 클래스 위에서 작업하도록 안내 필요.
+
+**검증:** `mvnw clean compile` 성공, 서버 기동 후 `/`, `/reservation/plan`, `/access`, 로그인/회원가입, 공지, `/rooms`·`/onsen`·`/dining`·`/facility`, 관리자 로그인 200 확인, 로그인 필요 페이지 302 리다이렉트 확인, 서버 로그 에러 0건. (관리자 로그인 후 화면과 실제 결제 흐름은 미검증)
+
+---
+
 ## 회원가입/로그인/문의 기능 구현 + 4개 팀 브랜치 로컬 통합 (2026-09-18)
 
 **배경:** 이 세션은 빌드가 깨진 상태(컴파일 에러)에서 시작. 패키지명 표기(대문자 vs 소문자)부터 팀원 4명(Choiyeongsu13/eartth21/june47087-byte/yeseong) 브랜치 통합, 당일 목표 기능(회원가입·로그인·문의작성, 비밀번호 해시) 구현까지 진행.
