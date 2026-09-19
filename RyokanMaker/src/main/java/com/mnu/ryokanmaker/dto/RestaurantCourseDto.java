@@ -1,5 +1,7 @@
 package com.mnu.ryokanmaker.dto;
 
+import java.util.List;
+
 import lombok.Data;
 
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
@@ -22,5 +24,10 @@ public class RestaurantCourseDto {
     /** 목록 화면 썸네일용. restaurantCourseImage(경로 JSON 배열)에서 첫 번째 이미지 경로만 뽑는다. */
     public String getThumbnailUrl() {
         return ImageJsonUtil.firstPath(restaurantCourseImage);
+    }
+
+    /** 메인 페이지 캐러셀용. restaurantCourseImage(경로 JSON 배열)의 전체 이미지 경로 목록. */
+    public List<String> getImageUrls() {
+        return ImageJsonUtil.parsePaths(restaurantCourseImage);
     }
 }

@@ -13,9 +13,15 @@
   activePage 값 : rooms / onsen / dining / facility / access / contact / booking
 -->
 <header class="site-header" th:fragment="header(activePage)">
+  <!-- siteInfo는 GlobalModelAdvice에서 ADMIN(idx=1) 정보로 채워주는 전역 모델 속성입니다.
+       로고(RYOKAN_LOGO)가 등록돼 있으면 이미지로, 없으면 기존 텍스트 로고로 표시합니다. -->
   <a href="/" class="logo" style="text-decoration:none;">
-    <span class="kanji">清流庵</span>
-    <span class="romaji">OTARU FURUKAWA</span>
+    <img th:if="${siteInfo != null and siteInfo.logoUrl != null}" th:src="@{${siteInfo.logoUrl}}"
+         th:alt="${siteInfo.ryokanName != null ? siteInfo.ryokanName : '清流庵'}">
+    <th:block th:if="${siteInfo == null or siteInfo.logoUrl == null}">
+      <span class="kanji">清流庵</span>
+      <span class="romaji">OTARU FURUKAWA</span>
+    </th:block>
   </a>
   <nav>
     <a class="navlink" th:classappend="${activePage == 'rooms'} ? 'active' : ''" th:href="@{/rooms}" th:text="#{nav.rooms}">객실</a>

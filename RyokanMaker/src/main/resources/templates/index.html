@@ -2,20 +2,39 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>清流庵 | 오타루 후루카와</title>
+  <title th:text="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵 | 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
   <style>
     .hero {
       position: relative; min-height: 480px; display: flex; align-items: flex-end;
       padding: 64px 56px; background: linear-gradient(160deg, var(--gold-deep), var(--ink));
+      overflow: hidden;
     }
-    .hero .hero-inner { color: #fff; max-width: 640px; }
-    .hero .eyebrow { font-size: 12px; letter-spacing: 0.2em; color: var(--gold-pale); margin-bottom: 18px; }
-    .hero h1 { font-family: var(--serif); font-size: 44px; font-weight: 400; margin: 0 0 12px; }
+    .hero .hero-bg { position: absolute; inset: 0; z-index: 0; }
+    .hero .hero-bg .slide { position: absolute; inset: 0; display: flex; transition: transform 0.6s ease; }
+    .hero .hero-bg .slide img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; }
+    .hero .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(160deg, rgba(143,119,72,0.55), rgba(38,35,31,0.78));
+    }
+    .hero .hero-inner { position: relative; z-index: 2; color: #fff; max-width: 640px; }
+    .hero h1 { font-family: var(--brush); font-size: 56px; font-weight: 400; margin: 0 0 12px; }
     .hero .tagline { font-size: 15px; font-weight: 300; color: #F1E7D3; margin: 0 0 32px; }
     .hero .hero-actions { display: flex; gap: 12px; }
     .hero .btn-line { border-color: rgba(255,255,255,0.5); color: #fff; }
     .hero .btn-line:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.1); }
+    .hero .nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+      width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.18); color: #fff; font-size: 16px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero .nav-btn:hover { background: rgba(255,255,255,0.32); }
+    .hero .nav-prev { left: 20px; }
+    .hero .nav-next { right: 20px; }
+    .hero .dots { position: absolute; bottom: 22px; right: 56px; z-index: 3; display: flex; gap: 6px; }
+    .hero .dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.45); }
+    .hero .dots span.active { background: #fff; }
 
     .intro { padding: 72px 56px 48px; text-align: center; }
     .intro .rule { width: 36px; height: 1px; background: var(--gold); margin: 0 auto 20px; }
@@ -25,9 +44,33 @@
     .feature-grid { padding: 24px 56px 64px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 32px; }
     .feature-card { border: 1px solid var(--line); }
     .feature-card .thumb {
-      height: 160px; display: flex; align-items: center; justify-content: center;
+      position: relative; height: 160px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
       background: var(--bg-soft); color: var(--gold-deep); font-family: var(--serif); font-size: 15px;
     }
+    .feature-card .thumb .slide {
+      position: absolute; inset: 0; display: flex; transition: transform 0.35s ease;
+    }
+    .feature-card .thumb .slide img {
+      flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover;
+    }
+    .feature-card .thumb .nav-btn {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+      width: 28px; height: 28px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(0,0,0,0.35); color: #fff; font-size: 14px; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .feature-card .thumb .nav-btn:hover { background: rgba(0,0,0,0.55); }
+    .feature-card .thumb .nav-prev { left: 8px; }
+    .feature-card .thumb .nav-next { right: 8px; }
+    .feature-card .thumb .dots {
+      position: absolute; bottom: 8px; left: 0; right: 0; z-index: 2;
+      display: flex; justify-content: center; gap: 5px;
+    }
+    .feature-card .thumb .dots span {
+      width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.5);
+    }
+    .feature-card .thumb .dots span.active { background: #fff; }
     .feature-card .body { padding: 22px 24px; }
     .feature-card h3 { font-family: var(--serif); font-weight: 400; font-size: 18px; color: var(--ink); margin: 0 0 8px; }
     .feature-card p { font-size: 13px; color: var(--ink-soft); line-height: 1.8; margin: 0; }
@@ -42,10 +85,25 @@
 
   <div th:replace="~{include/header :: header(activePage='index')}"></div>
 
-  <section class="hero">
+  <!--
+    heroImages는 ADMIN.RYOKAN_IMAGE(메인화면 슬라이드 이미지)에서 뽑은 전체 경로 목록입니다.
+    등록된 사진이 있으면 배경 캐러셀로, 없으면 기존 골드~잉크 그라데이션이 그대로 보입니다(관리자 미등록 시 대체 표시).
+  -->
+  <section class="hero" data-carousel>
+    <div class="hero-bg" th:if="${!#lists.isEmpty(heroImages)}">
+      <div class="slide">
+        <img th:each="url : ${heroImages}" th:src="@{${url}}" alt="">
+      </div>
+    </div>
+    <div class="hero-overlay"></div>
+    <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(heroImages) > 1}">&#10094;</button>
+    <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(heroImages) > 1}">&#10095;</button>
+    <div class="dots" th:if="${#lists.size(heroImages) > 1}">
+      <span th:each="url, iter : ${heroImages}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+    </div>
     <div class="hero-inner">
       <div class="eyebrow">OTARU FURUKAWA</div>
-      <h1>清流庵</h1>
+      <h1 th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵</h1>
       <p class="tagline" th:text="#{index.tagline}">오타루 운하가 내려다보이는, 하룻밤의 고요</p>
       <div class="hero-actions">
         <a class="btn-gold" th:href="@{/reservation/plan}" th:text="#{nav.booking}">숙박예약</a>
@@ -62,21 +120,51 @@
 
   <div class="feature-grid">
     <div class="feature-card">
-      <div class="thumb" th:text="#{nav.rooms}">객실</div>
+      <div class="thumb" data-carousel>
+        <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(roomImages) > 1}">&#10094;</button>
+        <div class="slide">
+          <img th:each="url : ${roomImages}" th:src="@{${url}}" alt="객실 이미지">
+        </div>
+        <span th:if="${#lists.isEmpty(roomImages)}" style="position:relative;z-index:1;" th:text="#{nav.rooms}">객실</span>
+        <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(roomImages) > 1}">&#10095;</button>
+        <div class="dots" th:if="${#lists.size(roomImages) > 1}">
+          <span th:each="url, iter : ${roomImages}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+        </div>
+      </div>
       <div class="body">
         <h3 th:text="#{nav.rooms}">객실</h3>
         <p th:text="#{index.room_desc}">다다미와 도코노마가 어우러진 전통 객실에서 마음 편히 머무르세요.</p>
       </div>
     </div>
     <div class="feature-card">
-      <div class="thumb" th:text="#{nav.onsen}">온천</div>
+      <div class="thumb" data-carousel>
+        <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(onsenImages) > 1}">&#10094;</button>
+        <div class="slide">
+          <img th:each="url : ${onsenImages}" th:src="@{${url}}" alt="온천 이미지">
+        </div>
+        <span th:if="${#lists.isEmpty(onsenImages)}" style="position:relative;z-index:1;" th:text="#{nav.onsen}">온천</span>
+        <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(onsenImages) > 1}">&#10095;</button>
+        <div class="dots" th:if="${#lists.size(onsenImages) > 1}">
+          <span th:each="url, iter : ${onsenImages}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+        </div>
+      </div>
       <div class="body">
         <h3 th:text="#{nav.onsen}">온천</h3>
         <p th:text="#{index.onsen_desc}">오타루 연석을 두른 실내탕과 대나무 정원이 보이는 창가의 시간.</p>
       </div>
     </div>
     <div class="feature-card">
-      <div class="thumb" th:text="#{nav.dining}">식사</div>
+      <div class="thumb" data-carousel>
+        <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(courseImages) > 1}">&#10094;</button>
+        <div class="slide">
+          <img th:each="url : ${courseImages}" th:src="@{${url}}" alt="식사 이미지">
+        </div>
+        <span th:if="${#lists.isEmpty(courseImages)}" style="position:relative;z-index:1;" th:text="#{nav.dining}">식사</span>
+        <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(courseImages) > 1}">&#10095;</button>
+        <div class="dots" th:if="${#lists.size(courseImages) > 1}">
+          <span th:each="url, iter : ${courseImages}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+        </div>
+      </div>
       <div class="body">
         <h3 th:text="#{nav.dining}">식사</h3>
         <p th:text="#{index.dining_desc}">오타루 인근 식재료로 빚은 계절의 맛 가이세키를 한 품씩 내어드립니다.</p>
@@ -106,6 +194,27 @@
   <div th:replace="~{include/footer :: footer}"></div>
 
 </div>
+
+<script>
+function carouselMove(btn, direction) {
+  var thumb = btn.closest('[data-carousel]');
+  var slide = thumb.querySelector('.slide');
+  var images = slide.querySelectorAll('img');
+  var total = images.length;
+  if (total === 0) return;
+
+  var current = parseInt(thumb.dataset.index || '0', 10);
+  var next = (current + direction + total) % total;
+  thumb.dataset.index = next;
+
+  slide.style.transform = 'translateX(-' + (next * 100) + '%)';
+
+  var dots = thumb.querySelectorAll('.dots span');
+  dots.forEach(function (dot, i) {
+    dot.classList.toggle('active', i === next);
+  });
+}
+</script>
 
 </body>
 </html>

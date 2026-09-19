@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>清流庵 관리자 - 비밀번호 변경</title>
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' 관리자 - 비밀번호 변경'">清流庵 관리자 - 비밀번호 변경</title>
 <link rel="stylesheet" th:href="@{/css/common.css}">
 <script type="text/javascript">
 
@@ -28,8 +28,11 @@
 <div class="auth-page">
   <div class="auth-card" style="max-width:440px;">
     <div class="auth-logo">
-      <div class="kanji">清流庵</div>
-      <div class="romaji">OTARU FURUKAWA &nbsp;·&nbsp; ADMIN</div>
+      <img th:if="${siteInfo != null and siteInfo.logoUrl != null}" th:src="@{${siteInfo.logoUrl}}"
+           th:alt="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">
+      <div class="kanji" th:if="${siteInfo == null or siteInfo.logoUrl == null}"
+           th:text="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵</div>
+      <div class="romaji">ADMIN</div>
     </div>
 
     <div class="auth-title">비밀번호 변경</div>

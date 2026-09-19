@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>admin shell fragments</title></head>
+<body>
+
+<!--
+  관리자 화면 공통 조각(fragment)입니다.
+  admin_info_register / admin_inquiry / admin_requests / admin_reservation / plan_sales / room_status
+  6개 화면이 거의 동일하게 복붙해서 쓰던 상단바(site-header)와 사이드바(admin-sidebar)를 여기로 통합했습니다.
+  이 fragment가 공통 아이콘 스프라이트(admin_icons)도 함께 내보내므로, 각 페이지는 자기 화면 본문에만
+  필요한 추가 아이콘만 별도 <svg> 스프라이트로 유지하면 됩니다.
+
+  사용법 (페이지의 <body> 맨 위) :
+    <div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
+    <div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='info')}"></div>
+    <div class="admin-shell">
+      <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false)}"></div>
+      <main class="admin-main"> ... 페이지 본문 ... </main>
+    </div>
+
+  activePage 값       : info(정보등록) / reservation(예약현황) / room(객실현황) / plan(판매관리) /
+                         inquiry(문의관리) / requests(계정신청)
+  showInfoSubmenu     : admin_info_register.html에서만 true — 사이드바 "정보등록" 항목 아래
+                         인페이지 섹션 서브메뉴(인덱스 화면/객실 정보/...)를 표시
+  showRequestsLink    : admin_requests.html에서만 true — 상단/사이드바에 "계정 신청" 항목을 추가로 노출
+                         (다른 5개 페이지는 원래 이 링크가 없었으므로 기본 false로 기존 동작 그대로 유지)
+-->
+
+<svg width="0" height="0" style="position:absolute" th:fragment="admin_icons">
+  <defs>
+    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12.5h6M9 16h6"/>
+    </symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.5" y="5" width="17" height="15.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>
+    </symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 18v2M21 18v2"/>
+      <path d="M3 13V8a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3"/><circle cx="7" cy="10" r="1"/>
+    </symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.5 3.5H20a.5.5 0 0 1 .5.5v7.5a1 1 0 0 1-.3.7l-8.8 8.8a1 1 0 0 1-1.4 0l-6.7-6.7a1 1 0 0 1 0-1.4l8.8-8.8a1 1 0 0 1 .4-.3Z"/>
+      <circle cx="16" cy="8" r="1.3"/>
+    </symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5.5" width="18" height="13"/><path d="m3.5 6 8.5 7 8.5-7"/>
+    </symbol>
+    <symbol id="i-user-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 19v-1a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v1"/><circle cx="8.5" cy="7.5" r="3.5"/><path d="M19 8v6M22 11h-6"/>
+    </symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m6 9 6 6 6-6"/>
+    </symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+    </symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 사이트 공통 헤더 -->
+<div class="site-header" th:fragment="admin_topbar(activePage)">
+  <div class="logo">
+    <img th:if="${admin != null and admin.logoUrl != null}" th:src="@{${admin.logoUrl}}"
+         th:alt="${!#strings.isEmpty(admin?.ryokanName)} ? ${admin.ryokanName} : '清流庵'">
+    <span class="kanji" th:if="${admin == null or admin.logoUrl == null}"
+          th:text="${!#strings.isEmpty(admin?.ryokanName)} ? ${admin.ryokanName} : '清流庵'">清流庵</span>
+    <span class="romaji">ADMIN</span>
+  </div>
+  <nav style="gap:44px;">
+    <a class="navlink" href="#">대시보드</a>
+    <a class="navlink" th:classappend="${activePage == 'info'} ? 'active'" th:href="@{/Admin/admin_info_register}">정보등록</a>
+    <a class="navlink" th:classappend="${activePage == 'reservation'} ? 'active'" th:href="@{/Admin/reservation_status}">예약 현황</a>
+    <a class="navlink" th:classappend="${activePage == 'room'} ? 'active'" th:href="@{/Admin/room_status}">객실 현황</a>
+    <a class="navlink" th:classappend="${activePage == 'plan'} ? 'active'" th:href="@{/Admin/plan_sales}">판매 관리</a>
+    <a class="navlink" th:classappend="${activePage == 'inquiry'} ? 'active'" th:href="@{/Admin/admin_inquiry}">문의 관리</a>
+    <a class="navlink active" th:if="${activePage == 'requests'}" th:href="@{/Admin/admin_requests}">계정 신청</a>
+    <a class="btn-line" th:href="@{/}" target="_blank" style="padding:10px 20px;font-size:12px;gap:7px;text-decoration:none;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</a>
+    <div class="account-menu" id="accountMenu">
+      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')"
+              th:text="${!#strings.isEmpty(admin?.adminName)} ? ${#strings.substring(admin.adminName,0,1)} : '관'">관</button>
+      <div class="account-dropdown">
+        <div class="account-dropdown-head">
+          <div class="avatar-sm" th:text="${!#strings.isEmpty(admin?.adminName)} ? ${#strings.substring(admin.adminName,0,1)} : '관'">관</div>
+          <div>
+            <div class="name" th:text="${!#strings.isEmpty(admin?.adminName)} ? ${admin.adminName} : '관리자'">清流庵 관리자</div>
+            <div class="sub" th:text="${admin?.adminId}">ADMIN_ID</div>
+          </div>
+        </div>
+        <a class="account-dropdown-item" th:href="@{/Admin/admin_pwreset}">
+          <svg width="15" height="15"><use href="#i-lock"/></svg>비밀번호 변경
+        </a>
+        <a class="account-dropdown-item danger" th:href="@{/Admin/admin_logout}">
+          <svg width="15" height="15"><use href="#i-logout"/></svg>로그아웃
+        </a>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<!-- 사이드바 -->
+<aside class="admin-sidebar" th:fragment="admin_sidebar(activePage, showInfoSubmenu, showRequestsLink)">
+  <div class="menu-label">관리자 메뉴</div>
+
+  <div class="tenant-card">
+    <div class="mark" th:text="${!#strings.isEmpty(admin?.ryokanName)} ? ${#strings.substring(admin.ryokanName,0,1)} : '淸'">淸</div>
+    <div class="who">
+      <div class="label">관리 중인 여관</div>
+      <div class="name" th:text="${!#strings.isEmpty(admin?.ryokanName)} ? ${admin.ryokanName} : '清流庵'">清流庵 (오타루)</div>
+    </div>
+    <svg width="14" height="14" style="color:var(--ink-faint);flex:0 0 auto;"><use href="#i-chevron"/></svg>
+  </div>
+
+  <nav class="admin-nav">
+    <a class="admin-nav-item" th:classappend="${activePage == 'info'} ? 'active'" th:href="@{/Admin/admin_info_register}">
+      <svg width="17" height="17"><use href="#i-doc"/></svg>
+      <span>정보등록</span>
+      <svg th:if="${showInfoSubmenu}" class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
+    </a>
+
+    <div class="admin-submenu" th:if="${showInfoSubmenu}">
+      <a href="#section-index" class="admin-submenu-item active">— 인덱스 화면</a>
+      <a href="#section-room" class="admin-submenu-item">— 객실 정보</a>
+      <a href="#section-meal" class="admin-submenu-item">— 식사 정보</a>
+      <a href="#section-onsen" class="admin-submenu-item">— 온천 정보</a>
+      <a href="#section-plan" class="admin-submenu-item">— 플랜 정보</a>
+      <a href="#section-facility" class="admin-submenu-item">— 시설</a>
+      <a href="#section-route" class="admin-submenu-item">— 교통안내</a>
+      <a href="#section-notice" class="admin-submenu-item">— 공지사항</a>
+    </div>
+
+    <a class="admin-nav-item" th:classappend="${activePage == 'reservation'} ? 'active'" th:href="@{/Admin/reservation_status}">
+      <svg width="17" height="17"><use href="#i-cal"/></svg>
+      <span>예약 현황</span>
+    </a>
+
+    <a class="admin-nav-item" th:classappend="${activePage == 'room'} ? 'active'" th:href="@{/Admin/room_status}">
+      <svg width="17" height="17"><use href="#i-bed"/></svg>
+      <span>객실 현황</span>
+    </a>
+
+    <a class="admin-nav-item" th:classappend="${activePage == 'plan'} ? 'active'" th:href="@{/Admin/plan_sales}">
+      <svg width="17" height="17"><use href="#i-tag"/></svg>
+      <span>판매 관리</span>
+    </a>
+
+    <a class="admin-nav-item" th:classappend="${activePage == 'inquiry'} ? 'active'" th:href="@{/Admin/admin_inquiry}">
+      <svg width="17" height="17"><use href="#i-mail"/></svg>
+      <span>문의 관리</span>
+      <span th:if="${pendingInquiryCount > 0 and activePage != 'inquiry' and activePage != 'requests'}" style="margin-left:auto;background:var(--warn);color:#fff;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 7px;" th:text="${pendingInquiryCount}">3</span>
+    </a>
+
+    <a class="admin-nav-item active" th:if="${showRequestsLink}" th:href="@{/Admin/admin_requests}">
+      <svg width="17" height="17"><use href="#i-user-plus"/></svg>
+      <span>계정 신청</span>
+    </a>
+  </nav>
+
+  <div style="flex:1;"></div>
+
+  <div style="height:1px;background:var(--line);margin:16px 0 14px 0;"></div>
+  <div class="admin-profile">
+    <div class="avatar" th:text="${!#strings.isEmpty(admin?.adminName)} ? ${#strings.substring(admin.adminName,0,1)} : '관'">관</div>
+    <div>
+      <div class="name" th:text="${!#strings.isEmpty(admin?.adminName)} ? ${admin.adminName} : '관리자'">관리자</div>
+      <div class="mail" th:text="${admin?.adminMail}">admin@seiryuan.jp</div>
+    </div>
+  </div>
+</aside>
+
+</body>
+</html>

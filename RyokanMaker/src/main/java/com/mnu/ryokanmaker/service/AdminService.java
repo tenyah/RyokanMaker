@@ -72,6 +72,11 @@ public class AdminService {
 		adminMapper.updateRyokanAccess(adminDto);
 	}
 
+	/** 여관 기본정보 조회 (메인 화면 히어로 캐러셀 등 비로그인 공개 화면에서 사용). */
+	public AdminDto getRyokanInfo(int adminIdx) {
+		return adminMapper.selectByAdminIdx(adminIdx);
+	}
+
 	/**
 	 * 비밀번호 변경 : 현재 비밀번호가 맞으면 새 비밀번호로 바꾸고 true, 아니면 false.
 	 * 이 경로는 PW_RESET_YN='N'(가입 직후=평문 저장) 상태에서 호출되므로 현재 비밀번호는 평문으로 비교하고,
