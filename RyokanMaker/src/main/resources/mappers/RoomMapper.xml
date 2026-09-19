@@ -80,4 +80,11 @@
 		  AND ROOM_SALE_YN = 'Y'
 	</select>
 
+	<update id="updateSaleYn">
+		UPDATE ROOM
+		SET ROOM_SALE_YN = #{roomSaleYn}
+		WHERE ROOM_IDX = #{roomIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
 </mapper>

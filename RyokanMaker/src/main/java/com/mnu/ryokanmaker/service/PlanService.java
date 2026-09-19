@@ -52,4 +52,8 @@ public class PlanService {
 	public void deletePlan(Integer planIdx, Integer adminIdx) {
 		planMapper.deletePlan(planIdx, adminIdx);
 	}
+
+	public void toggleSale(Integer planIdx, Integer adminIdx, boolean onSale) {
+		planMapper.updateSaleYn(planIdx, adminIdx, onSale ? "Y" : "N");
+	}
 }

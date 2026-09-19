@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>清流庵 관리자 - 객실 현황</title>
-<link rel="stylesheet" th:href="@{/css/common.css}"> 
+<link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
 
@@ -39,6 +39,13 @@
     </symbol>
     <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="5.5" width="18" height="13"/><path d="m3.5 6 8.5 7 8.5-7"/>
+    </symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.5 5.5 18 11 8 21H3v-5Z"/><path d="m16 4 4 4"/>
+    </symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 16a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.3 9.02 4.5 4.5 0 0 1 16.5 18H7Z"/>
+      <path d="M12 12v6"/><path d="m9.5 14.5 2.5-2.5 2.5 2.5"/>
     </symbol>
     <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
@@ -143,34 +150,29 @@
       <div class="crumb">관리자 &nbsp;/&nbsp; 객실 현황</div>
       <h1>객실 현황</h1>
       <div class="rule"></div>
-      <p>날짜별로 각 객실이 지금 이용 가능한 상태인지 확인하고, 청소·점검 상태를 관리합니다. 가격과 판매 플랜은 <strong style="font-weight:500;color:var(--ink);">판매 관리</strong>에서 설정합니다.</p>
+      <p>날짜별로 각 객실이 지금 예약 가능한 상태인지 확인합니다. 객실 등록 · 수정과 판매 여부는 아래에서 관리합니다.</p>
     </div>
 
     <!-- 통계 타일 -->
-    <div class="stat-grid cols-5">
-      <div class="stat-tile"><div class="label">전체 객실</div><div class="value">18</div></div>
-      <div class="stat-tile"><div class="label">판매가능</div><div class="value">11</div></div>
-      <div class="stat-tile accent-gold"><div class="label">예약 완료</div><div class="value">5</div></div>
-      <div class="stat-tile accent-warn"><div class="label">청소 필요</div><div class="value">1</div></div>
-      <div class="stat-tile accent-muted"><div class="label">점검 · 고장</div><div class="value">1</div></div>
+    <div class="stat-grid cols-3">
+      <div class="stat-tile"><div class="label">전체 객실</div><div class="value" th:text="${#lists.size(roomList)}">0</div></div>
+      <div class="stat-tile accent-gold"><div class="label">판매중</div>
+        <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn == 'Y'])}">0</div></div>
+      <div class="stat-tile accent-muted"><div class="label">판매중지</div>
+        <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn != 'Y'])}">0</div></div>
     </div>
 
-    <!-- 필터 바 -->
+    <!-- 조회 기간 -->
     <div class="search-bar" style="margin:28px 56px 0;">
       <div class="search-field">
         <div class="field-label">조회 기간</div>
-        <div class="field-value">2026.09.13 — 2026.09.19</div>
+        <div class="field-value" th:text="${#temporals.format(rangeStart, 'yyyy.MM.dd')} + ' — ' + ${#temporals.format(rangeEnd, 'yyyy.MM.dd')}">2026.09.13 — 2026.09.19</div>
       </div>
-      <div class="search-field">
-        <div class="field-label">객실 타입</div>
-        <div class="field-value">전체</div>
-      </div>
-      <div class="search-field">
-        <div class="field-label">상태</div>
-        <div class="field-value">전체</div>
-      </div>
-      <div style="padding-left:32px;">
-        <button type="button" class="btn-gold small"><svg width="13" height="13"><use href="#i-search"/></svg>&nbsp;조회</button>
+      <div style="padding-left:32px;display:flex;gap:8px;">
+        <a class="btn-line small" style="text-decoration:none;padding:11px 18px;font-size:12.5px;"
+           th:href="@{/Admin/room_status(rangeStart=${rangeStart.minusDays(7)})}">&laquo; 이전 7일</a>
+        <a class="btn-line small" style="text-decoration:none;padding:11px 18px;font-size:12.5px;"
+           th:href="@{/Admin/room_status(rangeStart=${rangeStart.plusDays(7)})}">다음 7일 &raquo;</a>
       </div>
     </div>
 
@@ -178,126 +180,131 @@
     <div class="legend">
       <div class="legend-item"><span class="legend-swatch" style="background:#fff;"></span>판매가능</div>
       <div class="legend-item"><span class="legend-swatch" style="background:var(--gold-pale);border-color:var(--gold);"></span>예약완료</div>
-      <div class="legend-item"><span class="legend-swatch" style="background:var(--warn-bg);border-color:#E3D6CC;"></span>청소필요</div>
-      <div class="legend-item"><span class="legend-swatch" style="background:#F3ECE3;"></span>점검·고장</div>
-      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span>마감</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span>판매중지</div>
     </div>
 
     <!-- 캘린더 표 -->
-    <div style="padding:16px 56px 0;position:relative;">
-      <table class="status-table">
+    <div style="padding:16px 56px 0;">
+      <table class="status-table" th:if="${!#lists.isEmpty(statusGrid)}">
         <thead>
           <tr>
             <th>객실</th>
-            <th>9/13 일</th><th>9/14 월</th><th>9/15 화</th><th>9/16 수</th><th>9/17 목</th><th>9/18 금</th><th>9/19 토</th>
+            <th th:each="d : ${statusGrid[0].days}" th:text="${#temporals.dayOfWeekNameShort(d.day)} + ' ' + ${#temporals.format(d.day, 'MM/dd')}">9/13 일</th>
           </tr>
         </thead>
         <tbody>
-
-          <tr>
-            <td class="roomname">사쿠라</td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-booked"><input type="checkbox" checked><span class="status-label">예약완료</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-closed"><span class="status-label">마감</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-booked"><input type="checkbox" checked><span class="status-label">예약완료</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
+          <tr th:each="row : ${statusGrid}">
+            <td class="roomname" th:text="${row.room.roomName}">사쿠라</td>
+            <td class="cell"
+                th:each="d : ${row.days}"
+                th:if="${row.room.roomSaleYn == 'Y'}"
+                th:classappend="${d.booked} ? 'cell-booked' : 'cell-available'">
+              <span class="status-label" th:text="${d.booked} ? '예약완료' : '판매가능'">판매가능</span>
+            </td>
+            <td class="cell cell-closed" th:if="${row.room.roomSaleYn != 'Y'}" th:each="d : ${row.days}">
+              <span class="status-label">판매중지</span>
+            </td>
           </tr>
-
-          <tr>
-            <td class="roomname">스탠다드</td>
-            <td class="cell cell-closed"><span class="status-label">마감</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-closed"><span class="status-label">마감</span></td>
-            <td class="cell cell-clean"><span class="status-label">청소필요</span><span class="sub">체크아웃 09:20</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-          </tr>
-
-          <tr>
-            <td class="roomname">디럭스</td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-phone"><span class="status-label">전화문의</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-phone"><span class="status-label">전화문의</span></td>
-            <td class="cell cell-closed"><span class="status-label">마감</span></td>
-          </tr>
-
-          <tr>
-            <td class="roomname">스위트</td>
-            <td class="cell cell-maintenance"><span class="status-label">점검중</span></td>
-            <td class="cell cell-maintenance"><span class="status-label">점검중</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-          </tr>
-
-          <tr>
-            <td class="roomname">온천뷰</td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-          </tr>
-
-          <tr>
-            <td class="roomname">다다미 12조</td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-phone"><span class="status-label">전화문의</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-            <td class="cell cell-available"><span class="status-label">판매가능</span></td>
-          </tr>
-
         </tbody>
       </table>
-
-      <!-- 상세 정보 팝오버 예시 -->
-      <div class="detail-popover" style="top:122px;left:382px;">
-        <div class="head">
-          9/14(월) · 사쿠라
-          <svg width="12" height="12" style="cursor:pointer;"><use href="#i-x"/></svg>
-        </div>
-        <div class="main">상태: 예약완료</div>
-        <div class="body">예약자 · 결제 등 상세 내용은<br>예약 현황 메뉴에서 확인할 수 있습니다.</div>
-        <div class="foot">※ 날짜 클릭 시 나타나는 상세 정보 예시</div>
-      </div>
+      <p th:if="${#lists.isEmpty(statusGrid)}" style="color:var(--ink-faint);font-size:13px;padding:24px 0;">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</p>
     </div>
 
-    <!-- 일괄 변경 패널 -->
-    <div class="bulk-panel" style="margin-bottom:56px;">
-      <div class="head-row">
-        <div class="title">선택한 셀 일괄 변경 <em>(2건 선택됨)</em></div>
-        <div class="hint">표에서 여러 날짜를 선택하면 상태를 한 번에 바꿀 수 있습니다</div>
-      </div>
-      <div class="bulk-row">
-        <div class="field">
-          <label>상태 변경</label>
-          <select>
-            <option>판매가능</option>
-            <option>예약완료</option>
-            <option>청소필요</option>
-            <option>점검·고장</option>
-            <option>마감</option>
-          </select>
+    <!-- 등록된 객실 / 등록·수정 폼 -->
+    <div class="section-tag" style="margin-top:40px;">
+      <div class="num">1</div>
+      <div class="label">객실 등록 · 관리</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-section-body">
+      <form class="form-card">
+        <div>
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 객실 (' + ${#lists.size(roomList)} + ')'">등록된 객실 (0)</div>
+
+          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</div>
+
+          <div class="list-item" th:each="room : ${roomList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo}">
+            <div class="thumb">
+              <img th:if="${room.thumbnailUrl != null}" th:src="@{${room.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
+              <svg th:unless="${room.thumbnailUrl != null}" width="20" height="20"><use href="#i-bed"/></svg>
+            </div>
+            <div class="info">
+              <div class="name" th:text="${room.roomName}">스탠다드 객실</div>
+              <div class="desc">
+                <span th:text="${room.roomLevel}">스탠다드</span> · 1박
+                <span th:text="${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">78,000</span>원 · 기준
+                <span th:text="${room.roomPeople}">2</span>인
+                <span th:if="${room.roomMemo != null and !room.roomMemo.isEmpty()}" th:text="' · 비고: ' + ${room.roomMemo}"></span>
+              </div>
+            </div>
+            <div class="actions">
+              <form th:action="@{/Admin/room_toggle_sale}" method="post" style="display:inline;">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <input type="hidden" name="redirectTo" value="room_status">
+                <input type="hidden" name="roomSaleYn" th:value="${room.roomSaleYn == 'Y'} ? 'N' : 'Y'">
+                <button type="submit" class="icon-btn" th:title="${room.roomSaleYn == 'Y'} ? '판매중지로 전환' : '판매중으로 전환'">
+                  <svg width="14" height="14"><use th:href="${room.roomSaleYn == 'Y'} ? '#i-x' : '#i-plus'"/></svg>
+                </button>
+              </form>
+              <button type="button" class="icon-btn" onclick="editRoom(this)"><svg width="14" height="14"><use href="#i-pencil"/></svg></button>
+              <form th:action="@{/Admin/room_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 객실을 삭제하시겠습니까?');">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <input type="hidden" name="redirectTo" value="room_status">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-x"/></svg></button>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="field wide">
-          <label>메모 (선택)</label>
-          <input type="text" placeholder="예: 배관 점검으로 2일간 사용 불가">
+
+        <div class="divider"></div>
+      </form>
+
+      <!-- 새 객실 추가 / 수정 공용 폼 : roomIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <form class="form-card" id="roomForm" th:action="@{/Admin/room_save}" method="post" enctype="multipart/form-data">
+
+        <input type="hidden" id="roomIdx" name="roomIdx" value="0">
+        <input type="hidden" name="redirectTo" value="room_status">
+
+        <div class="sub-label" id="roomFormTitle">새 객실 추가</div>
+
+        <div>
+          <div class="img-field-head">
+            <div class="sub-label">객실 이미지</div>
+            <div class="count-badge">0 / 10</div>
+          </div>
+          <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+          </div>
+          <div class="img-hint">최대 10장까지 등록됩니다. 이미지는 src/main/resources/static/uploads/room 폴더에 저장됩니다. 수정 시 새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.</div>
         </div>
-        <button type="button" class="btn-dark">일괄 적용</button>
-      </div>
+
+        <div class="field-row">
+          <div class="field"><label>객실 이름</label><input type="text" id="roomName" name="roomName" placeholder="예: 스탠다드 객실" required></div>
+          <div class="field"><label>객실 등급</label><input type="text" id="roomLevel" name="roomLevel" placeholder="예: 스탠다드 / 디럭스 / 스위트" required></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label>1박 가격</label><input type="number" id="roomPrice" name="roomPrice" placeholder="예: 78000" required></div>
+          <div class="field"><label>기준 인원</label><input type="number" id="roomPeople" name="roomPeople" placeholder="예: 2" required></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label>객실 설명</label><textarea id="roomInfo" name="roomInfo" placeholder="예: 오타루 운하가 내려다보이는 다다미 객실입니다..."></textarea></div>
+          <div class="field"><label>비고</label><textarea id="roomMemo" name="roomMemo" placeholder="예: 최대 인원, 금연/흡연, 전망 등 추가 메모"></textarea></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="roomCancelBtn" style="display:none;" onclick="resetRoomForm()">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-tag"/></svg>&nbsp;<span id="roomSubmitLabel">객실 추가</span></button>
+        </div>
+
+      </form>
     </div>
 
   </main>
@@ -309,6 +316,103 @@ document.addEventListener('click', function (e) {
     if (!menu.contains(e.target)) menu.classList.remove('open');
   });
 });
+
+/* ---------------- 이미지 업로드 미리보기 ---------------- */
+function updateImgGridCount(tile) {
+  var grid = tile.closest('.img-grid');
+  if (!grid) return;
+  var badge = grid.parentElement.querySelector('.count-badge');
+  if (!badge) return;
+  var filled = grid.querySelectorAll('.img-tile.filled').length;
+  var total = grid.querySelectorAll('.img-tile').length;
+  badge.textContent = filled + ' / ' + total;
+}
+
+function showTilePreview(tile, dataUrl) {
+  tile.classList.add('filled');
+  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = 'none'; });
+  tile.style.backgroundImage = 'url(' + dataUrl + ')';
+  tile.style.backgroundSize = 'cover';
+  tile.style.backgroundPosition = 'center';
+  if (!tile.querySelector('.remove')) {
+    var removeBtn = document.createElement('div');
+    removeBtn.className = 'remove';
+    removeBtn.innerHTML = '<svg width="10" height="10"><use href="#i-x"/></svg>';
+    tile.appendChild(removeBtn);
+  }
+}
+
+function clearTilePreview(tile) {
+  var input = tile.querySelector('input[type="file"]');
+  if (input) input.value = '';
+  tile.classList.remove('filled');
+  tile.style.backgroundImage = '';
+  var removeBtn = tile.querySelector('.remove');
+  if (removeBtn) removeBtn.remove();
+  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = ''; });
+}
+
+document.addEventListener('change', function (e) {
+  var input = e.target;
+  if (input.tagName !== 'INPUT' || input.type !== 'file') return;
+  var tile = input.closest('.img-tile');
+  if (!tile) return;
+
+  var file = input.files && input.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function (ev) {
+    showTilePreview(tile, ev.target.result);
+    updateImgGridCount(tile);
+  };
+  reader.readAsDataURL(file);
+});
+
+document.addEventListener('click', function (e) {
+  var removeBtn = e.target.closest('.img-tile .remove');
+  if (!removeBtn) return;
+  e.preventDefault();
+  var tile = removeBtn.closest('.img-tile');
+  clearTilePreview(tile);
+  updateImgGridCount(tile);
+});
+
+function clearImageGrids(form) {
+  form.querySelectorAll('.img-tile').forEach(function (tile) {
+    clearTilePreview(tile);
+  });
+  form.querySelectorAll('.count-badge').forEach(function (badge) {
+    var total = badge.parentElement.parentElement.querySelectorAll('.img-tile').length;
+    badge.textContent = '0 / ' + total;
+  });
+}
+
+/* ---------------- 객실 등록/수정 폼 ---------------- */
+function editRoom(btn) {
+  var item = btn.closest('.list-item');
+  clearImageGrids(document.getElementById('roomForm'));
+  document.getElementById('roomIdx').value = item.dataset.idx;
+  document.getElementById('roomName').value = item.dataset.name || '';
+  document.getElementById('roomLevel').value = item.dataset.level || '';
+  document.getElementById('roomPrice').value = item.dataset.price || '';
+  document.getElementById('roomPeople').value = item.dataset.people || '';
+  document.getElementById('roomInfo').value = item.dataset.info || '';
+  document.getElementById('roomMemo').value = item.dataset.memo || '';
+  document.getElementById('roomFormTitle').textContent = '객실 수정';
+  document.getElementById('roomSubmitLabel').textContent = '수정 내용 저장';
+  document.getElementById('roomCancelBtn').style.display = '';
+  document.getElementById('roomForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetRoomForm() {
+  var form = document.getElementById('roomForm');
+  form.reset();
+  clearImageGrids(form);
+  document.getElementById('roomIdx').value = '0';
+  document.getElementById('roomFormTitle').textContent = '새 객실 추가';
+  document.getElementById('roomSubmitLabel').textContent = '객실 추가';
+  document.getElementById('roomCancelBtn').style.display = 'none';
+}
 </script>
 </body>
 </html>

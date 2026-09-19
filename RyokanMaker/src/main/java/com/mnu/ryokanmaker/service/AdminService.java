@@ -39,6 +39,11 @@ public class AdminService {
 		return admin;
 	}
 
+	/** 관리자 인덱스로 단건 조회 (교통안내 등 공개 화면에서 여관 정보 표시용). */
+	public AdminDto findByAdminIdx(int adminIdx) {
+		return adminMapper.selectByAdminIdx(adminIdx);
+	}
+
 	/**
 	 * 여관 기본정보 수정 (인덱스 화면 입력). 1 관리자 = 1 여관이라 등록/삭제 없이 수정만 있음.
 	 * logoFile : 로고 1장 (선택) - 안 올리면 기존 로고 유지

@@ -61,6 +61,27 @@
 
 ---
 
+## dto→domain 패키지 통합 + 관리자 객실현황/판매관리 화면 완성 (2026-09-18)
+
+**배경:** `AccessController.findByAdminIdx` 컴파일 에러 수정 후, `origin/yeseong` 브랜치를 로컬에 가져오려다 원격 브랜치 6개(Test/Choiyeongsu13/eartth21/master/yeseong) 상태를 점검. Test/Choiyeongsu13/eartth21은 이미 현재 브랜치(june47087-byte)의 조상이라 가져올 것이 없었고, master는 같은 커밋을 넣었다 revert해 실질 빈 커밋, yeseong만 "플랜선택 예약 구현" 등 고유 커밋 2개가 있었음.
+
+**dto→domain 리네이밍:** yeseong이 `com.mnu.ryokanmaker.domain`(신규 DTO 5개)과 `com.mnu.ryokanmaker.dto`(기존 30개)가 혼재된 상태였고, 사용자 지시로 프로젝트 전체를 `domain`으로 통일하기로 함. `git mv`로 `dto` 디렉터리를 `domain`으로 옮기고 `sed`로 82개 파일(java+xml)의 패키지 참조를 일괄 치환, 빌드/테스트컴파일 성공 확인 후 커밋.
+
+**yeseong 병합 보류:** Windows NTFS 대소문자 미구분 때문에 `CourseDTO.java`(yeseong) vs `CourseDto.java`(기존)가 같은 경로로 충돌해 `git merge`가 막힘. 내용 비교 결과 yeseong의 예약 로직(ReservationController/Service, DB 매퍼)은 현재 브랜치가 이미 더 발전된 버전(로그인 가드, Lombok DTO, 결제 연동)을 갖고 있어 병합하면 오히려 후퇴. 병합은 포기하고 yeseong에서 실질 가치 있는 CSS 2가지만 수동 반영: `.btn-selected` 스타일 추가, 식사 코스 카드를 2열 grid에서 가로 스크롤(캐러셀) 방식으로 변경.
+
+**클린 빌드 필요성 발견:** dto→domain 리네이밍 직후 `mvnw spring-boot:run` 1회차에서 `NoClassDefFoundError: domain/CourseDTO (wrong name: CourseDto)` 발생 — 대소문자 미구분 파일시스템 때문에 `target/classes`에 stale 빌드 산출물이 남은 것. `mvnw clean compile`로 해결. Eclipse에서도 이런 리네이밍 후에는 Project → Clean이 필요함을 확인.
+
+**관리자 객실현황(`/Admin/room_status`)/판매관리(`/Admin/plan_sales`) 완성:** 기존에는 하드코딩된 목업 화면이었음(반면 예약현황 `/Admin/reservation_status`는 이미 DB 연동 완료 상태였음).
+- `RoomStatusService`/`PlanSalesService` 신규 작성: `RoomReservationMapper.findOverlapping()`을 재사용해 로그인한 관리자의 객실별/플랜별 7일 날짜별 예약 현황을 계산 (`RoomDayStatusDto`/`RoomStatusRowDto`/`PlanDayStatusDto`/`PlanSalesRowDto` 신규 DTO).
+- `ROOM_SALE_YN`/`PLAN_SALE_YN` 토글 전용 매퍼 쿼리(`updateSaleYn`)와 서비스/컨트롤러 엔드포인트(`room_toggle_sale`/`plan_toggle_sale`) 추가.
+- 두 화면 모두 `admin_info_register.html`의 등록/수정/삭제 CRUD 폼(이미지 업로드 포함)과 JS(이미지 미리보기, editRoom/editPlan)를 그대로 이식. 여러 화면에서 같은 저장/삭제 엔드포인트(`room_save`/`room_delete`/`plan_save`/`plan_delete`)를 쓰게 되어, `redirectTo` 파라미터(화이트리스트 검증)로 제출한 화면으로 되돌아가도록 처리.
+- 이미지 저장은 기존 `ImageJsonUtil` 컨벤션(`src/main/resources/static/uploads/{room,plan}`) 그대로 사용 — 별도 변경 없음. `plan_sales`에서 올린 이미지는 `PLAN_IMAGE` 컬럼을 공유하므로 사용자 예약 화면(`planSelect.html`)에도 자동 반영됨.
+- 사용자 결정: 플랜 판매중지 시에는 (버튼을 "선택불가"로 바꾸는 대신) 기존 동작대로 예약 화면에서 완전히 숨기는 것으로 유지. "온천 일일 판매 한도" 섹션은 이번 범위에서 제외하고 목업 그대로 복원.
+
+**검증:** `mvnw clean compile` BUILD SUCCESS. 관리자 로그인(테스트 계정) 후 두 화면 모두 HTTP 200, 실제 DB 데이터(객실 5개, 플랜 3개)가 캘린더/카드에 정상 렌더링, 서버 로그 에러 없음 확인. 브라우저 스크린샷 도구 접근이 막혀 육안 확인은 못함.
+
+---
+
 ## ORA-00904: 관리자 예약현황 상세(식사 코스) 조회 오류 수정 (2026-09-18)
 
 **증상:** 관리자 예약현황(`/Admin/reservation_status`) 상세 조회 시 `ORA-00904: "C"."COURSE_IDX": 부적합한 식별자`.
