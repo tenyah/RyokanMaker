@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' 관리자 - 계정 신청 관리'">清流庵 관리자 - 계정 신청 관리</title>
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_requests}">清流庵 관리자 - 계정 신청 관리</title>
 <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -31,19 +31,17 @@
   <main class="admin-main">
 
     <div class="admin-head">
-      <div class="crumb">관리자 &nbsp;/&nbsp; 계정 신청 관리</div>
-      <h1>관리자 계정 신청함</h1>
+      <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.req_manage}">계정 신청 관리</span></div>
+      <h1 th:text="#{adm.req_heading}">관리자 계정 신청함</h1>
       <div class="rule"></div>
-      <p>공개 신청 폼(<code>/admin/apply</code>)으로 접수된 관리자 계정 신청을 승인·반려합니다. 승인하면 계정이 즉시 생성되고 아이디/임시 비밀번호가 신청자 이메일로 발송됩니다.</p>
+      <p th:utext="#{adm.req_desc}">공개 신청 폼(<code>/admin/apply</code>)으로 접수된 관리자 계정 신청을 승인·반려합니다.</p>
     </div>
 
-    <div class="notice-banner">
-      신규 메뉴입니다 — 관리자 계정은 자율 가입이 아니라 신청 → 운영진 승인 → 메일 발급 방식으로 운영합니다.
-    </div>
+    <div class="notice-banner" th:text="#{adm.req_banner}">신규 메뉴입니다.</div>
 
     <div th:if="${message}" class="form-card" style="padding-bottom:0;">
       <div class="answer-block">
-        <div class="answer-body" th:text="${message}"></div>
+        <div class="answer-body" th:text="#{${message}}"></div>
       </div>
     </div>
 
@@ -51,35 +49,35 @@
       <table>
         <thead>
           <tr>
-            <th>료칸명</th>
-            <th>담당자</th>
-            <th>이메일</th>
-            <th>연락처</th>
-            <th>신청 내용</th>
-            <th>신청일시</th>
-            <th style="text-align:right;">처리</th>
+            <th th:text="#{adm.req_ryokan}">료칸명</th>
+            <th th:text="#{adm.req_person}">담당자</th>
+            <th th:text="#{member.email}">이메일</th>
+            <th th:text="#{member.tel}">연락처</th>
+            <th th:text="#{adm.req_message}">신청 내용</th>
+            <th th:text="#{adm.req_at}">신청일시</th>
+            <th style="text-align:right;" th:text="#{adm.req_action}">처리</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody th:with="_p=${@tr.prefetch(requestList, 'requestMessage')}">
           <tr th:each="req : ${requestList}">
             <td th:text="${req.ryokanName}"></td>
             <td th:text="${req.applicantName}"></td>
             <td th:text="${req.applicantEmail}"></td>
             <td th:text="${req.applicantTel}"></td>
-            <td th:text="${req.requestMessage}"></td>
+            <td th:text="${@tr.t(req.requestMessage)}"></td>
             <td class="qna-date" th:text="${req.requestedAt}"></td>
             <td style="text-align:right;white-space:nowrap;">
               <form th:action="@{'/Admin/admin_requests/' + ${req.requestIdx} + '/approve'}" method="post" style="display:inline;">
-                <button type="submit" class="btn-gold" style="padding:8px 14px;font-size:12px;"><svg width="13" height="13"><use href="#i-check"/></svg>&nbsp;승인</button>
+                <button type="submit" class="btn-gold" style="padding:8px 14px;font-size:12px;"><svg width="13" height="13"><use href="#i-check"/></svg>&nbsp;<span th:text="#{adm.approve}">승인</span></button>
               </form>
               <form th:action="@{'/Admin/admin_requests/' + ${req.requestIdx} + '/reject'}" method="post" style="display:inline;">
-                <button type="submit" class="btn-line" style="padding:8px 14px;font-size:12px;"><svg width="13" height="13"><use href="#i-x"/></svg>&nbsp;반려</button>
+                <button type="submit" class="btn-line" style="padding:8px 14px;font-size:12px;"><svg width="13" height="13"><use href="#i-x"/></svg>&nbsp;<span th:text="#{adm.reject}">반려</span></button>
               </form>
             </td>
           </tr>
         </tbody>
       </table>
-      <div th:if="${#lists.isEmpty(requestList)}" class="qna-empty">대기 중인 신청이 없습니다.</div>
+      <div th:if="${#lists.isEmpty(requestList)}" class="qna-empty" th:text="#{adm.req_empty}">대기 중인 신청이 없습니다.</div>
     </div>
 
     <div style="height:56px;"></div>

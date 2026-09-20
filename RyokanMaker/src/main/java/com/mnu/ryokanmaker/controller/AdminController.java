@@ -245,7 +245,7 @@ public class AdminController {
 			HttpSession session, Model model) {
 		AdminDto admin = adminService.authenticate(adminId, adminPassword);
 		if (admin == null) {
-			model.addAttribute("error", "아이디 또는 비밀번호가 일치하지 않습니다.");
+			model.addAttribute("error", "error.admin.login_failed");
 			return "Admin/admin_login";
 		}
 		admin.setAdminPassword(null);
@@ -285,14 +285,14 @@ public class AdminController {
 
 		if (!newPassword.equals(newPasswordConfirm)) {
 			model.addAttribute("admin", loginAdmin);
-			model.addAttribute("error", "새 비밀번호가 일치하지 않습니다.");
+			model.addAttribute("error", "error.admin.pw_mismatch");
 			return "Admin/admin_pwreset";
 		}
 
 		boolean success = adminService.changePassword(loginAdmin.getAdminIdx(), currentPassword, newPassword);
 		if (!success) {
 			model.addAttribute("admin", loginAdmin);
-			model.addAttribute("error", "현재 비밀번호가 일치하지 않습니다.");
+			model.addAttribute("error", "error.admin.pw_current");
 			return "Admin/admin_pwreset";
 		}
 
@@ -591,7 +591,7 @@ public class AdminController {
 		}
 		adminService.updateAccess(admin.getAdminIdx(), ryokanAccess);
 		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
-		model.addAttribute("message", "교통안내가 저장되었습니다.");
+		model.addAttribute("message", "adm.msg_access_saved");
 		return "Admin/access_edit";
 	}
 }

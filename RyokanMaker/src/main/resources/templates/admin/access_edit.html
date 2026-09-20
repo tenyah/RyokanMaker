@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>清流庵 관리자 - 교통안내</title>
+<title th:text="'清流庵 ' + #{adm.title_access}">清流庵 관리자 - 교통안내</title>
 <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -53,28 +53,29 @@
     <span class="romaji">OTARU FURUKAWA &nbsp;·&nbsp; ADMIN</span>
   </div>
   <nav style="gap:40px;">
-    <a class="navlink" href="#">대시보드</a>
-    <a class="navlink" th:href="@{/Admin/admin_info_register}">정보등록</a>
-    <a class="navlink" th:href="@{/Admin/reservation_status}">예약 현황</a>
-    <a class="navlink" th:href="@{/Admin/room_status}">객실 현황</a>
-    <a class="navlink" th:href="@{/Admin/plan_sales}">판매 관리</a>
-    <a class="navlink" th:href="@{/Admin/admin_inquiry}">문의 관리</a>
-    <span class="btn-line" style="padding:10px 20px;font-size:12px;gap:7px;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</span>
+    <a class="navlink" href="#" th:text="#{adm.dashboard}">대시보드</a>
+    <a class="navlink" th:href="@{/Admin/admin_info_register}" th:text="#{adm.info}">정보등록</a>
+    <a class="navlink" th:href="@{/Admin/reservation_status}" th:text="#{adm.reservation}">예약 현황</a>
+    <a class="navlink" th:href="@{/Admin/room_status}" th:text="#{adm.room}">객실 현황</a>
+    <a class="navlink" th:href="@{/Admin/plan_sales}" th:text="#{adm.plan}">판매 관리</a>
+    <a class="navlink" th:href="@{/Admin/admin_inquiry}" th:text="#{adm.inquiry}">문의 관리</a>
+    <span class="navlink" style="display:inline-flex; gap:8px;"><a href="#" style="font-size:12px;" onclick="var u=new URL(location.href);u.searchParams.set('lang','ko');location.href=u;return false;">KO</a><a href="#" style="font-size:12px;" onclick="var u=new URL(location.href);u.searchParams.set('lang','en');location.href=u;return false;">EN</a><a href="#" style="font-size:12px;" onclick="var u=new URL(location.href);u.searchParams.set('lang','ja');location.href=u;return false;">JA</a></span>
+    <span class="btn-line" style="padding:10px 20px;font-size:12px;gap:7px;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;<span th:text="#{adm.view_site}">사이트 보기</span></span>
     <div class="account-menu" id="accountMenu">
-      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">관</button>
+      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')" th:text="#{adm.avatar}">관</button>
       <div class="account-dropdown">
         <div class="account-dropdown-head">
-          <div class="avatar-sm">관</div>
+          <div class="avatar-sm" th:text="#{adm.avatar}">관</div>
           <div>
-            <div class="name">清流庵 관리자</div>
+            <div class="name" th:text="'清流庵 ' + #{adm.admin}">清流庵 관리자</div>
             <div class="sub">ADMIN_ID</div>
           </div>
         </div>
         <a class="account-dropdown-item" th:href="@{/Admin/admin_pwreset}">
-          <svg width="15" height="15"><use href="#i-lock"/></svg>비밀번호 변경
+          <svg width="15" height="15"><use href="#i-lock"/></svg><span th:text="#{adm.change_pw}">비밀번호 변경</span>
         </a>
         <a class="account-dropdown-item danger" th:href="@{/Admin/admin_logout}">
-          <svg width="15" height="15"><use href="#i-logout"/></svg>로그아웃
+          <svg width="15" height="15"><use href="#i-logout"/></svg><span th:text="#{nav.logout}">로그아웃</span>
         </a>
       </div>
     </div>
@@ -85,13 +86,13 @@
 
   <!-- 사이드바 -->
   <aside class="admin-sidebar">
-    <div class="menu-label">관리자 메뉴</div>
+    <div class="menu-label" th:text="#{adm.menu}">관리자 메뉴</div>
 
     <div class="tenant-card">
       <div class="mark">淸</div>
       <div class="who">
-        <div class="label">관리 중인 여관</div>
-        <div class="name">清流庵 (오타루)</div>
+        <div class="label" th:text="#{adm.managing}">관리 중인 여관</div>
+        <div class="name" th:text="#{adm.ac_tenant}">清流庵 (오타루)</div>
       </div>
       <svg width="14" height="14" style="color:var(--ink-faint);flex:0 0 auto;"><use href="#i-chevron"/></svg>
     </div>
@@ -99,27 +100,27 @@
     <nav class="admin-nav">
       <a class="admin-nav-item" th:href="@{/Admin/admin_info_register}">
         <svg width="17" height="17"><use href="#i-doc"/></svg>
-        <span>정보등록</span>
+        <span th:text="#{adm.info}">정보등록</span>
       </a>
       <a class="admin-nav-item" th:href="@{/Admin/reservation_status}">
         <svg width="17" height="17"><use href="#i-cal"/></svg>
-        <span>예약 현황</span>
+        <span th:text="#{adm.reservation}">예약 현황</span>
       </a>
       <a class="admin-nav-item" th:href="@{/Admin/room_status}">
         <svg width="17" height="17"><use href="#i-bed"/></svg>
-        <span>객실 현황</span>
+        <span th:text="#{adm.room}">객실 현황</span>
       </a>
       <a class="admin-nav-item" th:href="@{/Admin/plan_sales}">
         <svg width="17" height="17"><use href="#i-tag"/></svg>
-        <span>판매 관리</span>
+        <span th:text="#{adm.plan}">판매 관리</span>
       </a>
       <a class="admin-nav-item" th:href="@{/Admin/admin_inquiry}">
         <svg width="17" height="17"><use href="#i-mail"/></svg>
-        <span>문의 관리</span>
+        <span th:text="#{adm.inquiry}">문의 관리</span>
       </a>
       <a class="admin-nav-item active" th:href="@{/Admin/access_edit}">
         <svg width="17" height="17"><use href="#i-map"/></svg>
-        <span>교통안내</span>
+        <span th:text="#{nav.access}">교통안내</span>
       </a>
     </nav>
 
@@ -127,9 +128,9 @@
 
     <div style="height:1px;background:var(--line);margin:16px 0 14px 0;"></div>
     <div class="admin-profile">
-      <div class="avatar">관</div>
+      <div class="avatar" th:text="#{adm.avatar}">관</div>
       <div>
-        <div class="name">관리자</div>
+        <div class="name" th:text="#{adm.admin}">관리자</div>
         <div class="mail" th:text="${admin.adminMail}">admin@seiryuan.jp</div>
       </div>
     </div>
@@ -139,27 +140,27 @@
   <main class="admin-main">
 
     <div class="admin-head">
-      <div class="crumb">관리자 &nbsp;/&nbsp; 정보등록 &nbsp;/&nbsp; 교통안내</div>
-      <h1>교통안내 수정</h1>
+      <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.info}">정보등록</span> &nbsp;/&nbsp; <span th:text="#{nav.access}">교통안내</span></div>
+      <h1 th:text="#{adm.ac_heading}">교통안내 수정</h1>
       <div class="rule"></div>
-      <p>공개 사이트의 "교통안내" 페이지에 표시되는 안내문을 수정합니다. 지도 그림은 고정이고, 버스 노선 같은 텍스트만 자유롭게 수정할 수 있습니다.</p>
+      <p th:text="#{adm.ac_desc}">공개 사이트의 교통안내 페이지에 표시되는 안내문을 수정합니다.</p>
     </div>
 
     <div th:if="${message}" class="form-card" style="padding-bottom:0;">
       <div class="answer-block">
-        <div class="answer-body" th:text="${message}"></div>
+        <div class="answer-body" th:text="#{${message}}"></div>
       </div>
     </div>
 
     <form class="form-card" th:action="@{/Admin/access_edit}" method="post">
       <div class="field">
-        <label>교통안내 안내문</label>
+        <label th:text="#{adm.ac_label}">교통안내 안내문</label>
         <textarea name="ryokanAccess" style="min-height:220px;"
-                  placeholder="예) JR 오타루역에서 도보 15분, 또는 역 앞 3번 버스정류장에서 순환버스 이용 후 '후루카와' 정류장 하차"
+                  th:placeholder="#{adm.ac_ph}"
                   th:text="${admin?.ryokanAccess}"></textarea>
       </div>
       <div class="form-actions" style="justify-content:flex-end;">
-        <button type="submit" class="btn-gold">저장</button>
+        <button type="submit" class="btn-gold" th:text="#{common.save}">저장</button>
       </div>
     </form>
 
