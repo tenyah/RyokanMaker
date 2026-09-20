@@ -1,10 +1,8 @@
 package com.mnu.ryokanmaker.controller;
 
 import com.mnu.ryokanmaker.dto.NoticeDto;
-import com.mnu.ryokanmaker.service.GeminiTranslationService;
 import com.mnu.ryokanmaker.service.NoticeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,17 +20,14 @@ public class NoticeController {
     @Autowired
     private NoticeService noticeService;
 
-    @Autowired
-    private GeminiTranslationService translationService;
-
     @GetMapping("/notice/view")
     public String view(@RequestParam int idx, Model model) {
         NoticeDto notice = noticeService.select(idx);
+        if (notice == null) {
+            return "redirect:/";
+        }
 
-        // 현재 언어(헤더의 KO/EN/JA 전환)가 한국어가 아니면 Gemini로 즉석 번역해서 보여줌
-        notice.setNoticeTitle(translationService.translate(notice.getNoticeTitle(), LocaleContextHolder.getLocale()));
-        notice.setNoticeContent(translationService.translate(notice.getNoticeContent(), LocaleContextHolder.getLocale()));
-
+        // 제목/내용은 템플릿에서 @tr.t(...)로 현재 언어에 맞춰 번역해서 보여줌
         model.addAttribute("notice", notice);
         return "notice/view";
     }

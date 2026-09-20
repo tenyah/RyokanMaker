@@ -33,7 +33,7 @@ public class MemberController {
                           Model model) {
 
         if (memberService.existsByUserMail(memberDto.getUserMail())) {
-            model.addAttribute("error", "이미 가입된 이메일입니다.");
+            model.addAttribute("error", "error.member.duplicate_email");
             model.addAttribute("member", memberDto);
             model.addAttribute("countries", memberService.listCountries());
             return "member/signup";
@@ -69,7 +69,7 @@ public class MemberController {
                          Model model) {
         MemberDto member = memberService.authenticate(userMail, userPassword);
         if (member == null) {
-            model.addAttribute("error", "이메일 또는 비밀번호가 올바르지 않습니다.");
+            model.addAttribute("error", "error.member.login_failed");
             return "member/login";
         }
         member.setUserPassword(null);
@@ -135,7 +135,7 @@ public class MemberController {
         model.addAttribute("member", updated);
         model.addAttribute("countries", memberService.listCountries());
         model.addAttribute("reservations", memberService.getReservationHistory(updated.getUserMail()));
-        model.addAttribute("message", "정보가 수정되었습니다.");
+        model.addAttribute("message", "member.updated");
         return "member/mypage";
     }
 
@@ -143,11 +143,11 @@ public class MemberController {
     private String validateNames(MemberDto memberDto) {
         if (!NameValidationUtil.isValidEnglishName(memberDto.getUserLastNameEn())
                 || !NameValidationUtil.isValidEnglishName(memberDto.getUserFirstNameEn())) {
-            return "영문 이름은 알파벳으로만 입력해주세요.";
+            return "error.member.name_en";
         }
         if (!NameValidationUtil.isValidJapaneseNameOrBlank(memberDto.getUserLastNameJp())
                 || !NameValidationUtil.isValidJapaneseNameOrBlank(memberDto.getUserFirstNameJp())) {
-            return "일본어 이름은 히라가나/가타카나로만 입력해주세요 (한자 불가).";
+            return "error.member.name_jp";
         }
         return null;
     }

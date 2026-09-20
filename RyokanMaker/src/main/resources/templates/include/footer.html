@@ -18,8 +18,8 @@
            th:alt="${siteInfo.ryokanName != null ? siteInfo.ryokanName : '清流庵'}">
       <div class="kanji" th:if="${siteInfo == null or siteInfo.logoUrl == null}">清流庵</div>
       <div class="addr">
-        <span th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.adminLoc)} ? ${siteInfo.adminLoc} : '[주소를 입력하세요]'"></span><br>
-        <span>TEL. <span th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.ryokanTel)} ? ${siteInfo.ryokanTel} : '[전화번호를 입력하세요]'"></span></span>
+        <span th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.adminLoc)} ? ${@tr.t(siteInfo.adminLoc)} : #{footer.placeholder_addr}"></span><br>
+        <span><span th:text="#{footer.tel}">TEL.</span> <span th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.ryokanTel)} ? ${siteInfo.ryokanTel} : #{footer.placeholder_tel}"></span></span>
         <th:block th:if="${siteInfo != null and !#strings.isEmpty(siteInfo.adminMail)}">
           <br><span th:text="'MAIL. ' + ${siteInfo.adminMail}"></span>
         </th:block>

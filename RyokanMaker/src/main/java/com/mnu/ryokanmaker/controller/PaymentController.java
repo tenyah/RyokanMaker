@@ -10,12 +10,15 @@ import com.mnu.ryokanmaker.dto.RoomDto;
 import com.mnu.ryokanmaker.mapper.PlanMapper;
 import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;
 import com.mnu.ryokanmaker.mapper.RoomMapper;
+import com.mnu.ryokanmaker.service.GeminiTranslationService;
 import com.mnu.ryokanmaker.service.PaymentReservationService;
 import com.mnu.ryokanmaker.service.TossPaymentService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -62,6 +66,12 @@ public class PaymentController {
 
     @Autowired
     private PaymentReservationService paymentReservationService;
+
+    @Autowired
+    private MessageSource messageSource;
+
+    @Autowired
+    private GeminiTranslationService translationService;
 
     @Value("${tosspayments.client-key}")
     private String tossClientKey;
@@ -105,13 +115,15 @@ public class PaymentController {
         int roomFee = room != null ? room.getRoomPrice() : 0;
         int mealFee = totalAmount.intValue() - roomFee;
 
+        Locale locale = LocaleContextHolder.getLocale();
         StringBuilder planDescription = new StringBuilder();
         if (course != null) {
-            planDescription.append(course.getRestaurantCourseName()).append(" 포함");
+            String courseName = translationService.translate(course.getRestaurantCourseName(), locale);
+            planDescription.append(messageSource.getMessage("pay.includes_course", new Object[]{courseName}, locale));
         }
         if (onsenTimeSlot != null) {
             if (planDescription.length() > 0) planDescription.append(" · ");
-            planDescription.append("온천 ").append(onsenTimeSlot).append(" 이용");
+            planDescription.append(messageSource.getMessage("pay.onsen_use", new Object[]{onsenTimeSlot}, locale));
         }
 
         GuestInfoForm guestInfoForm = new GuestInfoForm();
@@ -188,7 +200,7 @@ public class PaymentController {
         // 서버가 신뢰하는 금액은 DB에 저장된 예약 금액이다 (successUrl의 amount는 위변조 가능).
         Integer expectedAmount = paymentReservationService.findTrustedAmount(orderId);
         if (expectedAmount == null || expectedAmount != amount) {
-            model.addAttribute("message", "결제 금액이 일치하지 않습니다. 다시 시도해주세요.");
+            model.addAttribute("messageKey", "pay.error.amount_mismatch");
             return "payment/fail";
         }
 
@@ -224,22 +236,22 @@ public class PaymentController {
 
     private Map<String, String> buildCountryOptions() {
         Map<String, String> countries = new LinkedHashMap<>();
-        countries.put("KR", "대한민국");
-        countries.put("JP", "일본");
-        countries.put("US", "미국");
-        countries.put("CN", "중국");
-        countries.put("TW", "대만");
-        countries.put("ETC", "그 외");
+        countries.put("KR", "country.KR");
+        countries.put("JP", "country.JP");
+        countries.put("US", "country.US");
+        countries.put("CN", "country.CN");
+        countries.put("TW", "country.TW");
+        countries.put("ETC", "country.ETC");
         return countries;
     }
 
     private Map<String, String> buildArrivalTimeOptions() {
         Map<String, String> times = new LinkedHashMap<>();
-        times.put("15", "15:00 ~ 16:00");
-        times.put("16", "16:00 ~ 17:00");
-        times.put("17", "17:00 ~ 18:00");
-        times.put("18", "18:00 ~ 19:00");
-        times.put("19", "19:00 이후");
+        times.put("15", "arrival.15");
+        times.put("16", "arrival.16");
+        times.put("17", "arrival.17");
+        times.put("18", "arrival.18");
+        times.put("19", "arrival.19");
         return times;
     }
 }

@@ -34,3 +34,7 @@ build/
 
 ### macOS ###
 .DS_Store
+
+### 번역 캐시 (Gemini 번역 결과를 서버 재시작 후에도 재사용) ###
+translation-cache.json
+translation-cache.json.tmp

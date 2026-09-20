@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <title th:text="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵 | 오타루 후루카와</title>
@@ -123,7 +123,7 @@
       <div class="thumb" data-carousel>
         <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(roomImages) > 1}">&#10094;</button>
         <div class="slide">
-          <img th:each="url : ${roomImages}" th:src="@{${url}}" alt="객실 이미지">
+          <img th:each="url : ${roomImages}" th:src="@{${url}}" th:alt="#{common.alt_room}">
         </div>
         <span th:if="${#lists.isEmpty(roomImages)}" style="position:relative;z-index:1;" th:text="#{nav.rooms}">객실</span>
         <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(roomImages) > 1}">&#10095;</button>
@@ -140,7 +140,7 @@
       <div class="thumb" data-carousel>
         <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(onsenImages) > 1}">&#10094;</button>
         <div class="slide">
-          <img th:each="url : ${onsenImages}" th:src="@{${url}}" alt="온천 이미지">
+          <img th:each="url : ${onsenImages}" th:src="@{${url}}" th:alt="#{common.alt_onsen}">
         </div>
         <span th:if="${#lists.isEmpty(onsenImages)}" style="position:relative;z-index:1;" th:text="#{nav.onsen}">온천</span>
         <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(onsenImages) > 1}">&#10095;</button>
@@ -157,7 +157,7 @@
       <div class="thumb" data-carousel>
         <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(courseImages) > 1}">&#10094;</button>
         <div class="slide">
-          <img th:each="url : ${courseImages}" th:src="@{${url}}" alt="식사 이미지">
+          <img th:each="url : ${courseImages}" th:src="@{${url}}" th:alt="#{common.alt_dining}">
         </div>
         <span th:if="${#lists.isEmpty(courseImages)}" style="position:relative;z-index:1;" th:text="#{nav.dining}">식사</span>
         <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(courseImages) > 1}">&#10095;</button>
@@ -178,10 +178,10 @@
     <div class="line"></div>
   </section>
 
-  <div class="board-list">
+  <div class="board-list" th:with="_p=${@tr.prefetch(notices, 'noticeTitle')}">
     <a class="board-row" th:each="notice : ${notices}" th:href="@{/notice/view(idx=${notice.noticeIdx})}">
       <span class="board-date" th:text="${#temporals.format(notice.noticeCreatedAt, 'yyyy/MM/dd')}"></span>
-      <span class="board-title" th:text="${notice.noticeTitle}"></span>
+      <span class="board-title" th:text="${@tr.t(notice.noticeTitle)}"></span>
     </a>
     <div th:if="${#lists.isEmpty(notices)}" class="board-empty" th:text="#{index.notice_empty}">등록된 공지사항이 없습니다.</div>
   </div>

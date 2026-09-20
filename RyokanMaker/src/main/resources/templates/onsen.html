@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title th:text="'온천 안내 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">온천 안내 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{onsen.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">온천 안내 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -15,7 +15,7 @@
   <!-- 타이틀 -->
   <section class="page-title">
     <div class="crumb">Hot Spring &nbsp;/&nbsp; 温泉</div>
-    <h1>온천 안내</h1>
+    <h1 th:text="#{onsen.title}">온천 안내</h1>
     <div class="rule"></div>
   </section>
 
@@ -24,7 +24,7 @@
     필드 : onsenName, onsenHour("시작–종료"), onsenInfo, onsenMemo, imageUrls(전체 이미지 경로 목록)
     사진은 가운데 캐러셀로, 그 아래 텍스트(온천명 → 이용시간 → 소개 → 비고)를 배치한다.
   -->
-  <section class="detail-list">
+  <section class="detail-list" th:with="_p=${@tr.prefetch(onsens, 'onsenName', 'onsenInfo', 'onsenMemo')}">
     <div class="detail-item" th:each="onsen : ${onsens}">
       <div class="detail-thumb" data-carousel>
         <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(onsen.imageUrls) > 1}">&#10094;</button>
@@ -33,7 +33,7 @@
         </div>
         <th:block th:if="${#lists.isEmpty(onsen.imageUrls)}">
           <img th:src="@{/images/sample/onsen.svg}" alt="" class="sample-img">
-          <span class="sample-badge">샘플 이미지</span>
+          <span class="sample-badge" th:text="#{common.sample_image}">샘플 이미지</span>
         </th:block>
         <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(onsen.imageUrls) > 1}">&#10095;</button>
         <div class="dots" th:if="${#lists.size(onsen.imageUrls) > 1}">
@@ -41,18 +41,18 @@
         </div>
       </div>
       <div class="detail-body">
-        <h2 th:text="${onsen.onsenName}">노천탕 (露天湯)</h2>
+        <h2 th:text="${@tr.t(onsen.onsenName)}">노천탕 (露天湯)</h2>
         <div class="meta-row" th:if="${onsen.onsenHour != null and !onsen.onsenHour.isEmpty()}">
-          <span>이용 시간 <span th:text="${onsen.onsenHour}">15:00~22:00</span></span>
+          <span><span th:text="#{onsen.hours}">이용 시간</span> <span th:text="${onsen.onsenHour}">15:00~22:00</span></span>
         </div>
-        <p class="desc" th:text="${onsen.onsenInfo}">오타루 앞바다가 보이는 전세탕(대절) 노천탕</p>
-        <p class="memo" th:if="${onsen.onsenMemo != null and !onsen.onsenMemo.isEmpty()}" th:text="${onsen.onsenMemo}">플랜을 통해 예약할 수 있으며 이용시간은 45분입니다</p>
+        <p class="desc" th:text="${@tr.t(onsen.onsenInfo)}">오타루 앞바다가 보이는 전세탕(대절) 노천탕</p>
+        <p class="memo" th:if="${onsen.onsenMemo != null and !onsen.onsenMemo.isEmpty()}" th:text="${@tr.t(onsen.onsenMemo)}">플랜을 통해 예약할 수 있으며 이용시간은 45분입니다</p>
       </div>
     </div>
-    <div class="intro-empty" th:if="${#lists.isEmpty(onsens)}">등록된 온천 정보가 없습니다.</div>
+    <div class="intro-empty" th:if="${#lists.isEmpty(onsens)}" th:text="#{onsen.empty}">등록된 온천 정보가 없습니다.</div>
   </section>
 
-  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-32px 56px 64px;">
+  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-32px 56px 64px;" th:text="#{onsen.note}">
     ※ 전세탕은 숙박 예약 시 플랜에 포함된 경우에 한해 이용하실 수 있습니다.
   </p>
 

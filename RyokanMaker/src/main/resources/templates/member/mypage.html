@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title th:text="'마이페이지 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">마이페이지 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{mypage.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">마이페이지 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
   <style>
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -15,120 +15,120 @@
   <div th:replace="~{include/header :: header(activePage='mypage')}"></div>
 
   <section class="page-title">
-    <div class="crumb">HOME &nbsp;/&nbsp; 마이페이지</div>
-    <h1>마이페이지</h1>
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{mypage.title}">마이페이지</span></div>
+    <h1 th:text="#{mypage.title}">마이페이지</h1>
     <div class="rule"></div>
-    <p class="desc">회원 정보를 확인하고 수정할 수 있습니다.</p>
+    <p class="desc" th:text="#{mypage.desc}">회원 정보를 확인하고 수정할 수 있습니다.</p>
   </section>
 
   <div th:if="${message}" class="form-card" style="padding-bottom:0;">
     <div class="answer-block">
-      <div class="answer-body" th:text="${message}"></div>
+      <div class="answer-body" th:text="#{${message}}"></div>
     </div>
   </div>
 
   <section class="reservation-history">
-    <h2 style="font-family: var(--serif); font-size: 18px; font-weight: 400; color: var(--ink); margin: 0 0 16px;">예약 현황</h2>
+    <h2 style="font-family: var(--serif); font-size: 18px; font-weight: 400; color: var(--ink); margin: 0 0 16px;" th:text="#{mypage.resv_heading}">예약 현황</h2>
     <table>
       <thead>
         <tr>
-          <th>객실</th>
-          <th>플랜</th>
-          <th>체크인</th>
-          <th>체크아웃</th>
-          <th>인원</th>
-          <th>금액</th>
-          <th>상태</th>
+          <th th:text="#{resv.room}">객실</th>
+          <th th:text="#{resv.plan}">플랜</th>
+          <th th:text="#{resv.checkin}">체크인</th>
+          <th th:text="#{resv.checkout}">체크아웃</th>
+          <th th:text="#{resv.people}">인원</th>
+          <th th:text="#{resv.amount}">금액</th>
+          <th th:text="#{resv.status}">상태</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody th:with="_p=${@tr.prefetch(reservations, 'roomName', 'planName')}">
         <tr th:each="r : ${reservations}">
-          <td th:text="${r.roomName}">사쿠라</td>
-          <td th:text="${r.planName}">객실 + 식사 플랜</td>
+          <td th:text="${@tr.t(r.roomName)}">사쿠라</td>
+          <td th:text="${@tr.t(r.planName)}">객실 + 식사 플랜</td>
           <td th:text="${#temporals.format(r.resvCheckIn, 'yyyy.MM.dd')}">2026.09.13</td>
           <td th:text="${#temporals.format(r.resvCheckOut, 'yyyy.MM.dd')}">2026.09.14</td>
           <td th:text="${r.resvPeople}">2</td>
-          <td th:text="${#numbers.formatInteger(r.resvPrice, 0, 'COMMA')} + '원'">848,508원</td>
-          <td th:text="${r.resvStatus}">예약완료</td>
+          <td th:text="#{common.price(${#numbers.formatInteger(r.resvPrice, 0, 'COMMA')})}">848,508원</td>
+          <td th:text="${@tr.label('resv.status', r.resvStatus)}">예약완료</td>
         </tr>
       </tbody>
     </table>
-    <div class="reservation-history-empty" th:if="${#lists.isEmpty(reservations)}">
+    <div class="reservation-history-empty" th:if="${#lists.isEmpty(reservations)}" th:text="#{mypage.resv_empty}">
       예약 내역이 없습니다.
     </div>
   </section>
 
   <div th:if="${error}" class="form-card" style="padding-bottom:0;">
     <div class="answer-block">
-      <div class="answer-body" th:text="${error}" style="color:var(--warn);"></div>
+      <div class="answer-body" th:text="#{${error}}" style="color:var(--warn);"></div>
     </div>
   </div>
 
   <form class="form-card" th:action="@{/member/mypage}" method="post">
 
     <div class="form-row">
-      <label class="field-label">이메일 (아이디)</label>
+      <label class="field-label" th:text="#{member.email_id}">이메일 (아이디)</label>
       <input type="text" th:value="${member.userMail}" disabled>
     </div>
 
     <div class="form-row">
-      <label class="field-label">새 비밀번호 (변경할 때만 입력)</label>
-      <input type="password" name="newPassword" placeholder="변경하지 않으려면 비워두세요">
+      <label class="field-label" th:text="#{member.new_password}">새 비밀번호 (변경할 때만 입력)</label>
+      <input type="password" name="newPassword" th:placeholder="#{member.new_password_ph}">
     </div>
 
     <div class="form-row">
-      <label class="field-label">닉네임</label>
+      <label class="field-label" th:text="#{member.nickname}">닉네임</label>
       <input type="text" name="userNickname" th:value="${member.userNickname}" required>
     </div>
 
     <div class="form-row">
-      <label class="field-label">영문 이름 (여권 표기 기준)</label>
+      <label class="field-label" th:text="#{member.name_en}">영문 이름 (여권 표기 기준)</label>
       <div class="row-2">
         <input type="text" name="userLastNameEn" th:value="${member.userLastNameEn}" placeholder="Last Name"
-               pattern="[A-Za-z][A-Za-z '\-]*" title="영문 알파벳만 입력해주세요." required>
+               pattern="[A-Za-z][A-Za-z '\-]*" th:title="#{member.pattern_en}" required>
         <input type="text" name="userFirstNameEn" th:value="${member.userFirstNameEn}" placeholder="First Name"
-               pattern="[A-Za-z][A-Za-z '\-]*" title="영문 알파벳만 입력해주세요." required>
+               pattern="[A-Za-z][A-Za-z '\-]*" th:title="#{member.pattern_en}" required>
       </div>
     </div>
 
     <div class="form-row">
-      <label class="field-label">일본어 이름 (선택, 히라가나/가타카나만 - 한자 불가)</label>
+      <label class="field-label" th:text="#{member.name_jp}">일본어 이름 (선택, 히라가나/가타카나만 - 한자 불가)</label>
       <div class="row-2">
         <input type="text" name="userLastNameJp" th:value="${member.userLastNameJp}" placeholder="せい"
-               pattern="[぀-ゟ゠-ヿ]*" title="히라가나/가타카나로만 입력해주세요 (한자 불가).">
+               pattern="[぀-ゟ゠-ヿ]*" th:title="#{member.pattern_jp}">
         <input type="text" name="userFirstNameJp" th:value="${member.userFirstNameJp}" placeholder="めい"
-               pattern="[぀-ゟ゠-ヿ]*" title="히라가나/가타카나로만 입력해주세요 (한자 불가).">
+               pattern="[぀-ゟ゠-ヿ]*" th:title="#{member.pattern_jp}">
       </div>
     </div>
 
     <div class="form-row">
-      <label class="field-label">국가</label>
-      <select name="userCountry" required>
-        <option value="">국가를 선택해주세요</option>
-        <option th:each="c : ${countries}" th:value="${c.countryName}" th:text="${c.countryName + ' (' + c.dialCode + ')'}"
+      <label class="field-label" th:text="#{member.country}">국가</label>
+      <select name="userCountry" required th:with="_p=${@tr.prefetch(countries, 'countryName')}">
+        <option value="" th:text="#{member.country_select}">국가를 선택해주세요</option>
+        <option th:each="c : ${countries}" th:value="${c.countryName}" th:text="${@tr.t(c.countryName) + ' (' + c.dialCode + ')'}"
                 th:selected="${c.countryName == member.userCountry}"></option>
       </select>
     </div>
 
     <div class="form-row">
-      <label class="field-label">연락처</label>
+      <label class="field-label" th:text="#{member.tel}">연락처</label>
       <input type="text" name="userTel" th:value="${member.userTel}" required>
     </div>
 
     <div class="form-row">
-      <label class="field-label">주소</label>
+      <label class="field-label" th:text="#{member.address}">주소</label>
       <input type="text" name="userAddress" th:value="${member.userAddress}" required>
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-gold">저장</button>
+      <button type="submit" class="btn-gold" th:text="#{common.save}">저장</button>
     </div>
   </form>
 
   <div class="content-actions" style="padding-bottom: 64px;">
     <form th:action="@{/member/withdraw}" method="post"
-          onsubmit="return confirm('정말 탈퇴하시겠습니까?\n작성하신 문의와 예약 내역이 모두 삭제되며 되돌릴 수 없습니다.');">
-      <button type="submit" class="btn-line" style="color:var(--warn); border-color:var(--warn);">회원탈퇴</button>
+          th:data-confirm="#{mypage.withdraw_confirm}" onsubmit="return confirm(this.dataset.confirm);">
+      <button type="submit" class="btn-line" style="color:var(--warn); border-color:var(--warn);" th:text="#{mypage.withdraw}">회원탈퇴</button>
     </form>
   </div>
 

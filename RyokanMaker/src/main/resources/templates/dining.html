@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title th:text="'식사 안내 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">식사 안내 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{dining.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">식사 안내 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -15,7 +15,7 @@
   <!-- 타이틀 -->
   <section class="page-title">
     <div class="crumb">Dining &nbsp;/&nbsp; お食事</div>
-    <h1>식사 안내</h1>
+    <h1 th:text="#{dining.title}">식사 안내</h1>
     <div class="rule"></div>
   </section>
 
@@ -24,7 +24,7 @@
     필드 : restaurantCourseName, restaurantCourseInfo, restaurantCourseMemo, imageUrls(전체 이미지 경로 목록)
     사진은 가운데 캐러셀로, 그 아래 텍스트(코스명 → 소개 → 비고)를 배치한다.
   -->
-  <section class="detail-list">
+  <section class="detail-list" th:with="_p=${@tr.prefetch(courses, 'restaurantCourseName', 'restaurantCourseInfo', 'restaurantCourseMemo')}">
     <div class="detail-item" th:each="course : ${courses}">
       <div class="detail-thumb" data-carousel>
         <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(course.imageUrls) > 1}">&#10094;</button>
@@ -33,7 +33,7 @@
         </div>
         <th:block th:if="${#lists.isEmpty(course.imageUrls)}">
           <img th:src="@{/images/sample/dining.svg}" alt="" class="sample-img">
-          <span class="sample-badge">샘플 이미지</span>
+          <span class="sample-badge" th:text="#{common.sample_image}">샘플 이미지</span>
         </th:block>
         <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(course.imageUrls) > 1}">&#10095;</button>
         <div class="dots" th:if="${#lists.size(course.imageUrls) > 1}">
@@ -41,15 +41,15 @@
         </div>
       </div>
       <div class="detail-body">
-        <h2 th:text="${course.restaurantCourseName}">달 코스 「계절의 맛 가이세키」</h2>
-        <p class="desc" th:text="${course.restaurantCourseInfo}">제철 식재료로 구성한 정통 가이세키 코스</p>
-        <p class="memo" th:if="${course.restaurantCourseMemo != null and !course.restaurantCourseMemo.isEmpty()}" th:text="${course.restaurantCourseMemo}">비고</p>
+        <h2 th:text="${@tr.t(course.restaurantCourseName)}">달 코스 「계절의 맛 가이세키」</h2>
+        <p class="desc" th:text="${@tr.t(course.restaurantCourseInfo)}">제철 식재료로 구성한 정통 가이세키 코스</p>
+        <p class="memo" th:if="${course.restaurantCourseMemo != null and !course.restaurantCourseMemo.isEmpty()}" th:text="${@tr.t(course.restaurantCourseMemo)}">비고</p>
       </div>
     </div>
-    <div class="intro-empty" th:if="${#lists.isEmpty(courses)}">등록된 식사 코스 정보가 없습니다.</div>
+    <div class="intro-empty" th:if="${#lists.isEmpty(courses)}" th:text="#{dining.empty}">등록된 식사 코스 정보가 없습니다.</div>
   </section>
 
-  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-16px 56px 64px;">
+  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-16px 56px 64px;" th:text="#{dining.note}">
     ※ 식사 코스는 숙박 예약 시 플랜에 포함된 경우에 한해 이용하실 수 있습니다.
   </p>
 

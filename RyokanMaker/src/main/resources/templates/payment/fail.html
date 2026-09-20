@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title th:text="'결제 실패 | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">결제 실패 | 清流庵 OTARU FURUKAWA</title>
+  <title th:text="#{pay.fail_title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">결제 실패 | 清流庵 OTARU FURUKAWA</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -14,14 +14,14 @@
 
   <div class="result-wrap">
     <span class="result-badge error">!</span>
-    <h1>결제가 완료되지 않았습니다</h1>
-    <p>결제가 취소되었거나 인증에 실패했습니다. 다시 시도해주세요.</p>
+    <h1 th:text="#{pay.fail_heading}">결제가 완료되지 않았습니다</h1>
+    <p th:text="#{pay.fail_desc}">결제가 취소되었거나 인증에 실패했습니다. 다시 시도해주세요.</p>
 
-    <div class="result-panel error" th:if="${message != null}">
-      <span th:text="${code}">CODE</span> — <span th:text="${message}">사유</span>
+    <div class="result-panel error" th:if="${message != null or messageKey != null}">
+      <span th:text="${code}">CODE</span> — <span th:text="${messageKey != null} ? #{${messageKey}} : ${@tr.t(message)}">사유</span>
     </div>
 
-    <a class="result-action retry" th:href="@{/payment}">결제 다시 시도하기</a>
+    <a class="result-action retry" th:href="@{/payment}" th:text="#{pay.retry}">결제 다시 시도하기</a>
   </div>
 
 </div>
