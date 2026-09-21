@@ -131,6 +131,8 @@ public class AdminController {
 		model.addAttribute("noticeList", noticeService.getNoticeList(loginAdmin.getAdminIdx()));
 		model.addAttribute("pageTexts", pageContentService.getMap(loginAdmin.getAdminIdx()));
 		model.addAttribute("textGroups", PageTextDefs.byGroup());
+		model.addAttribute("mailPasswordSet", adminService.hasMailPassword(loginAdmin.getAdminIdx()));
+		model.addAttribute("mailSecretAvailable", adminService.isMailSecretAvailable());
 		return "Admin/admin_info_register";
 	}
 	@GetMapping("plan_sales")
@@ -392,6 +394,38 @@ public class AdminController {
 		return "ACCESS".equals(group)
 				? "redirect:/Admin/admin_info_register#section-route"
 				: "redirect:/Admin/admin_info_register#section-pagetext";
+	}
+
+	/**
+	 * 손님 대상 메일(비밀번호 찾기 등)을 이 관리자의 메일 주소(ADMIN_MAIL)로 직접 보내기 위한 메일 앱 비밀번호 저장.
+	 * 값은 암호화해서 저장하고 화면에 다시 보여주지 않는다. 비워서 저장하면 변경 없음, clear=Y면 삭제.
+	 */
+	@PostMapping("admin_mail_save")
+	public String adminMailSave(@RequestParam(value = "mailPassword", required = false) String mailPassword,
+			@RequestParam(value = "clear", required = false) String clear,
+			HttpSession session, RedirectAttributes redirectAttributes) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
+		try {
+			if ("Y".equals(clear)) {
+				adminService.clearMailPassword(loginAdmin.getAdminIdx());
+				redirectAttributes.addFlashAttribute("mailMessage", "adm.ir_mail_cleared");
+			} else if (mailPassword != null && !mailPassword.isBlank()) {
+				if (!adminService.isMailSecretAvailable()) {
+					redirectAttributes.addFlashAttribute("mailError", "adm.ir_mail_no_key");
+				} else {
+					adminService.saveMailPassword(loginAdmin.getAdminIdx(), mailPassword);
+					redirectAttributes.addFlashAttribute("mailMessage", "adm.ir_mail_saved");
+				}
+			}
+		} catch (Exception e) {
+			log.warn("관리자 메일 앱 비밀번호 저장 실패 (ADMIN.MAIL_APP_PASSWORD 컬럼 확인 필요)", e);
+			redirectAttributes.addFlashAttribute("mailError", "adm.ir_mail_save_fail");
+		}
+		return "redirect:/Admin/admin_info_register#section-mail";
 	}
 
 	private void savePageTexts(AdminDto loginAdmin, String group, Map<String, String> params,

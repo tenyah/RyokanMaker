@@ -759,6 +759,48 @@
       </th:block>
     </div>
 
+
+    <!-- SECTION 10: 메일 발송 설정 (손님에게 가는 메일을 이 관리자 메일 주소로 직접 발송) -->
+    <div id="section-mail" class="section-tag">
+      <div class="num">10</div>
+      <div class="label" th:text="#{adm.ir_s_mail}">메일 발송 설정</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-section-body">
+      <form class="form-card" th:action="@{/Admin/admin_mail_save}" method="post" autocomplete="off">
+
+        <div class="notice-banner" th:if="${mailError}" th:text="#{${mailError}}">저장에 실패했습니다.</div>
+        <div class="notice-banner" th:if="${mailMessage}" th:text="#{${mailMessage}}">저장되었습니다.</div>
+        <div class="notice-banner" th:unless="${mailSecretAvailable}" th:text="#{adm.ir_mail_no_key}">서버에 MAIL_SECRET_KEY가 설정되어 있지 않아 저장할 수 없습니다.</div>
+
+        <div class="img-hint" th:text="#{adm.ir_mail_hint}">비밀번호 찾기 등 손님에게 가는 메일이 이 관리자 메일 주소에서 료칸 이름으로 발송됩니다.</div>
+
+        <div class="field">
+          <label th:text="#{adm.ir_mail_sender}">보내는 메일 주소</label>
+          <div th:text="${!#strings.isEmpty(admin?.adminMail)} ? ${admin.adminMail} : #{adm.ir_mail_no_address}">admin@example.com</div>
+        </div>
+
+        <div class="field">
+          <label th:text="#{adm.ir_mail_status}">저장 상태</label>
+          <div th:text="${mailPasswordSet} ? #{adm.ir_mail_set} : #{adm.ir_mail_unset}">미설정</div>
+        </div>
+
+        <div class="field">
+          <label th:text="#{adm.ir_mail_pw}">메일 앱 비밀번호</label>
+          <input type="password" name="mailPassword" autocomplete="new-password" maxlength="100" th:placeholder="#{adm.ir_mail_pw_ph}">
+          <div class="img-hint" th:text="#{adm.ir_mail_pw_hint}">Gmail 2단계 인증 후 발급한 앱 비밀번호 16자리를 입력하세요.</div>
+        </div>
+
+        <div class="field" th:if="${mailPasswordSet}">
+          <label><input type="checkbox" name="clear" value="Y"> <span th:text="#{adm.ir_mail_clear}">저장된 비밀번호 삭제</span></label>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn-gold small" th:text="#{common.save}">저장</button>
+        </div>
+      </form>
+    </div>
     <!-- 저장 영역 : 임시저장 없이 바로 저장 -->
     <div class="save-bar">
       <div class="status" th:text="#{adm.ir_last_saved}">마지막 저장: 아직 저장되지 않음</div>

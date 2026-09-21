@@ -40,6 +40,10 @@
         WHERE USER_MAIL = #{userMail}
     </update>
 
+    <update id="updatePassword">
+        UPDATE MEMBER SET USER_PASSWORD = #{userPassword} WHERE USER_MAIL = #{userMail}
+    </update>
+
     <delete id="deleteByUserMail" parameterType="string">
         DELETE FROM MEMBER WHERE USER_MAIL = #{userMail}
     </delete>

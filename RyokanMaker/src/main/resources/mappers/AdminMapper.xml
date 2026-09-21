@@ -55,6 +55,14 @@
         WHERE ADMIN_IDX = #{adminIdx}
     </update>
 
+    <select id="selectMailPassword" resultType="string">
+        SELECT MAIL_APP_PASSWORD FROM ADMIN WHERE ADMIN_IDX = #{adminIdx}
+    </select>
+
+    <update id="updateMailPassword">
+        UPDATE ADMIN SET MAIL_APP_PASSWORD = #{value, jdbcType=VARCHAR} WHERE ADMIN_IDX = #{adminIdx}
+    </update>
+
     <!-- 비밀번호 변경 시 PW_RESET_YN을 'Y'로 갱신 (이후 로그인은 해시 비교) -->
     <update id="updatePassword">
         UPDATE ADMIN SET ADMIN_PASSWORD = #{adminPassword}, PW_RESET_YN = 'Y' WHERE ADMIN_IDX = #{adminIdx}

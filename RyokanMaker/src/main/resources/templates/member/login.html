@@ -46,6 +46,9 @@
       <button type="submit" class="btn-gold" th:text="#{nav.login}">로그인</button>
       <a class="btn-line" th:href="@{/member/signup}" th:text="#{nav.signup}">회원가입</a>
     </div>
+    <div style="text-align:center; margin-top:14px; font-size:13px;">
+      <a th:href="@{/member/forgot}" th:text="#{member.forgot_link}">비밀번호를 잊으셨나요?</a>
+    </div>
   </form>
 
   <div th:replace="~{include/footer :: footer}"></div>

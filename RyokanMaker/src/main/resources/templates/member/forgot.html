@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="#{member.forgot_title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">비밀번호 찾기 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='login')}"></div>
+
+  <section class="page-title">
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.login}">로그인</span> &nbsp;/&nbsp; <span th:text="#{member.forgot_title}">비밀번호 찾기</span></div>
+    <h1 th:text="#{member.forgot_title}">비밀번호 찾기</h1>
+    <div class="rule"></div>
+    <p class="desc" th:text="#{member.forgot_desc}">가입하신 이메일을 입력하면 임시 비밀번호를 보내드립니다.</p>
+  </section>
+
+  <div th:if="${sent}" class="form-card" style="padding-bottom:0;">
+    <div class="answer-block">
+      <div class="answer-body" style="color:var(--gold-deep);" th:text="#{member.forgot_sent}">임시 비밀번호를 보냈습니다.</div>
+    </div>
+  </div>
+
+  <div th:if="${error}" class="form-card" style="padding-bottom:0;">
+    <div class="answer-block">
+      <div class="answer-body" th:text="#{${error}}" style="color:var(--warn);"></div>
+    </div>
+  </div>
+
+  <form class="form-card" th:action="@{/member/forgot}" method="post">
+
+    <div class="form-row">
+      <label class="field-label" th:text="#{member.email}">이메일</label>
+      <input type="email" name="userMail" placeholder="you@example.com" required>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-gold" th:text="#{member.forgot_submit}">임시 비밀번호 받기</button>
+      <a class="btn-line" th:href="@{/member/login}" th:text="#{member.forgot_back}">로그인으로 돌아가기</a>
+    </div>
+  </form>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+</body>
+</html>
