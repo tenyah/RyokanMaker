@@ -644,8 +644,20 @@
     <div class="admin-section-body">
       <form class="form-card" th:action="@{/Admin/admin_access_save}" method="post">
 
+        <div class="notice-banner" th:if="${pageTextError != null and pageTextErrorGroup == 'ACCESS'}" th:text="#{${pageTextError}}">저장에 실패했습니다.</div>
+
+        <div class="img-hint" th:text="#{adm.ir_ac_hint}">비워 두고 저장하면 기본 문구가 표시됩니다.</div>
+
+        <div class="field" th:each="def : ${textGroups['ACCESS']}">
+          <label th:text="#{${def.labelKey()}}">문구</label>
+          <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="500"
+                    th:placeholder="${@pt.placeholder(def.key())}" th:text="${pageTexts[def.key()]}"></textarea>
+          <input th:unless="${def.multiline()}" type="text" th:name="${'pc_' + def.key()}" maxlength="300"
+                 th:placeholder="${@pt.placeholder(def.key())}" th:value="${pageTexts[def.key()]}">
+        </div>
+
         <div class="field">
-          <label th:text="#{nav.access}">교통안내</label>
+          <label th:text="#{adm.ir_ac_line}">추가 안내문 (한 줄, 카드 위에 표시)</label>
           <input type="text" name="ryokanAccess" maxlength="33" th:placeholder="#{adm.ir_route_ph}" th:value="${admin.ryokanAccess}">
           <div class="img-hint" th:text="#{adm.ir_route_hint}">여관 하나당 한 줄만 등록됩니다.</div>
         </div>
@@ -714,6 +726,37 @@
         </div>
 
       </form>
+    </div>
+
+    <!-- SECTION 9: 페이지 문구 (손님 화면의 소개·설명 문구. PAGE_CONTENT 테이블, 교통안내 문구는 위 교통안내 섹션) -->
+    <div id="section-pagetext" class="section-tag">
+      <div class="num">9</div>
+      <div class="label" th:text="#{adm.ir_s_pagetext}">페이지 문구</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-section-body">
+      <th:block th:each="entry : ${textGroups}" th:if="${entry.key != 'ACCESS'}">
+        <form class="form-card" th:action="@{/Admin/admin_page_text_save}" method="post">
+          <input type="hidden" name="group" th:value="${entry.key}">
+
+          <div class="sub-label" style="margin-bottom:2px;" th:text="#{${'adm.pt_group_' + entry.key.toLowerCase()}}">메인 화면</div>
+          <div class="notice-banner" th:if="${pageTextError != null and pageTextErrorGroup == entry.key}" th:text="#{${pageTextError}}">저장에 실패했습니다.</div>
+          <div class="img-hint" th:text="#{adm.ir_ac_hint}">비워 두고 저장하면 기본 문구가 표시됩니다.</div>
+
+          <div class="field" th:each="def : ${entry.value}">
+            <label th:text="#{${def.labelKey()}}">문구</label>
+            <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="500"
+                      th:placeholder="${@pt.placeholder(def.key())}" th:text="${pageTexts[def.key()]}"></textarea>
+            <input th:unless="${def.multiline()}" type="text" th:name="${'pc_' + def.key()}" maxlength="300"
+                   th:placeholder="${@pt.placeholder(def.key())}" th:value="${pageTexts[def.key()]}">
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;">
+            <button type="submit" class="btn-gold small" th:text="#{common.save}">저장</button>
+          </div>
+        </form>
+      </th:block>
     </div>
 
     <!-- 저장 영역 : 임시저장 없이 바로 저장 -->

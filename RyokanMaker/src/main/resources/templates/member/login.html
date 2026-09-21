@@ -15,7 +15,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.login}">로그인</span></div>
     <h1 th:text="#{nav.login}">로그인</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{login.desc}">예약, 문의 이용을 위해 로그인해주세요.</p>
+    <p class="desc" th:text="${@pt.t('LOGIN_DESC')}">예약, 문의 이용을 위해 로그인해주세요.</p>
   </section>
 
   <div th:if="${param.signup != null}" class="form-card" style="padding-bottom:0;">

@@ -3,6 +3,7 @@ package com.mnu.ryokanmaker.controller;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.mnu.ryokanmaker.dto.AdminDto;
 import com.mnu.ryokanmaker.dto.AdminPlanDto;
@@ -34,6 +36,8 @@ import com.mnu.ryokanmaker.service.FacilityService;
 import com.mnu.ryokanmaker.service.InquiryService;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.OnsenService;
+import com.mnu.ryokanmaker.service.PageContentService;
+import com.mnu.ryokanmaker.service.PageTextDefs;
 import com.mnu.ryokanmaker.service.PlanSalesService;
 import com.mnu.ryokanmaker.service.PlanService;
 import com.mnu.ryokanmaker.service.RestaurantCourseService;
@@ -83,6 +87,9 @@ public class AdminController {
 	@Autowired
 	private PlanSalesService planSalesService;
 
+	@Autowired
+	private PageContentService pageContentService;
+
 	private static final int STATUS_RANGE_DAYS = 7;
 
 	private AdminDto currentAdmin(HttpSession session) {
@@ -122,6 +129,8 @@ public class AdminController {
 		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdminIdx()));
 		model.addAttribute("facilityList", facilityService.getFacilityList(loginAdmin.getAdminIdx()));
 		model.addAttribute("noticeList", noticeService.getNoticeList(loginAdmin.getAdminIdx()));
+		model.addAttribute("pageTexts", pageContentService.getMap(loginAdmin.getAdminIdx()));
+		model.addAttribute("textGroups", PageTextDefs.byGroup());
 		return "Admin/admin_info_register";
 	}
 	@GetMapping("plan_sales")
@@ -336,24 +345,63 @@ public class AdminController {
 	}
 
 	/**
-	 * 교통안내(RYOKAN_ACCESS) 단독 수정. 인덱스 화면 본체 폼과 별도로 제출됨.
+	 * 교통안내 수정. 한 줄 안내(ADMIN.RYOKAN_ACCESS)와 화면의 나머지 문구(PAGE_CONTENT, 폼 필드명 pc_키)를
+	 * 함께 저장한다. 문구를 비워서 저장하면 기본 문구로 되돌아간다.
 	 */
 	@PostMapping("admin_access_save")
-	public String adminAccessSave(@RequestParam("ryokanAccess") String ryokanAccess, HttpSession session) {
+	public String adminAccessSave(@RequestParam(value = "ryokanAccess", required = false) String ryokanAccess,
+			@RequestParam Map<String, String> params,
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
 
-		AdminDto adminDto = new AdminDto();
-		adminDto.setAdminIdx(loginAdmin.getAdminIdx());
-		adminDto.setRyokanAccess(ryokanAccess);
-		adminService.updateRyokanAccess(adminDto);
+		if (ryokanAccess != null) {
+			AdminDto adminDto = new AdminDto();
+			adminDto.setAdminIdx(loginAdmin.getAdminIdx());
+			adminDto.setRyokanAccess(ryokanAccess);
+			adminService.updateRyokanAccess(adminDto);
 
-		loginAdmin.setRyokanAccess(ryokanAccess);
-		session.setAttribute("admin", loginAdmin);
+			loginAdmin.setRyokanAccess(ryokanAccess);
+			session.setAttribute("admin", loginAdmin);
+		}
 
+		savePageTexts(loginAdmin, "ACCESS", params, redirectAttributes);
 		return "redirect:/Admin/admin_info_register#section-route";
+	}
+
+	/**
+	 * 손님 화면의 소개·설명 문구 저장 (메인/플랜 선택/로그인·회원가입/문의 등). group은 PageTextDefs의 그룹 코드.
+	 * 폼 필드명은 pc_키이고, 비워서 저장하면 기본 문구로 되돌아간다.
+	 */
+	@PostMapping("admin_page_text_save")
+	public String adminPageTextSave(@RequestParam("group") String group,
+			@RequestParam Map<String, String> params,
+			HttpSession session, RedirectAttributes redirectAttributes) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		if (PageTextDefs.ofGroup(group).isEmpty()) {
+			return "redirect:/Admin/admin_info_register#section-pagetext";
+		}
+
+		savePageTexts(loginAdmin, group, params, redirectAttributes);
+		return "ACCESS".equals(group)
+				? "redirect:/Admin/admin_info_register#section-route"
+				: "redirect:/Admin/admin_info_register#section-pagetext";
+	}
+
+	private void savePageTexts(AdminDto loginAdmin, String group, Map<String, String> params,
+			RedirectAttributes redirectAttributes) {
+		try {
+			pageContentService.saveGroup(loginAdmin.getAdminIdx(), group, params);
+		} catch (Exception e) {
+			log.warn("페이지 문구 저장 실패 (PAGE_CONTENT 테이블 확인 필요): group={}", group, e);
+			redirectAttributes.addFlashAttribute("pageTextError", "adm.ir_route_save_fail");
+			redirectAttributes.addFlashAttribute("pageTextErrorGroup", group);
+		}
 	}
 
 	/**
@@ -570,28 +618,9 @@ public class AdminController {
 		return "redirect:/Admin/admin_login";
 	}
 
-	/** 교통안내(RYOKAN_ACCESS) 단독 수정 화면. admin_info_register의 section-route와는 별도의 전용 화면. */
+	/** 예전 교통안내 단독 수정 화면 주소. 이제 정보등록 화면의 교통안내 섹션으로 통합됨. */
 	@GetMapping("access_edit")
-	public String accessEditForm(HttpSession session, Model model) {
-		AdminDto admin = currentAdmin(session);
-		if (admin == null) {
-			return "redirect:/Admin/admin_login";
-		}
-		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
-		return "Admin/access_edit";
-	}
-
-	@PostMapping("access_edit")
-	public String accessEditSave(HttpSession session,
-			@RequestParam String ryokanAccess,
-			Model model) {
-		AdminDto admin = currentAdmin(session);
-		if (admin == null) {
-			return "redirect:/Admin/admin_login";
-		}
-		adminService.updateAccess(admin.getAdminIdx(), ryokanAccess);
-		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
-		model.addAttribute("message", "adm.msg_access_saved");
-		return "Admin/access_edit";
+	public String accessEditRedirect() {
+		return "redirect:/Admin/admin_info_register#section-route";
 	}
 }

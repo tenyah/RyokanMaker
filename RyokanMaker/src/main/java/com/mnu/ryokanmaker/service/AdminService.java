@@ -94,9 +94,4 @@ public class AdminService {
 	public AdminDto findByAdminIdx(Integer adminIdx) {
 		return adminMapper.selectByAdminIdx(adminIdx);
 	}
-
-	/** 교통안내 화면(/access, /Admin/access_edit) 전용 단순 업데이트. updateRyokanAccess와 동일 컬럼을 갱신한다. */
-	public void updateAccess(Integer adminIdx, String ryokanAccess) {
-		adminMapper.updateAccess(adminIdx, ryokanAccess);
-	}
 }

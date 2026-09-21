@@ -18,7 +18,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.signup}">회원가입</span></div>
     <h1 th:text="#{nav.signup}">회원가입</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{signup.desc}">숙박 예약과 문의 이용을 위해 회원가입을 해주세요.</p>
+    <p class="desc" th:text="${@pt.t('SIGNUP_DESC')}">숙박 예약과 문의 이용을 위해 회원가입을 해주세요.</p>
   </section>
 
   <div th:if="${error}" class="form-card" style="padding-bottom:0;">

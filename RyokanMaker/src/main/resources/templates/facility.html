@@ -15,8 +15,9 @@
   <!-- 타이틀 -->
   <section class="page-title">
     <div class="crumb">Facility &nbsp;/&nbsp; 施設</div>
-    <h1 th:text="#{facility.title}">시설 안내</h1>
+    <h1 th:text="${@pt.t('FACILITY_TITLE')}">시설 안내</h1>
     <div class="rule"></div>
+    <p class="desc" th:if="${!#strings.isEmpty(@pt.t('FACILITY_DESC'))}" th:text="${@pt.t('FACILITY_DESC')}" style="white-space:pre-line;"></p>
   </section>
 
   <!--

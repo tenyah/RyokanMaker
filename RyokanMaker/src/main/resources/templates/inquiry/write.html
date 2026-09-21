@@ -15,7 +15,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.contact}">문의하기</span> &nbsp;/&nbsp; <span th:text="#{inquiry.write}">문의 작성</span></div>
     <h1 th:text="#{inquiry.write}">문의 작성</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{inquiry.write_desc}">궁금하신 점을 남겨주시면 확인 후 답변드리겠습니다.</p>
+    <p class="desc" th:text="${@pt.t('INQUIRY_WRITE_DESC')}">궁금하신 점을 남겨주시면 확인 후 답변드리겠습니다.</p>
   </section>
 
   <form class="form-card" th:action="@{/inquiry/write}" method="post">

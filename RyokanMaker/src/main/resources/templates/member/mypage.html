@@ -18,7 +18,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{mypage.title}">마이페이지</span></div>
     <h1 th:text="#{mypage.title}">마이페이지</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{mypage.desc}">회원 정보를 확인하고 수정할 수 있습니다.</p>
+    <p class="desc" th:text="${@pt.t('MYPAGE_DESC')}">회원 정보를 확인하고 수정할 수 있습니다.</p>
   </section>
 
   <div th:if="${message}" class="form-card" style="padding-bottom:0;">

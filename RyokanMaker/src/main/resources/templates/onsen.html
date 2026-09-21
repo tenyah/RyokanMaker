@@ -15,8 +15,9 @@
   <!-- 타이틀 -->
   <section class="page-title">
     <div class="crumb">Hot Spring &nbsp;/&nbsp; 温泉</div>
-    <h1 th:text="#{onsen.title}">온천 안내</h1>
+    <h1 th:text="${@pt.t('ONSEN_TITLE')}">온천 안내</h1>
     <div class="rule"></div>
+    <p class="desc" th:if="${!#strings.isEmpty(@pt.t('ONSEN_DESC'))}" th:text="${@pt.t('ONSEN_DESC')}" style="white-space:pre-line;"></p>
   </section>
 
   <!--
@@ -52,7 +53,7 @@
     <div class="intro-empty" th:if="${#lists.isEmpty(onsens)}" th:text="#{onsen.empty}">등록된 온천 정보가 없습니다.</div>
   </section>
 
-  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-32px 56px 64px;" th:text="#{onsen.note}">
+  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-32px 56px 64px;" th:text="${@pt.t('ONSEN_NOTE')}">
     ※ 전세탕은 숙박 예약 시 플랜에 포함된 경우에 한해 이용하실 수 있습니다.
   </p>
 

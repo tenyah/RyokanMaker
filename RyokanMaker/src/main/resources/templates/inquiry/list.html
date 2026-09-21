@@ -15,7 +15,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.contact}">문의하기</span> &nbsp;/&nbsp; <span th:text="#{inquiry.title}">1:1 문의</span></div>
     <h1 th:text="#{inquiry.title}">1:1 문의</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{inquiry.list_desc}">그동안 남겨주신 문의와 답변 내역입니다.</p>
+    <p class="desc" th:text="${@pt.t('INQUIRY_LIST_DESC')}">그동안 남겨주신 문의와 답변 내역입니다.</p>
   </section>
 
   <div class="list-toolbar">

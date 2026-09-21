@@ -55,11 +55,6 @@
         WHERE ADMIN_IDX = #{adminIdx}
     </update>
 
-    <!-- /access, /Admin/access_edit 전용 단순 업데이트 (updateRyokanAccess와 동일 컬럼) -->
-    <update id="updateAccess">
-        UPDATE ADMIN SET RYOKAN_ACCESS = #{ryokanAccess} WHERE ADMIN_IDX = #{adminIdx}
-    </update>
-
     <!-- 비밀번호 변경 시 PW_RESET_YN을 'Y'로 갱신 (이후 로그인은 해시 비교) -->
     <update id="updatePassword">
         UPDATE ADMIN SET ADMIN_PASSWORD = #{adminPassword}, PW_RESET_YN = 'Y' WHERE ADMIN_IDX = #{adminIdx}

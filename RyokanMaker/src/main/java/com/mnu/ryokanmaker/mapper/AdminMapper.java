@@ -21,9 +21,6 @@ public interface AdminMapper {
     /** 교통안내(RYOKAN_ACCESS) 단독 수정 */
     int updateRyokanAccess(AdminDto adminDto);
 
-    /** /access, /Admin/access_edit 전용 단순 업데이트 (updateRyokanAccess와 동일 컬럼) */
-    int updateAccess(@Param("adminIdx") Integer adminIdx, @Param("ryokanAccess") String ryokanAccess);
-
     /** 비밀번호 변경. 변경 성공 시 PW_RESET_YN도 'Y'로 같이 갱신된다(이후 로그인은 해시 비교). */
     int updatePassword(@Param("adminIdx") Integer adminIdx, @Param("adminPassword") String adminPassword);
 }

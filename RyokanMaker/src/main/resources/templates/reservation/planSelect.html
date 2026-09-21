@@ -15,9 +15,9 @@
   <!-- 타이틀 -->
   <section class="page-title">
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.booking}">숙박예약</span> &nbsp;/&nbsp; <span th:text="#{plans.title}">플랜 선택</span></div>
-    <h1 th:text="#{plans.heading}">플랜을 선택해주세요</h1>
+    <h1 th:text="${@pt.t('PLANS_HEADING')}">플랜을 선택해주세요</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{plans.desc}">원하시는 구성으로 플랜을 골라주세요. 플랜 선택 후 예약 가능한 날짜와 요금을 확인하실 수 있습니다.</p>
+    <p class="desc" th:text="${@pt.t('PLANS_DESC')}">원하시는 구성으로 플랜을 골라주세요. 플랜 선택 후 예약 가능한 날짜와 요금을 확인하실 수 있습니다.</p>
   </section>
 
   <!--

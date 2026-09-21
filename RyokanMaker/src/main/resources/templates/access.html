@@ -38,7 +38,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.access}">교통안내</span></div>
     <h1 th:text="#{nav.access}">교통안내</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{access.desc}">오타루역에서 清流庵까지 오시는 길을 안내해드립니다.</p>
+    <p class="desc" th:text="${@pt.t('ACCESS_DESC')}">오타루역에서 清流庵까지 오시는 길을 안내해드립니다.</p>
   </section>
 
   <div class="access-map">
@@ -50,7 +50,7 @@
         <path d="M60 150 C60 150 38 118 38 98 a22 22 0 1 1 44 0 C82 118 60 150 60 150 Z"
               fill="var(--gold-pale)" stroke="var(--gold-deep)" stroke-width="2"/>
         <circle cx="60" cy="98" r="8" fill="var(--gold-deep)"/>
-        <text x="60" y="78" text-anchor="middle" font-family="var(--serif)" font-size="15" fill="var(--ink)" th:text="#{access.station}">JR 오타루역</text>
+        <text x="60" y="78" text-anchor="middle" font-family="var(--serif)" font-size="15" fill="var(--ink)" th:text="${@pt.t('ACCESS_STATION')}">JR 오타루역</text>
         <text x="60" y="185" text-anchor="middle" font-size="12" fill="var(--ink-faint)">START</text>
       </g>
 
@@ -63,8 +63,8 @@
           <circle cx="6" cy="16" r="2" fill="var(--gold-deep)" stroke="none"/>
           <circle cx="18" cy="16" r="2" fill="var(--gold-deep)" stroke="none"/>
         </g>
-        <text x="320" y="112" text-anchor="middle" font-size="12" fill="var(--ink-soft)" th:text="#{access.busstop}">순환버스 정류장</text>
-        <text x="320" y="185" text-anchor="middle" font-size="11" fill="var(--ink-faint)" th:text="#{access.busstop_sub}">'후루카와' 하차</text>
+        <text x="320" y="112" text-anchor="middle" font-size="12" fill="var(--ink-soft)" th:text="${@pt.t('ACCESS_BUSSTOP')}">순환버스 정류장</text>
+        <text x="320" y="185" text-anchor="middle" font-size="11" fill="var(--ink-faint)" th:text="${@pt.t('ACCESS_BUSSTOP_SUB')}">'후루카와' 하차</text>
       </g>
 
       <!-- 清流庵 : 지도 마커 핀 (골드 강조) -->
@@ -90,7 +90,7 @@
         </svg>
       </div>
       <h3 th:text="#{access.walk}">도보</h3>
-      <p th:text="#{access.walk_desc}">JR 오타루역 정면 출구에서
+      <p th:text="${@pt.t('ACCESS_WALK_DESC')}">JR 오타루역 정면 출구에서
 도보 약 15분 (약 1.1km)</p>
     </div>
 
@@ -101,10 +101,10 @@
         </svg>
       </div>
       <h3 th:text="#{access.bus}">버스</h3>
-      <p th:text="#{access.bus_desc}">오타루역앞 3번 승강장에서
+      <p th:text="${@pt.t('ACCESS_BUS_DESC')}">오타루역앞 3번 승강장에서
 순환버스(덴구야마 방면) 탑승
 '후루카와' 정류장 하차 후 도보 3분</p>
-      <div class="fare" th:text="#{access.bus_fare}">약 10분 · 요금 210엔</div>
+      <div class="fare" th:text="${@pt.t('ACCESS_BUS_FARE')}">약 10분 · 요금 210엔</div>
     </div>
 
     <div class="access-option">
@@ -114,9 +114,9 @@
         </svg>
       </div>
       <h3 th:text="#{access.taxi}">택시</h3>
-      <p th:text="#{access.taxi_desc}">오타루역 택시승강장에서 탑승
+      <p th:text="${@pt.t('ACCESS_TAXI_DESC')}">오타루역 택시승강장에서 탑승
 소요시간 약 10분</p>
-      <div class="fare" th:text="#{access.taxi_fare}">예상 요금 1,500 ~ 1,800엔</div>
+      <div class="fare" th:text="${@pt.t('ACCESS_TAXI_FARE')}">예상 요금 1,500 ~ 1,800엔</div>
     </div>
   </div>
 
