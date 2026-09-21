@@ -1,9 +1,20 @@
 package com.mnu.ryokanmaker.dto;
 
+import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import com.mnu.ryokanmaker.util.ImageJsonUtil;
+
 /**
  * ADMIN 테이블 매핑 DTO
  * PK : adminIdx
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AdminDto {
 
     private Integer adminIdx;
@@ -13,44 +24,19 @@ public class AdminDto {
     private String adminMail;
     private String adminLoc;
     private String ryokanName;
-    private Integer ryokanLevel;
+    private String ryokanTel;
+    private String ryokanAccess;
+    private String ryokanLogo;     // RYOKAN_LOGO (CLOB) - 로고 이미지 경로 JSON 배열 문자열 저장
+    private String pwResetYn;
+    private String ryokanImage;    // RYOKAN_IMAGE (CLOB) - 메인화면 슬라이드 이미지 경로 JSON 배열 문자열 저장
 
-    public AdminDto() {
+    /** 로고는 1장만 쓰므로 경로 JSON 배열에서 첫 번째 경로만 뽑는다. */
+    public String getLogoUrl() {
+        return ImageJsonUtil.firstPath(ryokanLogo);
     }
 
-    public AdminDto(Integer adminIdx, String adminId, String adminPassword, String adminName,
-                     String adminMail, String adminLoc, String ryokanName, Integer ryokanLevel) {
-        this.adminIdx = adminIdx;
-        this.adminId = adminId;
-        this.adminPassword = adminPassword;
-        this.adminName = adminName;
-        this.adminMail = adminMail;
-        this.adminLoc = adminLoc;
-        this.ryokanName = ryokanName;
-        this.ryokanLevel = ryokanLevel;
+    /** 메인 화면 슬라이드 이미지 경로 목록 (화면에서 등록된 사진을 그대로 미리보기하기 위함). */
+    public List<String> getRyokanImageUrls() {
+        return ImageJsonUtil.parsePaths(ryokanImage);
     }
-
-    public Integer getAdminIdx() { return adminIdx; }
-    public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
-
-    public String getAdminId() { return adminId; }
-    public void setAdminId(String adminId) { this.adminId = adminId; }
-
-    public String getAdminPassword() { return adminPassword; }
-    public void setAdminPassword(String adminPassword) { this.adminPassword = adminPassword; }
-
-    public String getAdminName() { return adminName; }
-    public void setAdminName(String adminName) { this.adminName = adminName; }
-
-    public String getAdminMail() { return adminMail; }
-    public void setAdminMail(String adminMail) { this.adminMail = adminMail; }
-
-    public String getAdminLoc() { return adminLoc; }
-    public void setAdminLoc(String adminLoc) { this.adminLoc = adminLoc; }
-
-    public String getRyokanName() { return ryokanName; }
-    public void setRyokanName(String ryokanName) { this.ryokanName = ryokanName; }
-
-    public Integer getRyokanLevel() { return ryokanLevel; }
-    public void setRyokanLevel(Integer ryokanLevel) { this.ryokanLevel = ryokanLevel; }
 }

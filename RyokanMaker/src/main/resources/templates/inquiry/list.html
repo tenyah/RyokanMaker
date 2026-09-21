@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="#{inquiry.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">1:1 문의 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='contact')}"></div>
+
+  <section class="page-title">
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.contact}">문의하기</span> &nbsp;/&nbsp; <span th:text="#{inquiry.title}">1:1 문의</span></div>
+    <h1 th:text="#{inquiry.title}">1:1 문의</h1>
+    <div class="rule"></div>
+    <p class="desc" th:text="#{inquiry.list_desc}">그동안 남겨주신 문의와 답변 내역입니다.</p>
+  </section>
+
+  <div class="list-toolbar">
+    <a class="btn-gold" style="text-decoration:none;" th:href="@{/inquiry/write}" th:text="#{inquiry.write}">문의 작성</a>
+  </div>
+
+  <section class="qna-table">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60%;" th:text="#{inquiry.col_title}">제목</th>
+          <th style="text-align:center;" th:text="#{resv.status}">상태</th>
+          <th style="text-align:right;" th:text="#{inquiry.col_date}">등록일</th>
+        </tr>
+      </thead>
+      <tbody th:with="_p=${@tr.prefetch(inquiryList, 'inquiryTitle')}">
+        <tr th:each="inquiry : ${inquiryList}">
+          <td>
+            <a class="qna-title-link" th:href="@{/inquiry/view(idx=${inquiry.inquiryIdx})}"
+               th:text="${@tr.t(inquiry.inquiryTitle)}">문의 제목</a>
+          </td>
+          <td class="qna-status">
+            <span class="status-pill" th:classappend="${inquiry.inquiryStatus == '답변완료'} ? 'done' : 'wait'"
+                  th:text="${@tr.label('inquiry.status', inquiry.inquiryStatus)}">답변대기</span>
+          </td>
+          <td class="qna-date" th:text="${#temporals.format(inquiry.inquiryCreatedAt, 'yyyy.MM.dd')}">2026.01.01</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="qna-empty" th:if="${#lists.isEmpty(inquiryList)}" th:text="#{inquiry.empty}">
+      문의하신 내역이 없습니다.
+    </div>
+  </section>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+</body>
+</html>

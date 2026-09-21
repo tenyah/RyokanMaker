@@ -1,12 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mnu.ryokanmaker.mappers.OnsenMapper">
-<select id="findAll" resultType="com.mnu.ryokanmaker.domain.OnsenDTO">
-    SELECT onsen_idx AS onsenIdx, onsen_name AS onsenName, onsen_image AS onsenImage,
-           onsen_info AS onsenInfo, admin_idx AS adminIdx, onsen_sale_yn AS onsenSaleYN,
-           onsen_memo AS onsenMemo, onsen_hour AS onsenHour
-    FROM "ONSEN"
-    WHERE onsen_sale_yn = 'Y'
-    ORDER BY onsen_idx
-</select>
+<mapper namespace="com.mnu.ryokanmaker.mapper.OnsenMapper">
+
+	<!-- ONSEN_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
+	<insert id="insertOnsen" parameterType="com.mnu.ryokanmaker.dto.OnsenDto">
+		INSERT INTO ONSEN (
+			ONSEN_NAME,
+			ONSEN_IMAGE,
+			ONSEN_INFO,
+			ADMIN_IDX,
+			ONSEN_SALE_YN,
+			ONSEN_MEMO,
+			ONSEN_HOUR,
+			ONSEN_PRICE
+		) VALUES (
+			#{onsenName},
+			#{onsenImage},
+			#{onsenInfo},
+			#{adminIdx},
+			#{onsenSaleYn},
+			#{onsenMemo},
+			#{onsenHour},
+			#{onsenPrice}
+		)
+	</insert>
+
+	<select id="selectOnsensByAdmin" resultType="com.mnu.ryokanmaker.dto.OnsenDto">
+		SELECT *
+		FROM ONSEN
+		WHERE ADMIN_IDX = #{adminIdx}
+		ORDER BY ONSEN_IDX DESC
+	</select>
+
+	<!-- onsenImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
+	<update id="updateOnsen" parameterType="com.mnu.ryokanmaker.dto.OnsenDto">
+		UPDATE ONSEN
+		<set>
+			ONSEN_NAME = #{onsenName},
+			ONSEN_INFO = #{onsenInfo},
+			ONSEN_SALE_YN = #{onsenSaleYn},
+			ONSEN_MEMO = #{onsenMemo},
+			ONSEN_HOUR = #{onsenHour},
+			ONSEN_PRICE = #{onsenPrice},
+			<if test="onsenImage != null">ONSEN_IMAGE = #{onsenImage},</if>
+		</set>
+		WHERE ONSEN_IDX = #{onsenIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
+	<delete id="deleteOnsen">
+		DELETE FROM ONSEN
+		WHERE ONSEN_IDX = #{onsenIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</delete>
+
+	<!-- 사용자 예약 화면(온천 선택)에 노출할 판매중 온천 전체 조회 -->
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.OnsenDto">
+		SELECT *
+		FROM ONSEN
+		WHERE ONSEN_SALE_YN = 'Y'
+		ORDER BY ONSEN_IDX
+	</select>
+
 </mapper>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="#{notice.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">공지사항 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <div th:replace="~{include/header :: header(activePage='notice')}"></div>
+
+  <section class="page-title">
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{notice.title}">공지사항</span> &nbsp;/&nbsp; <span th:text="#{common.detail}">상세</span></div>
+    <h1 th:text="#{notice.title}">공지사항</h1>
+    <div class="rule"></div>
+  </section>
+
+  <section class="content-card">
+    <div class="content-head">
+      <h2 th:text="${@tr.t(notice.noticeTitle)}">공지 제목</h2>
+      <div class="content-meta">
+        <span th:text="${#temporals.format(notice.noticeCreatedAt, 'yyyy.MM.dd')}">2026.01.01</span>
+      </div>
+    </div>
+
+    <div class="content-body" th:text="${@tr.t(notice.noticeContent)}">
+      공지 내용
+    </div>
+
+    <div class="content-actions">
+      <a class="btn-line" th:href="@{/}" th:text="#{common.home}">홈으로</a>
+    </div>
+  </section>
+
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+</body>
+</html>

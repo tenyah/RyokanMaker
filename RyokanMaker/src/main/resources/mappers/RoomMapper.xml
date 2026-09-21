@@ -1,28 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.mnu.ryokanmaker.mappers.RoomMapper">
-<select id="findAll" resultType="com.mnu.ryokanmaker.domain.RoomDTO">
-    SELECT room_idx AS roomIdx, admin_idx AS adminIdx, room_name AS roomName, room_level AS roomLevel,
-           room_info AS roomInfo, room_price AS roomPrice, room_people AS roomPeople,
-           room_image AS roomImage, room_memo AS roomMemo, room_sale_yn AS roomSaleYN
-    FROM "ROOM"
-    WHERE room_sale_yn = 'Y'
-    ORDER BY room_idx
-</select>
+<mapper namespace="com.mnu.ryokanmaker.mapper.RoomMapper">
 
-<select id="findById" resultType="com.mnu.ryokanmaker.domain.RoomDTO">
-    SELECT room_idx AS roomIdx, admin_idx AS adminIdx, room_name AS roomName, room_level AS roomLevel,
-           room_info AS roomInfo, room_price AS roomPrice, room_people AS roomPeople,
-           room_image AS roomImage, room_memo AS roomMemo, room_sale_yn AS roomSaleYN
-    FROM "ROOM"
-    WHERE room_idx = #{roomIdx}
-</select>
+	<!-- ROOM_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외. ROOM_SALE_YN은 화면 입력 항목이 아니라
+	     컬럼 목록에서 빼고 DB 기본값('Y')에 맡긴다. -->
+	<insert id="insertRoom" parameterType="com.mnu.ryokanmaker.dto.RoomDto">
+		INSERT INTO ROOM (
+			ADMIN_IDX,
+			ROOM_NAME,
+			ROOM_LEVEL,
+			ROOM_INFO,
+			ROOM_PRICE,
+			ROOM_PEOPLE,
+			ROOM_IMAGE,
+			ROOM_MEMO
+		) VALUES (
+			#{adminIdx},
+			#{roomName},
+			#{roomLevel},
+			#{roomInfo},
+			#{roomPrice},
+			#{roomPeople},
+			#{roomImage},
+			#{roomMemo}
+		)
+	</insert>
 
-<select id="findMinPrice" resultType="java.lang.Long">
-    SELECT MIN(room_price)
-    FROM "ROOM"
-    WHERE room_sale_yn = 'Y'
-</select>
+	<!-- 로그인한 관리자(adminIdx) 소유의 객실만 조회 -->
+	<select id="selectRoomsByAdmin" resultType="com.mnu.ryokanmaker.dto.RoomDto">
+		SELECT *
+		FROM ROOM
+		WHERE ADMIN_IDX = #{adminIdx}
+		ORDER BY ROOM_IDX DESC
+	</select>
 
+	<!--
+		roomImage는 화면에서 새 이미지를 올렸을 때만 값이 채워짐(null이면 기존 이미지 유지).
+		WHERE절에 adminIdx도 같이 걸어서, 다른 관리자의 객실을 수정하지 못하도록 함.
+	-->
+	<update id="updateRoom" parameterType="com.mnu.ryokanmaker.dto.RoomDto">
+		UPDATE ROOM
+		<set>
+			ROOM_NAME = #{roomName},
+			ROOM_LEVEL = #{roomLevel},
+			ROOM_INFO = #{roomInfo},
+			ROOM_PRICE = #{roomPrice},
+			ROOM_PEOPLE = #{roomPeople},
+			ROOM_MEMO = #{roomMemo},
+			<if test="roomImage != null">ROOM_IMAGE = #{roomImage},</if>
+		</set>
+		WHERE ROOM_IDX = #{roomIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
+	<delete id="deleteRoom">
+		DELETE FROM ROOM
+		WHERE ROOM_IDX = #{roomIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</delete>
+
+	<!-- 사용자 예약 화면(객실 선택)에 노출할 판매중 객실 전체 조회 -->
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.RoomDto">
+		SELECT *
+		FROM ROOM
+		WHERE ROOM_SALE_YN = 'Y'
+		ORDER BY ROOM_IDX
+	</select>
+
+	<select id="findById" resultType="com.mnu.ryokanmaker.dto.RoomDto">
+		SELECT *
+		FROM ROOM
+		WHERE ROOM_IDX = #{roomIdx}
+	</select>
+
+	<select id="findMinPrice" resultType="java.lang.Long">
+		SELECT MIN(ROOM_PRICE)
+		FROM ROOM
+		WHERE ROOM_SALE_YN = 'Y'
+	</select>
+
+	<update id="updateSaleYn">
+		UPDATE ROOM
+		SET ROOM_SALE_YN = #{roomSaleYn}
+		WHERE ROOM_IDX = #{roomIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
 
 </mapper>

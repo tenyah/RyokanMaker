@@ -1,0 +1,308 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_room}">清流庵 관리자 - 객실 현황</title>
+<link rel="stylesheet" th:href="@{/css/common.css}"> 
+</head>
+<body>
+
+<!-- 이 화면 본문 전용 아이콘 스프라이트 (헤더/사이드바 공통 아이콘은 admin_shell fragment가 제공) -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <path d="M6 6l12 12M18 6L6 18"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/>
+    </symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.5 5.5 18 11 8 21H3v-5Z"/><path d="m16 4 4 4"/>
+    </symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 16a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.3 9.02 4.5 4.5 0 0 1 16.5 18H7Z"/>
+      <path d="M12 12v6"/><path d="m9.5 14.5 2.5-2.5 2.5 2.5"/>
+    </symbol>
+  </defs>
+</svg>
+<div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
+
+<div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='room')}"></div>
+
+<div class="admin-shell">
+
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='room', showInfoSubmenu=false, showRequestsLink=false)}"></div>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="admin-main" th:with="_p=${@tr.prefetch(roomList, 'roomName', 'roomLevel', 'roomMemo')}">
+
+    <div class="admin-head">
+      <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.room}">객실 현황</span></div>
+      <h1 th:text="#{adm.room}">객실 현황</h1>
+      <div class="rule"></div>
+      <p th:text="#{adm.rs_desc}">날짜별로 각 객실이 지금 예약 가능한 상태인지 확인합니다.</p>
+    </div>
+
+    <!-- 통계 타일 -->
+    <div class="stat-grid cols-3">
+      <div class="stat-tile"><div class="label" th:text="#{adm.rs_total}">전체 객실</div><div class="value" th:text="${#lists.size(roomList)}">0</div></div>
+      <div class="stat-tile accent-gold"><div class="label" th:text="#{adm.on_sale}">판매중</div>
+        <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn == 'Y'])}">0</div></div>
+      <div class="stat-tile accent-muted"><div class="label" th:text="#{adm.sale_stopped}">판매중지</div>
+        <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn != 'Y'])}">0</div></div>
+    </div>
+
+    <!-- 조회 기간 -->
+    <div class="search-bar" style="margin:28px 56px 0;">
+      <div class="search-field">
+        <div class="field-label" th:text="#{adm.rs_range}">조회 기간</div>
+        <div class="field-value" th:text="${#temporals.format(rangeStart, 'yyyy.MM.dd')} + ' — ' + ${#temporals.format(rangeEnd, 'yyyy.MM.dd')}">2026.09.13 — 2026.09.19</div>
+      </div>
+      <div style="padding-left:32px;display:flex;gap:8px;">
+        <a class="btn-line small" style="text-decoration:none;padding:11px 18px;font-size:12.5px;"
+           th:href="@{/Admin/room_status(rangeStart=${rangeStart.minusDays(7)})}">&laquo; <span th:text="#{adm.prev7}">이전 7일</span></a>
+        <a class="btn-line small" style="text-decoration:none;padding:11px 18px;font-size:12.5px;"
+           th:href="@{/Admin/room_status(rangeStart=${rangeStart.plusDays(7)})}"><span th:text="#{adm.next7}">다음 7일</span> &raquo;</a>
+      </div>
+    </div>
+
+    <!-- 범례 -->
+    <div class="legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:#fff;"></span><span th:text="#{adm.available}">판매가능</span></div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--gold-pale);border-color:var(--gold);"></span><span th:text="#{adm.booked}">예약완료</span></div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span><span th:text="#{adm.sale_stopped}">판매중지</span></div>
+    </div>
+
+    <!-- 캘린더 표 -->
+    <div style="padding:16px 56px 0;">
+      <table class="status-table" th:if="${!#lists.isEmpty(statusGrid)}">
+        <thead>
+          <tr>
+            <th th:text="#{resv.room}">객실</th>
+            <th th:each="d : ${statusGrid[0].days}" th:text="${#temporals.dayOfWeekNameShort(d.day)} + ' ' + ${#temporals.format(d.day, 'MM/dd')}">9/13 일</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="row : ${statusGrid}">
+            <td class="roomname" th:text="${@tr.t(row.room.roomName)}">사쿠라</td>
+            <td class="cell"
+                th:each="d : ${row.days}"
+                th:if="${row.room.roomSaleYn == 'Y'}"
+                th:classappend="${d.booked} ? 'cell-booked' : 'cell-available'">
+              <span class="status-label" th:text="${d.booked} ? #{adm.booked} : #{adm.available}">판매가능</span>
+            </td>
+            <td class="cell cell-closed" th:if="${row.room.roomSaleYn != 'Y'}" th:each="d : ${row.days}">
+              <span class="status-label" th:text="#{adm.sale_stopped}">판매중지</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p th:if="${#lists.isEmpty(statusGrid)}" style="color:var(--ink-faint);font-size:13px;padding:24px 0;" th:text="#{adm.rs_empty}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</p>
+    </div>
+
+    <!-- 등록된 객실 / 등록·수정 폼 -->
+    <div class="section-tag" style="margin-top:40px;">
+      <div class="num">1</div>
+      <div class="label" th:text="#{adm.rs_manage}">객실 등록 · 관리</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-section-body">
+      <form class="form-card">
+        <div>
+          <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.rs_registered(${#lists.size(roomList)})}">등록된 객실 (0)</div>
+
+          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}" th:text="#{adm.rs_empty}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</div>
+
+          <div class="list-item" th:each="room : ${roomList}" style="margin-bottom:10px;"
+               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo}">
+            <div class="thumb">
+              <img th:if="${room.thumbnailUrl != null}" th:src="@{${room.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
+              <svg th:unless="${room.thumbnailUrl != null}" width="20" height="20"><use href="#i-bed"/></svg>
+            </div>
+            <div class="info">
+              <div class="name" th:text="${@tr.t(room.roomName)}">스탠다드 객실</div>
+              <div class="desc">
+                <span th:text="#{adm.rs_line(${@tr.t(room.roomLevel)}, ${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}, ${room.roomPeople})}">스탠다드 · 1박 78,000원 · 기준 2인</span>
+                <span th:if="${room.roomMemo != null and !room.roomMemo.isEmpty()}" th:text="' · ' + #{adm.note} + ': ' + ${@tr.t(room.roomMemo)}"></span>
+              </div>
+            </div>
+            <div class="actions">
+              <form th:action="@{/Admin/room_toggle_sale}" method="post" style="display:inline;">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <input type="hidden" name="redirectTo" value="room_status">
+                <input type="hidden" name="roomSaleYn" th:value="${room.roomSaleYn == 'Y'} ? 'N' : 'Y'">
+                <button type="submit" class="icon-btn" th:title="${room.roomSaleYn == 'Y'} ? #{adm.to_stop} : #{adm.to_sale}">
+                  <svg width="14" height="14"><use th:href="${room.roomSaleYn == 'Y'} ? '#i-x' : '#i-plus'"/></svg>
+                </button>
+              </form>
+              <button type="button" class="icon-btn" onclick="editRoom(this)"><svg width="14" height="14"><use href="#i-pencil"/></svg></button>
+              <form th:action="@{/Admin/room_delete}" method="post" style="display:inline;" th:data-confirm="#{adm.rs_delete_confirm}" onsubmit="return confirm(this.dataset.confirm);">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <input type="hidden" name="redirectTo" value="room_status">
+                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-x"/></svg></button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+      </form>
+
+      <!-- 새 객실 추가 / 수정 공용 폼 : roomIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
+      <form class="form-card" id="roomForm" th:action="@{/Admin/room_save}" method="post" enctype="multipart/form-data">
+
+        <input type="hidden" id="roomIdx" name="roomIdx" value="0">
+        <input type="hidden" name="redirectTo" value="room_status">
+
+        <div class="sub-label" id="roomFormTitle" th:text="#{adm.rs_new}">새 객실 추가</div>
+
+        <div>
+          <div class="img-field-head">
+            <div class="sub-label" th:text="#{adm.rs_images}">객실 이미지</div>
+            <div class="count-badge">0 / 10</div>
+          </div>
+          <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span th:text="#{adm.add_image}">이미지 추가</span></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
+          </div>
+          <div class="img-hint" th:text="#{adm.rs_img_hint}">최대 10장까지 등록됩니다.</div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label th:text="#{adm.rs_name}">객실 이름</label><input type="text" id="roomName" name="roomName" th:placeholder="#{adm.rs_name_ph}" required></div>
+          <div class="field"><label th:text="#{adm.rs_level}">객실 등급</label><input type="text" id="roomLevel" name="roomLevel" th:placeholder="#{adm.rs_level_ph}" required></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label th:text="#{adm.rs_price}">1박 가격</label><input type="number" id="roomPrice" name="roomPrice" th:placeholder="#{adm.rs_price_ph}" required></div>
+          <div class="field"><label th:text="#{adm.rs_people}">기준 인원</label><input type="number" id="roomPeople" name="roomPeople" th:placeholder="#{adm.rs_people_ph}" required></div>
+        </div>
+
+        <div class="field-row">
+          <div class="field"><label th:text="#{adm.rs_info}">객실 설명</label><textarea id="roomInfo" name="roomInfo" th:placeholder="#{adm.rs_info_ph}"></textarea></div>
+          <div class="field"><label th:text="#{adm.note}">비고</label><textarea id="roomMemo" name="roomMemo" th:placeholder="#{adm.rs_memo_ph}"></textarea></div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn-line small" id="roomCancelBtn" style="display:none;" onclick="resetRoomForm()" th:text="#{common.cancel}">취소</button>
+          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-tag"/></svg>&nbsp;<span id="roomSubmitLabel" th:text="#{adm.rs_add}">객실 추가</span></button>
+        </div>
+
+      </form>
+    </div>
+
+  </main>
+</div>
+
+<script th:inline="javascript">
+var T = { editTitle: /*[[#{adm.rs_edit}]]*/ "객실 수정", editSubmit: /*[[#{adm.save_changes}]]*/ "수정 내용 저장", newTitle: /*[[#{adm.rs_new}]]*/ "새 객실 추가", newSubmit: /*[[#{adm.rs_add}]]*/ "객실 추가" };
+document.addEventListener('click', function (e) {
+  document.querySelectorAll('.account-menu.open').forEach(function (menu) {
+    if (!menu.contains(e.target)) menu.classList.remove('open');
+  });
+});
+
+/* ---------------- 이미지 업로드 미리보기 ---------------- */
+function updateImgGridCount(tile) {
+  var grid = tile.closest('.img-grid');
+  if (!grid) return;
+  var badge = grid.parentElement.querySelector('.count-badge');
+  if (!badge) return;
+  var filled = grid.querySelectorAll('.img-tile.filled').length;
+  var total = grid.querySelectorAll('.img-tile').length;
+  badge.textContent = filled + ' / ' + total;
+}
+
+function showTilePreview(tile, dataUrl) {
+  tile.classList.add('filled');
+  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = 'none'; });
+  tile.style.backgroundImage = 'url(' + dataUrl + ')';
+  tile.style.backgroundSize = 'cover';
+  tile.style.backgroundPosition = 'center';
+  if (!tile.querySelector('.remove')) {
+    var removeBtn = document.createElement('div');
+    removeBtn.className = 'remove';
+    removeBtn.innerHTML = '<svg width="10" height="10"><use href="#i-x"/></svg>';
+    tile.appendChild(removeBtn);
+  }
+}
+
+function clearTilePreview(tile) {
+  var input = tile.querySelector('input[type="file"]');
+  if (input) input.value = '';
+  tile.classList.remove('filled');
+  tile.style.backgroundImage = '';
+  var removeBtn = tile.querySelector('.remove');
+  if (removeBtn) removeBtn.remove();
+  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = ''; });
+}
+
+document.addEventListener('change', function (e) {
+  var input = e.target;
+  if (input.tagName !== 'INPUT' || input.type !== 'file') return;
+  var tile = input.closest('.img-tile');
+  if (!tile) return;
+
+  var file = input.files && input.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function (ev) {
+    showTilePreview(tile, ev.target.result);
+    updateImgGridCount(tile);
+  };
+  reader.readAsDataURL(file);
+});
+
+document.addEventListener('click', function (e) {
+  var removeBtn = e.target.closest('.img-tile .remove');
+  if (!removeBtn) return;
+  e.preventDefault();
+  var tile = removeBtn.closest('.img-tile');
+  clearTilePreview(tile);
+  updateImgGridCount(tile);
+});
+
+function clearImageGrids(form) {
+  form.querySelectorAll('.img-tile').forEach(function (tile) {
+    clearTilePreview(tile);
+  });
+  form.querySelectorAll('.count-badge').forEach(function (badge) {
+    var total = badge.parentElement.parentElement.querySelectorAll('.img-tile').length;
+    badge.textContent = '0 / ' + total;
+  });
+}
+
+/* ---------------- 객실 등록/수정 폼 ---------------- */
+function editRoom(btn) {
+  var item = btn.closest('.list-item');
+  clearImageGrids(document.getElementById('roomForm'));
+  document.getElementById('roomIdx').value = item.dataset.idx;
+  document.getElementById('roomName').value = item.dataset.name || '';
+  document.getElementById('roomLevel').value = item.dataset.level || '';
+  document.getElementById('roomPrice').value = item.dataset.price || '';
+  document.getElementById('roomPeople').value = item.dataset.people || '';
+  document.getElementById('roomInfo').value = item.dataset.info || '';
+  document.getElementById('roomMemo').value = item.dataset.memo || '';
+  document.getElementById('roomFormTitle').textContent = T.editTitle;
+  document.getElementById('roomSubmitLabel').textContent = T.editSubmit;
+  document.getElementById('roomCancelBtn').style.display = '';
+  document.getElementById('roomForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function resetRoomForm() {
+  var form = document.getElementById('roomForm');
+  form.reset();
+  clearImageGrids(form);
+  document.getElementById('roomIdx').value = '0';
+  document.getElementById('roomFormTitle').textContent = T.newTitle;
+  document.getElementById('roomSubmitLabel').textContent = T.newSubmit;
+  document.getElementById('roomCancelBtn').style.display = 'none';
+}
+</script>
+</body>
+</html>

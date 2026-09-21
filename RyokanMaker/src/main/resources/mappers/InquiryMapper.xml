@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.InquiryMapper">
+
+    <resultMap id="inquiryResultMap" type="com.mnu.ryokanmaker.dto.InquiryDto">
+        <id     column="INQUIRY_IDX"            property="inquiryIdx"/>
+        <result column="ADMIN_IDX"              property="adminIdx"/>
+        <result column="USER_MAIL"              property="userMail"/>
+        <result column="INQUIRY_TITLE"          property="inquiryTitle"/>
+        <result column="INQUIRY_CONTENT"        property="inquiryContent"/>
+        <result column="INQUIRY_ANSWER_CONTENT" property="inquiryAnswerContent"/>
+        <result column="INQUIRY_STATUS"         property="inquiryStatus"/>
+        <result column="INQUIRY_CREATED_AT"     property="inquiryCreatedAt"/>
+    </resultMap>
+
+    <select id="selectListByUserMail" parameterType="string" resultMap="inquiryResultMap">
+        SELECT * FROM INQUIRY
+        WHERE USER_MAIL = #{userMail}
+        ORDER BY INQUIRY_IDX DESC
+    </select>
+
+    <select id="selectByIdx" parameterType="int" resultMap="inquiryResultMap">
+        SELECT * FROM INQUIRY WHERE INQUIRY_IDX = #{inquiryIdx}
+    </select>
+
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.InquiryDto"
+            useGeneratedKeys="true" keyProperty="inquiryIdx" keyColumn="INQUIRY_IDX">
+        INSERT INTO INQUIRY (ADMIN_IDX, USER_MAIL, INQUIRY_TITLE, INQUIRY_CONTENT, INQUIRY_STATUS, INQUIRY_CREATED_AT)
+        VALUES (#{adminIdx}, #{userMail}, #{inquiryTitle}, #{inquiryContent}, '답변대기', SYSTIMESTAMP)
+    </insert>
+
+    <delete id="deleteByIdx" parameterType="int">
+        DELETE FROM INQUIRY WHERE INQUIRY_IDX = #{inquiryIdx}
+    </delete>
+
+    <delete id="deleteByUserMail" parameterType="string">
+        DELETE FROM INQUIRY WHERE USER_MAIL = #{userMail}
+    </delete>
+
+    <!-- 미답변을 위로, 그 다음 최신순으로 정렬해서 관리자가 처리할 문의를 먼저 보게 함.
+         status가 null이거나 빈 문자열이면(전체) 상태 조건 없이 전부 조회.
+         Thymeleaf가 @{...(status=${nullValue})}를 렌더링할 때 빈 문자열("")로 넘어오는 경우가 있어 둘 다 체크한다. -->
+    <select id="selectInquiriesByAdmin" resultMap="inquiryResultMap">
+        SELECT *
+        FROM INQUIRY
+        WHERE ADMIN_IDX = #{adminIdx}
+        <if test="status != null and status != ''">AND INQUIRY_STATUS = #{status}</if>
+        ORDER BY CASE WHEN INQUIRY_STATUS = '답변완료' THEN 1 ELSE 0 END, INQUIRY_IDX DESC
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*)
+        FROM INQUIRY
+        WHERE ADMIN_IDX = #{adminIdx}
+        <if test="status != null and status != ''">AND INQUIRY_STATUS = #{status}</if>
+    </select>
+
+    <select id="selectInquiry" resultMap="inquiryResultMap">
+        SELECT *
+        FROM INQUIRY
+        WHERE INQUIRY_IDX = #{inquiryIdx}
+          AND ADMIN_IDX = #{adminIdx}
+    </select>
+
+    <!-- 답변 등록/수정. 등록과 동시에 상태를 '답변완료'로 갱신 -->
+    <update id="answerInquiry" parameterType="com.mnu.ryokanmaker.dto.InquiryDto">
+        UPDATE INQUIRY
+        SET INQUIRY_ANSWER_CONTENT = #{inquiryAnswerContent},
+            INQUIRY_STATUS = '답변완료'
+        WHERE INQUIRY_IDX = #{inquiryIdx}
+          AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+</mapper>

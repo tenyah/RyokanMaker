@@ -1,9 +1,16 @@
 package com.mnu.ryokanmaker.dto;
 
+import java.util.List;
+
+import lombok.Data;
+
+import com.mnu.ryokanmaker.util.ImageJsonUtil;
+
 /**
  * ROOM 테이블 매핑 DTO (객실 마스터 정보)
- * PK : roomIdx / FK : adminIdx -> ADMIN.AdminIdx
+ * PK : roomIdx (IDENTITY, 자동 채번) / FK : adminIdx -> ADMIN.ADMIN_IDX
  */
+@Data
 public class RoomDto {
 
     private Integer roomIdx;
@@ -13,44 +20,17 @@ public class RoomDto {
     private String roomInfo;
     private Integer roomPrice;
     private Integer roomPeople;
-    private String roomPicture;   // 이미지 경로 또는 파일명 (VARCHAR2)
+    private String roomImage;     // ROOM_IMAGE (CLOB) - 이미지 경로 JSON 배열 문자열 저장
+    private String roomSaleYn;
+    private String roomMemo;      // ROOM_MEMO (비고)
 
-    public RoomDto() {
+    /** 목록 화면 썸네일용. roomImage(경로 JSON 배열)에서 첫 번째 이미지 경로만 뽑는다. */
+    public String getThumbnailUrl() {
+        return ImageJsonUtil.firstPath(roomImage);
     }
 
-    public RoomDto(Integer roomIdx, Integer adminIdx, String roomName, String roomLevel,
-                    String roomInfo, Integer roomPrice, Integer roomPeople, String roomPicture) {
-        this.roomIdx = roomIdx;
-        this.adminIdx = adminIdx;
-        this.roomName = roomName;
-        this.roomLevel = roomLevel;
-        this.roomInfo = roomInfo;
-        this.roomPrice = roomPrice;
-        this.roomPeople = roomPeople;
-        this.roomPicture = roomPicture;
+    /** 메인 페이지 캐러셀용. roomImage(경로 JSON 배열)의 전체 이미지 경로 목록. */
+    public List<String> getImageUrls() {
+        return ImageJsonUtil.parsePaths(roomImage);
     }
-
-    public Integer getRoomIdx() { return roomIdx; }
-    public void setRoomIdx(Integer roomIdx) { this.roomIdx = roomIdx; }
-
-    public Integer getAdminIdx() { return adminIdx; }
-    public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
-
-    public String getRoomName() { return roomName; }
-    public void setRoomName(String roomName) { this.roomName = roomName; }
-
-    public String getRoomLevel() { return roomLevel; }
-    public void setRoomLevel(String roomLevel) { this.roomLevel = roomLevel; }
-
-    public String getRoomInfo() { return roomInfo; }
-    public void setRoomInfo(String roomInfo) { this.roomInfo = roomInfo; }
-
-    public Integer getRoomPrice() { return roomPrice; }
-    public void setRoomPrice(Integer roomPrice) { this.roomPrice = roomPrice; }
-
-    public Integer getRoomPeople() { return roomPeople; }
-    public void setRoomPeople(Integer roomPeople) { this.roomPeople = roomPeople; }
-
-    public String getRoomPicture() { return roomPicture; }
-    public void setRoomPicture(String roomPicture) { this.roomPicture = roomPicture; }
 }

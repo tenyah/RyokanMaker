@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>플랜 선택 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{plans.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">플랜 선택 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -14,17 +14,17 @@
 
   <!-- 타이틀 -->
   <section class="page-title">
-    <div class="crumb">HOME &nbsp;/&nbsp; 숙박예약 &nbsp;/&nbsp; 플랜 선택</div>
-    <h1>플랜을 선택해주세요</h1>
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.booking}">숙박예약</span> &nbsp;/&nbsp; <span th:text="#{plans.title}">플랜 선택</span></div>
+    <h1 th:text="#{plans.heading}">플랜을 선택해주세요</h1>
     <div class="rule"></div>
-    <p class="desc">원하시는 구성으로 플랜을 골라주세요. 플랜 선택 후 예약 가능한 날짜와 요금을 확인하실 수 있습니다.</p>
+    <p class="desc" th:text="#{plans.desc}">원하시는 구성으로 플랜을 골라주세요. 플랜 선택 후 예약 가능한 날짜와 요금을 확인하실 수 있습니다.</p>
   </section>
 
   <!--
-    plans는 DB의 PLAN 테이블에서 조회한 PlanDTO 리스트입니다.
+    plans는 DB의 PLAN 테이블에서 조회한 AdminPlanDto 리스트입니다.
     필드 : planIdx, planName, planImage, planIncludesMeal(Y/N), planIncludesOnsen(Y/N), planInfo, planPrice
   -->
-  <section class="plan-grid">
+  <section class="plan-grid" th:with="_p=${@tr.prefetch(plans, 'planName', 'planInfo')}">
 
     <div class="plan-card" th:each="plan : ${plans}">
       <div class="thumb">
@@ -33,27 +33,28 @@
       <div class="body">
        <!-- 식사/온천만 포함된 경우에만 표시 -->
         <div class="incl-row">
-          <span class="incl on" th:if="${plan.planIncludesMeal == 'Y'}">식사</span>
-          <span class="incl on" th:if="${plan.planIncludesOnsen == 'Y'}">온천</span>
+          <span class="incl on" th:if="${plan.planIncludesMeal == 'Y'}" th:text="#{plans.incl_meal}">식사</span>
+          <span class="incl on" th:if="${plan.planIncludesOnsen == 'Y'}" th:text="#{plans.incl_onsen}">온천</span>
         </div>
-        <h3 th:text="${plan.planName}">플랜명</h3>
-        <p th:text="${plan.planInfo}">플랜 설명</p>
+        <h3 th:text="${@tr.t(plan.planName)}">플랜명</h3>
+        <p th:text="${@tr.t(plan.planInfo)}">플랜 설명</p>
         <div class="price-row">
           <div>
-            <span class="from">1박 2인 기준</span>
+            <span class="from" th:text="#{plans.per_night_2}">1박 2인 기준</span>
             <span class="amount">
               <span th:text="${'₩' + #numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩0</span>
-              <span class="unit">부터</span>
+              <span class="unit" th:text="#{rooms.from}">부터</span>
             </span>
           </div>
-         <a class="btn-gold" ... th:href="@{/reservation/reservation(planCode=${plan.planIdx})}">이 플랜으로 예약하기</a>
+          <a class="btn-gold" style="padding:12px 24px; font-size:13px; text-decoration:none;"
+             th:href="@{/reservation/reservation(planCode=${plan.planIdx})}" th:text="#{plans.book}">이 플랜으로 예약하기</a>
         </div>
       </div>
     </div>
 
   </section>
 
-  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:28px 56px 0;">
+  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:28px 56px 0;" th:text="#{plans.note}">
     ※ 표시된 요금과 구성은 화면 구성 예시이며, 실제 요금 및 포함 내역은 추후 확정됩니다.
   </p>
 

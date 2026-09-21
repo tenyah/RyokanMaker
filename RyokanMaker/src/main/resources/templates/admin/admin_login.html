@@ -1,0 +1,73 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_login}">清流庵 관리자 - 로그인</title>
+<link rel="stylesheet" th:href="@{/css/common.css}"> 
+<script type="text/javascript" th:inline="javascript">
+ function send(){
+	 if(!loginForm.adminId.value){
+		 alert(/*[[#{adm.alert_id}]]*/ "아이디가 입력되지 않았습니다");
+		 loginForm.adminId.focus();
+		 return false;
+	 }
+	 if(!loginForm.adminPassword.value){
+		 alert(/*[[#{adm.alert_pw}]]*/ "비밀번호가 입력되지 않았습니다");
+		 loginForm.adminPassword.focus();
+		 return false;
+	 }
+	 loginForm.submit();
+ }
+</script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.3" r="0.9" fill="currentColor" stroke="none"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div style="text-align:right;font-size:12px;margin-bottom:10px;display:flex;gap:10px;justify-content:flex-end;"><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','ko');location.href=u;return false;">KO</a><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','en');location.href=u;return false;">EN</a><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','ja');location.href=u;return false;">JA</a></div>
+    <div class="auth-logo">
+      <img th:if="${siteInfo != null and siteInfo.logoUrl != null}" th:src="@{${siteInfo.logoUrl}}"
+           th:alt="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">
+      <div class="kanji" th:if="${siteInfo == null or siteInfo.logoUrl == null}"
+           th:text="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵</div>
+      <div class="romaji">ADMIN</div>
+    </div>
+
+    <div class="auth-title" th:text="#{adm.login}">관리자 로그인</div>
+
+    <div class="auth-error" th:if="${error}">
+      <svg width="16" height="16"><use href="#i-alert"/></svg>
+      <span th:text="#{${error}}"></span>
+    </div>
+
+    <form class="auth-form" name="loginForm" th:action="@{/Admin/admin_login}" method="post">
+      <div class="field">
+        <label th:text="#{adm.id}">아이디</label>
+        <input type="text" name="adminId" th:placeholder="#{adm.id_ph}">
+      </div>
+      <div class="field">
+        <label th:text="#{member.password}">비밀번호</label>
+        <input type="password" name="adminPassword" th:placeholder="#{adm.pw_ph}">
+      </div>
+
+      <input type="button" class="btn-gold" onclick="send()" th:value="#{nav.login}" value="로그인">
+    </form>
+
+    <div class="auth-footnote" th:utext="#{adm.login_note}">아이디 · 초기 비밀번호를 아직 받지 못하셨다면<br>담당 개발팀으로 문의해 주세요.</div>
+  </div>
+</div>
+
+</body>
+</html>

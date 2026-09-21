@@ -1,9 +1,18 @@
 package com.mnu.ryokanmaker.dto;
 
+import java.time.LocalDate;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * RESERVATION 테이블 매핑 DTO (예약 1건의 상위/통합 정보 - 결제 상태 등)
- * PK : resvNum / FK : adminIdx -> ADMIN.AdminIdx, userMail -> MEMBER.UserMail
+ * PK : resvNum / FK : adminIdx -> ADMIN.ADMIN_IDX, userMail -> MEMBER.USER_MAIL
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReservationDto {
 
     private Integer resvNum;
@@ -14,43 +23,8 @@ public class ReservationDto {
     private String resvStatus;
     private String resvPayStatus;
     private String resvPayMethod;
-
-    public ReservationDto() {
-    }
-
-    public ReservationDto(Integer resvNum, Integer adminIdx, String userMail, Integer resvPrice,
-                           Integer resvPeople, String resvStatus, String resvPayStatus, String resvPayMethod) {
-        this.resvNum = resvNum;
-        this.adminIdx = adminIdx;
-        this.userMail = userMail;
-        this.resvPrice = resvPrice;
-        this.resvPeople = resvPeople;
-        this.resvStatus = resvStatus;
-        this.resvPayStatus = resvPayStatus;
-        this.resvPayMethod = resvPayMethod;
-    }
-
-    public Integer getResvNum() { return resvNum; }
-    public void setResvNum(Integer resvNum) { this.resvNum = resvNum; }
-
-    public Integer getAdminIdx() { return adminIdx; }
-    public void setAdminIdx(Integer adminIdx) { this.adminIdx = adminIdx; }
-
-    public String getUserMail() { return userMail; }
-    public void setUserMail(String userMail) { this.userMail = userMail; }
-
-    public Integer getResvPrice() { return resvPrice; }
-    public void setResvPrice(Integer resvPrice) { this.resvPrice = resvPrice; }
-
-    public Integer getResvPeople() { return resvPeople; }
-    public void setResvPeople(Integer resvPeople) { this.resvPeople = resvPeople; }
-
-    public String getResvStatus() { return resvStatus; }
-    public void setResvStatus(String resvStatus) { this.resvStatus = resvStatus; }
-
-    public String getResvPayStatus() { return resvPayStatus; }
-    public void setResvPayStatus(String resvPayStatus) { this.resvPayStatus = resvPayStatus; }
-
-    public String getResvPayMethod() { return resvPayMethod; }
-    public void setResvPayMethod(String resvPayMethod) { this.resvPayMethod = resvPayMethod; }
+    private String resvOrderId;
+    private String resvArrivalTime;
+    private String resvRequest;
+    private LocalDate resvDay;
 }

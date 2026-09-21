@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.AdminRequestMapper">
+
+    <resultMap id="adminRequestResultMap" type="com.mnu.ryokanmaker.dto.AdminRequestDto">
+        <id     column="REQUEST_IDX"       property="requestIdx"/>
+        <result column="RYOKAN_NAME"       property="ryokanName"/>
+        <result column="APPLICANT_NAME"    property="applicantName"/>
+        <result column="APPLICANT_EMAIL"   property="applicantEmail"/>
+        <result column="APPLICANT_TEL"     property="applicantTel"/>
+        <result column="REQUEST_MESSAGE"   property="requestMessage"/>
+        <result column="REQUEST_STATUS"    property="requestStatus"/>
+        <result column="REQUEST_AT"        property="requestedAt"/>
+        <result column="PROCESSED_AT"      property="processedAt"/>
+        <result column="ADMIN_IDX"         property="resultAdminIdx"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminRequestDto"
+            useGeneratedKeys="true" keyProperty="requestIdx" keyColumn="REQUEST_IDX">
+        INSERT INTO ADMIN_REQUEST (RYOKAN_NAME, APPLICANT_NAME, APPLICANT_EMAIL, APPLICANT_TEL,
+                                    REQUEST_MESSAGE, REQUEST_STATUS, REQUEST_AT)
+        VALUES (#{ryokanName}, #{applicantName}, #{applicantEmail}, #{applicantTel},
+                #{requestMessage}, '대기', SYSTIMESTAMP)
+    </insert>
+
+    <select id="selectPending" resultMap="adminRequestResultMap">
+        SELECT * FROM ADMIN_REQUEST
+        WHERE REQUEST_STATUS = '대기'
+        ORDER BY REQUEST_IDX DESC
+    </select>
+
+    <select id="selectByIdx" parameterType="int" resultMap="adminRequestResultMap">
+        SELECT * FROM ADMIN_REQUEST WHERE REQUEST_IDX = #{requestIdx}
+    </select>
+
+    <update id="approve">
+        UPDATE ADMIN_REQUEST
+        SET REQUEST_STATUS = '승인', PROCESSED_AT = SYSTIMESTAMP, ADMIN_IDX = #{resultAdminIdx}
+        WHERE REQUEST_IDX = #{requestIdx}
+    </update>
+
+    <update id="reject" parameterType="int">
+        UPDATE ADMIN_REQUEST
+        SET REQUEST_STATUS = '반려', PROCESSED_AT = SYSTIMESTAMP
+        WHERE REQUEST_IDX = #{requestIdx}
+    </update>
+
+</mapper>

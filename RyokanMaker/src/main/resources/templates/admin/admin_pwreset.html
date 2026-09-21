@@ -1,0 +1,69 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_pw}">清流庵 관리자 - 비밀번호 변경</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+<script type="text/javascript">
+
+</script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m5 12.5 5 5L19 7"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.3" r="0.9" fill="currentColor" stroke="none"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="auth-page">
+  <div class="auth-card" style="max-width:440px;">
+    <div style="text-align:right;font-size:12px;margin-bottom:10px;display:flex;gap:10px;justify-content:flex-end;"><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','ko');location.href=u;return false;">KO</a><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','en');location.href=u;return false;">EN</a><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','ja');location.href=u;return false;">JA</a></div>
+    <div class="auth-logo">
+      <img th:if="${siteInfo != null and siteInfo.logoUrl != null}" th:src="@{${siteInfo.logoUrl}}"
+           th:alt="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">
+      <div class="kanji" th:if="${siteInfo == null or siteInfo.logoUrl == null}"
+           th:text="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵</div>
+      <div class="romaji">ADMIN</div>
+    </div>
+
+    <div class="auth-title" th:text="#{adm.change_pw}">비밀번호 변경</div>
+    <div class="auth-sub" th:utext="#{adm.pw_sub}">최초 로그인 시에는 발급받은 초기 비밀번호를<br>새 비밀번호로 반드시 변경해야 합니다.</div>
+
+    <div class="notice-banner" style="margin:0 0 24px;" id="pwnotice" th:if="${admin.pwResetYn!='Y'}" th:text="#{adm.pw_notice}">초기 비밀번호 상태입니다. 비밀번호를 변경해야 관리자 화면을 계속 이용할 수 있습니다.</div>
+
+    <div class="auth-error" th:if="${error}">
+      <svg width="16" height="16"><use href="#i-alert"/></svg>
+      <span th:text="#{${error}}"></span>
+    </div>
+
+    <form class="auth-form" name="pwreset" th:action="@{/Admin/password_reset}" method="post">
+      <div class="field">
+        <label th:text="#{adm.pw_current}">현재 비밀번호</label>
+        <input type="password" name="currentPassword" th:placeholder="#{adm.pw_ph}">
+      </div>
+      <div class="field">
+        <label th:text="#{adm.pw_new}">새 비밀번호</label>
+        <input type="password" name="newPassword" th:placeholder="#{adm.pw_new_ph}">
+      </div>
+      <div class="field">
+        <label th:text="#{adm.pw_new_confirm}">새 비밀번호 확인</label>
+        <input type="password" name="newPasswordConfirm" th:placeholder="#{adm.pw_new_confirm_ph}">
+      </div>
+
+      <input type="submit" class="btn-gold" th:value="#{adm.pw_submit}" value="비밀번호 변경하기">
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
