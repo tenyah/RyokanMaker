@@ -206,45 +206,6 @@
     </div>
     <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 플랜이 없습니다. 아래에서 새 플랜을 추가해 주세요.</p>
 
-    <!-- 새 플랜 등록 / 수정 -->
-    <form class="form-card" id="planForm" style="margin:0 56px 40px;" th:action="@{/Admin/plan_save}" method="post" enctype="multipart/form-data">
-      <input type="hidden" id="planIdx" name="planIdx" value="0">
-      <input type="hidden" name="redirectTo" value="plan_sales">
-
-      <div class="sub-label" id="planFormTitle" style="margin-bottom:4px;">새 플랜 등록</div>
-
-      <div>
-        <div class="img-field-head">
-          <div class="sub-label">플랜 이미지</div>
-          <div class="count-badge">0 / 10</div>
-        </div>
-        <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
-          <div class="img-tile"><input type="file" name="planImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span>이미지 추가</span></div>
-          <div class="img-tile"><input type="file" name="planImageFiles" accept="image/*"></div>
-          <div class="img-tile"><input type="file" name="planImageFiles" accept="image/*"></div>
-          <div class="img-tile"><input type="file" name="planImageFiles" accept="image/*"></div>
-          <div class="img-tile"><input type="file" name="planImageFiles" accept="image/*"></div>
-        </div>
-        <div class="img-hint">최대 10장까지 등록됩니다. 이미지는 src/main/resources/static/uploads/plan 폴더에 저장되며, 사용자 예약 화면(플랜 선택)에도 그대로 노출됩니다. 수정 시 새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.</div>
-      </div>
-
-      <div class="field"><label>플랜 이름</label><input type="text" id="planName" name="planName" placeholder="예: 객실 + 식사 플랜" required></div>
-
-      <div class="field-row">
-        <div class="field"><label>1박 2인 기준 가격</label><input type="text" id="planPrice" name="planPrice" placeholder="예: 848508" required></div>
-        <div class="field" style="flex-direction:row;align-items:center;gap:24px;max-width:none;padding-top:20px;">
-          <label style="display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;color:var(--ink-soft);"><input type="checkbox" id="planIncludesMeal" name="planIncludesMeal" value="Y" style="width:15px;height:15px;">식사 포함</label>
-          <label style="display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;color:var(--ink-soft);"><input type="checkbox" id="planIncludesOnsen" name="planIncludesOnsen" value="Y" style="width:15px;height:15px;">온천 포함</label>
-        </div>
-      </div>
-
-      <div class="field"><label>플랜 설명</label><textarea id="planInfo" name="planInfo" placeholder="예: 숙박과 저녁 가이세키 코스가 포함된 구성입니다..."></textarea></div>
-
-      <div style="display:flex;justify-content:flex-end;gap:10px;">
-        <button type="button" class="btn-line small" id="planCancelBtn" style="display:none;" onclick="resetPlanForm()">취소</button>
-        <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-plus"/></svg>&nbsp;<span id="planSubmitLabel">플랜 등록</span></button>
-      </div>
-    </form>
 
     <!-- 날짜별 예약 현황 -->
     <div class="section-tag">
@@ -291,26 +252,40 @@
     <!-- 가이세키/온천 한도 -->
     <div class="section-tag">
       <div class="num">3</div>
-      <div class="label">온천 일일 판매 한도</div>
+      <div class="label">온천 판매 관리</div>
       <div class="line"></div>
     </div>
 
-    <div class="limit-grid">
+   <div class="admin-plan-grid" th:if="${!#lists.isEmpty(planList)}">
 
-      <div class="limit-card">
-        <div class="head">
-          <svg width="17" height="17"><use href="#i-onsen"/></svg>
-          <div class="name">노천탕 (露天湯) 전세탕</div>
+      <div class="admin-plan-card" th:each="plan : ${planList}" th:classappend="${plan.planSaleYn != 'Y'} ? 'off'"
+           th:attr="data-idx=${plan.planIdx},data-name=${plan.planName},data-price=${plan.planPrice},data-info=${plan.planInfo},data-meal=${plan.planIncludesMeal},data-onsen=${plan.planIncludesOnsen}">
+        <div class="card-head">
+          <div class="badges">
+            <span class="badge">객실</span>
+            <span class="badge" th:if="${plan.planIncludesMeal == 'Y'}">식사</span>
+            <span class="badge" th:if="${plan.planIncludesOnsen == 'Y'}">온천</span>
+          </div>
+          <form th:action="@{/Admin/plan_toggle_sale}" method="post">
+            <input type="hidden" name="planIdx" th:value="${plan.planIdx}">
+            <input type="hidden" name="redirectTo" value="plan_sales">
+            <input type="hidden" name="planSaleYn" th:value="${plan.planSaleYn == 'Y'} ? 'N' : 'Y'">
+            <label class="toggle"><input type="checkbox" th:checked="${plan.planSaleYn == 'Y'}" onchange="this.form.submit()"><span class="track"></span></label>
+          </form>
         </div>
-        <div class="row">
-          <div class="field"><label>1일 판매 한도 (타임)</label><input type="text" value="7"></div>
-          <div class="field"><label>오늘 판매</label><div class="today">4 / 7타임</div></div>
-          <button type="button" class="btn-line" style="padding:11px 22px;font-size:12.5px;">저장</button>
+        <div class="card-body">
+          <h3 th:text="${plan.planName}">객실 플랜</h3>
+          <p th:text="${plan.planInfo != null and !plan.planInfo.isEmpty()} ? ${plan.planInfo} : (${plan.planSaleYn == 'Y'} ? '' : '현재 판매 중지')">숙박만 필요한 고객을 위한 기본 구성</p>
+          <div class="price-row">
+            <div><span class="from">1박 2인 부터</span><span class="amount" th:text="'₩' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
+            <button type="button" class="icon-btn" onclick="editPlan(this)"><svg width="13" height="13"><use href="#i-pencil"/></svg></button>
+          </div>
         </div>
       </div>
-
+      <div class="divider"></div>
+      
     </div>
-
+    <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 플랜이 없습니다. 아래에서 새 플랜을 추가해 주세요.</p>
   </main>
 </div>
 
