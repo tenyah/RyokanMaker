@@ -59,4 +59,11 @@
 		ORDER BY ONSEN_IDX
 	</select>
 
+	<update id="updateSaleYn">
+		UPDATE ONSEN
+		SET ONSEN_SALE_YN = #{onsenSaleYn}
+		WHERE ONSEN_IDX = #{onsenIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
+
 </mapper>

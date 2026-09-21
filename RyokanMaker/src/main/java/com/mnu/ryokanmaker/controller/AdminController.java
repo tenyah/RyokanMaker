@@ -139,6 +139,7 @@ public class AdminController {
 
 		List<PlanSalesRowDto> salesGrid = planSalesService.getSalesGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
 		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdminIdx()));
+		model.addAttribute("onsenList", onsenService.getOnsenList(loginAdmin.getAdminIdx()));
 		model.addAttribute("salesGrid", salesGrid);
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
@@ -507,6 +508,18 @@ public class AdminController {
 		}
 		planService.toggleSale(planIdx, loginAdmin.getAdminIdx(), "Y".equals(planSaleYn));
 		return planRedirect(redirectTo);
+	}
+
+	@PostMapping("onsen_toggle_sale")
+	public String onsenToggleSale(@RequestParam("onsenIdx") Integer onsenIdx,
+			@RequestParam("onsenSaleYn") String onsenSaleYn,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		onsenService.toggleSale(onsenIdx, loginAdmin.getAdminIdx(), "Y".equals(onsenSaleYn));
+		return "redirect:/Admin/plan_sales";
 	}
 
 	/**

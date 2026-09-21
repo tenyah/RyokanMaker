@@ -61,4 +61,8 @@ public class OnsenService {
 	public void deleteOnsen(Integer onsenIdx, Integer adminIdx) {
 		onsenMapper.deleteOnsen(onsenIdx, adminIdx);
 	}
+
+	public void toggleSale(Integer onsenIdx, Integer adminIdx, boolean onSale) {
+		onsenMapper.updateSaleYn(onsenIdx, adminIdx, onSale ? "Y" : "N");
+	}
 }

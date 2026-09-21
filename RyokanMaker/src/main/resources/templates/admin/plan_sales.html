@@ -198,13 +198,12 @@
           <p th:text="${plan.planInfo != null and !plan.planInfo.isEmpty()} ? ${plan.planInfo} : (${plan.planSaleYn == 'Y'} ? '' : '현재 판매 중지')">숙박만 필요한 고객을 위한 기본 구성</p>
           <div class="price-row">
             <div><span class="from">1박 2인 부터</span><span class="amount" th:text="'₩' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
-            <button type="button" class="icon-btn" onclick="editPlan(this)"><svg width="13" height="13"><use href="#i-pencil"/></svg></button>
           </div>
         </div>
       </div>
 
     </div>
-    <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 플랜이 없습니다. 아래에서 새 플랜을 추가해 주세요.</p>
+    <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 플랜이 없습니다. 정보 등록 화면에서 플랜을 추가해 주세요.</p>
 
 
     <!-- 날짜별 예약 현황 -->
@@ -256,36 +255,30 @@
       <div class="line"></div>
     </div>
 
-   <div class="admin-plan-grid" th:if="${!#lists.isEmpty(planList)}">
+    <div class="admin-plan-grid" th:if="${!#lists.isEmpty(onsenList)}">
 
-      <div class="admin-plan-card" th:each="plan : ${planList}" th:classappend="${plan.planSaleYn != 'Y'} ? 'off'"
-           th:attr="data-idx=${plan.planIdx},data-name=${plan.planName},data-price=${plan.planPrice},data-info=${plan.planInfo},data-meal=${plan.planIncludesMeal},data-onsen=${plan.planIncludesOnsen}">
+      <div class="admin-plan-card" th:each="onsen : ${onsenList}" th:classappend="${onsen.onsenSaleYn != 'Y'} ? 'off'">
         <div class="card-head">
           <div class="badges">
-            <span class="badge">객실</span>
-            <span class="badge" th:if="${plan.planIncludesMeal == 'Y'}">식사</span>
-            <span class="badge" th:if="${plan.planIncludesOnsen == 'Y'}">온천</span>
+            <span class="badge">온천</span>
           </div>
-          <form th:action="@{/Admin/plan_toggle_sale}" method="post">
-            <input type="hidden" name="planIdx" th:value="${plan.planIdx}">
-            <input type="hidden" name="redirectTo" value="plan_sales">
-            <input type="hidden" name="planSaleYn" th:value="${plan.planSaleYn == 'Y'} ? 'N' : 'Y'">
-            <label class="toggle"><input type="checkbox" th:checked="${plan.planSaleYn == 'Y'}" onchange="this.form.submit()"><span class="track"></span></label>
+          <form th:action="@{/Admin/onsen_toggle_sale}" method="post">
+            <input type="hidden" name="onsenIdx" th:value="${onsen.onsenIdx}">
+            <input type="hidden" name="onsenSaleYn" th:value="${onsen.onsenSaleYn == 'Y'} ? 'N' : 'Y'">
+            <label class="toggle"><input type="checkbox" th:checked="${onsen.onsenSaleYn == 'Y'}" onchange="this.form.submit()"><span class="track"></span></label>
           </form>
         </div>
         <div class="card-body">
-          <h3 th:text="${plan.planName}">객실 플랜</h3>
-          <p th:text="${plan.planInfo != null and !plan.planInfo.isEmpty()} ? ${plan.planInfo} : (${plan.planSaleYn == 'Y'} ? '' : '현재 판매 중지')">숙박만 필요한 고객을 위한 기본 구성</p>
+          <h3 th:text="${onsen.onsenName}">노천탕 전세탕</h3>
+          <p th:text="${onsen.onsenInfo != null and !onsen.onsenInfo.isEmpty()} ? ${onsen.onsenInfo} : (${onsen.onsenSaleYn == 'Y'} ? '' : '현재 판매 중지')">온천 설명</p>
           <div class="price-row">
-            <div><span class="from">1박 2인 부터</span><span class="amount" th:text="'₩' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
-            <button type="button" class="icon-btn" onclick="editPlan(this)"><svg width="13" height="13"><use href="#i-pencil"/></svg></button>
+            <div><span class="from">이용 시간</span><span class="amount" th:text="${onsen.onsenHour != null and !onsen.onsenHour.isEmpty()} ? ${onsen.onsenHour} : '-'">15:00–21:00</span></div>
           </div>
         </div>
       </div>
-      <div class="divider"></div>
-      
+
     </div>
-    <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 플랜이 없습니다. 아래에서 새 플랜을 추가해 주세요.</p>
+    <p th:if="${#lists.isEmpty(onsenList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 온천이 없습니다. 정보 등록 화면에서 온천을 추가해 주세요.</p>
   </main>
 </div>
 
@@ -295,102 +288,6 @@ document.addEventListener('click', function (e) {
     if (!menu.contains(e.target)) menu.classList.remove('open');
   });
 });
-
-/* ---------------- 이미지 업로드 미리보기 ---------------- */
-function updateImgGridCount(tile) {
-  var grid = tile.closest('.img-grid');
-  if (!grid) return;
-  var badge = grid.parentElement.querySelector('.count-badge');
-  if (!badge) return;
-  var filled = grid.querySelectorAll('.img-tile.filled').length;
-  var total = grid.querySelectorAll('.img-tile').length;
-  badge.textContent = filled + ' / ' + total;
-}
-
-function showTilePreview(tile, dataUrl) {
-  tile.classList.add('filled');
-  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = 'none'; });
-  tile.style.backgroundImage = 'url(' + dataUrl + ')';
-  tile.style.backgroundSize = 'cover';
-  tile.style.backgroundPosition = 'center';
-  if (!tile.querySelector('.remove')) {
-    var removeBtn = document.createElement('div');
-    removeBtn.className = 'remove';
-    removeBtn.innerHTML = '<svg width="10" height="10"><use href="#i-x"/></svg>';
-    tile.appendChild(removeBtn);
-  }
-}
-
-function clearTilePreview(tile) {
-  var input = tile.querySelector('input[type="file"]');
-  if (input) input.value = '';
-  tile.classList.remove('filled');
-  tile.style.backgroundImage = '';
-  var removeBtn = tile.querySelector('.remove');
-  if (removeBtn) removeBtn.remove();
-  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = ''; });
-}
-
-document.addEventListener('change', function (e) {
-  var input = e.target;
-  if (input.tagName !== 'INPUT' || input.type !== 'file') return;
-  var tile = input.closest('.img-tile');
-  if (!tile) return;
-
-  var file = input.files && input.files[0];
-  if (!file) return;
-
-  var reader = new FileReader();
-  reader.onload = function (ev) {
-    showTilePreview(tile, ev.target.result);
-    updateImgGridCount(tile);
-  };
-  reader.readAsDataURL(file);
-});
-
-document.addEventListener('click', function (e) {
-  var removeBtn = e.target.closest('.img-tile .remove');
-  if (!removeBtn) return;
-  e.preventDefault();
-  var tile = removeBtn.closest('.img-tile');
-  clearTilePreview(tile);
-  updateImgGridCount(tile);
-});
-
-function clearImageGrids(form) {
-  form.querySelectorAll('.img-tile').forEach(function (tile) {
-    clearTilePreview(tile);
-  });
-  form.querySelectorAll('.count-badge').forEach(function (badge) {
-    var total = badge.parentElement.parentElement.querySelectorAll('.img-tile').length;
-    badge.textContent = '0 / ' + total;
-  });
-}
-
-/* ---------------- 플랜 등록/수정 폼 ---------------- */
-function editPlan(btn) {
-  var item = btn.closest('.admin-plan-card');
-  clearImageGrids(document.getElementById('planForm'));
-  document.getElementById('planIdx').value = item.dataset.idx;
-  document.getElementById('planName').value = item.dataset.name || '';
-  document.getElementById('planPrice').value = item.dataset.price || '';
-  document.getElementById('planInfo').value = item.dataset.info || '';
-  document.getElementById('planIncludesMeal').checked = (item.dataset.meal === 'Y');
-  document.getElementById('planIncludesOnsen').checked = (item.dataset.onsen === 'Y');
-  document.getElementById('planFormTitle').textContent = '플랜 수정';
-  document.getElementById('planSubmitLabel').textContent = '수정 내용 저장';
-  document.getElementById('planCancelBtn').style.display = '';
-  document.getElementById('planForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-function resetPlanForm() {
-  var form = document.getElementById('planForm');
-  form.reset();
-  clearImageGrids(form);
-  document.getElementById('planIdx').value = '0';
-  document.getElementById('planFormTitle').textContent = '새 플랜 등록';
-  document.getElementById('planSubmitLabel').textContent = '플랜 등록';
-  document.getElementById('planCancelBtn').style.display = 'none';
-}
 </script>
 </body>
 </html>
