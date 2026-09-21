@@ -634,7 +634,7 @@
       </form>
     </div>
 
-    <!-- SECTION 6: 교통안내 (신규) — ADMIN.RYOKAN_ACCESS 단일 텍스트 컬럼(최대 100byte)에 대응 -->
+    <!-- SECTION 6: 교통안내 (신규) — ADMIN.RYOKAN_ACCESS 단일 텍스트 컬럼(VARCHAR2(1000) BYTE)에 대응 -->
     <div id="section-route" class="section-tag">
       <div class="num">7</div>
       <div class="label" th:text="#{adm.ir_s_route}">교통안내 입력</div>
@@ -650,7 +650,7 @@
 
         <div class="field" th:each="def : ${textGroups['ACCESS']}">
           <label th:text="#{${def.labelKey()}}">문구</label>
-          <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="500"
+          <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="300"
                     th:placeholder="${@pt.placeholder(def.key())}" th:text="${pageTexts[def.key()]}"></textarea>
           <input th:unless="${def.multiline()}" type="text" th:name="${'pc_' + def.key()}" maxlength="300"
                  th:placeholder="${@pt.placeholder(def.key())}" th:value="${pageTexts[def.key()]}">
@@ -658,7 +658,7 @@
 
         <div class="field">
           <label th:text="#{adm.ir_ac_line}">추가 안내문 (한 줄, 카드 위에 표시)</label>
-          <input type="text" name="ryokanAccess" maxlength="33" th:placeholder="#{adm.ir_route_ph}" th:value="${admin.ryokanAccess}">
+          <input type="text" name="ryokanAccess" maxlength="300" th:placeholder="#{adm.ir_route_ph}" th:value="${admin.ryokanAccess}">
           <div class="img-hint" th:text="#{adm.ir_route_hint}">여관 하나당 한 줄만 등록됩니다.</div>
         </div>
 
@@ -746,7 +746,7 @@
 
           <div class="field" th:each="def : ${entry.value}">
             <label th:text="#{${def.labelKey()}}">문구</label>
-            <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="500"
+            <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="300"
                       th:placeholder="${@pt.placeholder(def.key())}" th:text="${pageTexts[def.key()]}"></textarea>
             <input th:unless="${def.multiline()}" type="text" th:name="${'pc_' + def.key()}" maxlength="300"
                    th:placeholder="${@pt.placeholder(def.key())}" th:value="${pageTexts[def.key()]}">

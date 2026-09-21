@@ -1,5 +1,6 @@
 package com.mnu.ryokanmaker.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class PageContentService {
     /** 사이트가 단일 료칸 기준이라 손님 화면은 이 관리자의 문구를 보여준다 (다른 컨트롤러의 MAIN_ADMIN_IDX와 같은 가정). */
     public static final int SITE_ADMIN_IDX = 1;
 
-    private static final int MAX_LENGTH = 1000;
+    private static final int MAX_BYTES = 1000;
     private static final long CACHE_MILLIS = 20_000L;
 
     @Autowired
@@ -81,14 +82,31 @@ public class PageContentService {
                 if (value.isEmpty()) {
                     pageContentMapper.delete(adminIdx, def.key());
                 } else {
-                    if (value.length() > MAX_LENGTH) {
-                        value = value.substring(0, MAX_LENGTH);
-                    }
-                    pageContentMapper.upsert(adminIdx, def.key(), value);
+                    pageContentMapper.upsert(adminIdx, def.key(), truncateUtf8(value, MAX_BYTES));
                 }
             }
         } finally {
             siteLoadedAt = 0L;
         }
+    }
+
+    /** DB 컬럼이 VARCHAR2(n BYTE)라 글자 수가 아니라 UTF-8 바이트 수로 잘라야 한다 (한글·일본어는 글자당 3바이트). */
+    public static String truncateUtf8(String value, int maxBytes) {
+        if (value == null || value.getBytes(StandardCharsets.UTF_8).length <= maxBytes) {
+            return value;
+        }
+        StringBuilder sb = new StringBuilder();
+        int bytes = 0;
+        for (int i = 0; i < value.length(); ) {
+            int cp = value.codePointAt(i);
+            int len = new String(Character.toChars(cp)).getBytes(StandardCharsets.UTF_8).length;
+            if (bytes + len > maxBytes) {
+                break;
+            }
+            sb.appendCodePoint(cp);
+            bytes += len;
+            i += Character.charCount(cp);
+        }
+        return sb.toString();
     }
 }

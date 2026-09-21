@@ -358,6 +358,7 @@ public class AdminController {
 		}
 
 		if (ryokanAccess != null) {
+			ryokanAccess = PageContentService.truncateUtf8(ryokanAccess.strip(), 1000);
 			AdminDto adminDto = new AdminDto();
 			adminDto.setAdminIdx(loginAdmin.getAdminIdx());
 			adminDto.setRyokanAccess(ryokanAccess);
