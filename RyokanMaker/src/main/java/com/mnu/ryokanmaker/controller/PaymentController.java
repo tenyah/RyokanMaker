@@ -3,6 +3,8 @@ package com.mnu.ryokanmaker.controller;
 import com.mnu.ryokanmaker.dto.AdminPlanDto;
 import com.mnu.ryokanmaker.dto.GuestInfoForm;
 import com.mnu.ryokanmaker.dto.MemberDto;
+import com.mnu.ryokanmaker.dto.OnsenPickDto;
+import com.mnu.ryokanmaker.dto.PriceBreakdownDto;
 import com.mnu.ryokanmaker.dto.ReservationContext;
 import com.mnu.ryokanmaker.dto.ReservationSummary;
 import com.mnu.ryokanmaker.dto.RestaurantCourseDto;
@@ -12,6 +14,7 @@ import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;
 import com.mnu.ryokanmaker.mapper.RoomMapper;
 import com.mnu.ryokanmaker.service.GeminiTranslationService;
 import com.mnu.ryokanmaker.service.PaymentReservationService;
+import com.mnu.ryokanmaker.service.ReservationService;
 import com.mnu.ryokanmaker.service.TossPaymentService;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
@@ -33,6 +36,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -68,6 +72,9 @@ public class PaymentController {
     private PaymentReservationService paymentReservationService;
 
     @Autowired
+    private ReservationService reservationService;
+
+    @Autowired
     private MessageSource messageSource;
 
     @Autowired
@@ -95,8 +102,7 @@ public class PaymentController {
                            @RequestParam(defaultValue = "0") int childCount,
                            @RequestParam(defaultValue = "1") int roomCount,
                            @RequestParam(required = false) Long courseIdx,
-                           @RequestParam(required = false) Long onsenIdx,
-                           @RequestParam(required = false) String onsenTimeSlot,
+                           @RequestParam(required = false) List<String> onsen,
                            Model model, HttpSession session) {
 
         if (loginMember(session) == null) {
@@ -111,9 +117,16 @@ public class PaymentController {
                         .findFirst().orElse(null)
                 : null;
 
+        // 화면에서 넘어온 totalAmount는 위변조될 수 있으므로 서버에서 다시 계산한 금액을 사용한다.
+        // onsen : 날짜별 온천 선택. 각 값은 "날짜|온천idx|시간" 형식 (예: 2026-09-19|1|15:00)
+        List<OnsenPickDto> onsenPicks = reservationService.parseOnsenPicks(onsen, checkIn, checkOut);
         int nights = (int) ChronoUnit.DAYS.between(checkIn, checkOut);
-        int roomFee = room != null ? room.getRoomPrice() : 0;
-        int mealFee = totalAmount.intValue() - roomFee;
+        PriceBreakdownDto price = reservationService.calculatePriceBreakdown(
+                Integer.valueOf(planCode), roomIdx.intValue(),
+                courseIdx != null ? courseIdx.intValue() : null,
+                onsenPicks, nights);
+        int finalAmount = price.getTotal();
+
 
         Locale locale = LocaleContextHolder.getLocale();
         StringBuilder planDescription = new StringBuilder();
@@ -121,9 +134,10 @@ public class PaymentController {
             String courseName = translationService.translate(course.getRestaurantCourseName(), locale);
             planDescription.append(messageSource.getMessage("pay.includes_course", new Object[]{courseName}, locale));
         }
-        if (onsenTimeSlot != null) {
+        for (OnsenPickDto pick : onsenPicks) {
             if (planDescription.length() > 0) planDescription.append(" · ");
-            planDescription.append(messageSource.getMessage("pay.onsen_use", new Object[]{onsenTimeSlot}, locale));
+            String when = pick.getDate().getMonthValue() + "/" + pick.getDate().getDayOfMonth() + " " + pick.getTimeSlot();
+            planDescription.append(messageSource.getMessage("pay.onsen_use", new Object[]{when}, locale));
         }
 
         GuestInfoForm guestInfoForm = new GuestInfoForm();
@@ -137,11 +151,10 @@ public class PaymentController {
                         Integer.valueOf(planCode),
                         roomIdx.intValue(),
                         checkIn, checkOut,
-                        totalAmount.intValue(),
+                        finalAmount,
                         adultCount + childCount,
                         courseIdx != null ? courseIdx.intValue() : null,
-                        onsenIdx != null ? onsenIdx.intValue() : null,
-                        onsenTimeSlot));
+                        onsenPicks));
 
         model.addAttribute("guestInfoForm", guestInfoForm);
         model.addAttribute("reservation", new ReservationSummary(
@@ -150,7 +163,7 @@ public class PaymentController {
                 nights, roomCount, adultCount, childCount,
                 room != null ? room.getRoomName() : "",
                 planDescription.toString(),
-                roomFee, mealFee, totalAmount.intValue(),
+                price.getPlanFee(), price.getRoomExtra(), price.getCourseExtra(), price.getOnsenExtra(), finalAmount,
                 3
         ));
         model.addAttribute("countryOptions", buildCountryOptions());

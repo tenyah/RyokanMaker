@@ -39,7 +39,7 @@
 
 <div class="admin-shell">
 
-  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='plan', showInfoSubmenu=false, showRequestsLink=false)}"></div>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='plan', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
   <main class="admin-main" th:with="_p=${@tr.prefetch(planList, 'planName', 'planInfo')}">

@@ -21,8 +21,10 @@ public class ReservationSummary {
     private int childCount;
     private String roomPlanName;
     private String roomPlanDescription;
-    private int roomFee;
-    private int mealFee;
+    private int planFee;           // 플랜 기본 요금
+    private int roomExtra;         // 객실 추가 요금
+    private Integer courseExtra;   // 식사 코스 추가 요금 (코스를 고르지 않았으면 null)
+    private Integer onsenExtra;    // 온천 추가 요금 합계 (온천을 고르지 않았으면 null)
     private int totalAmount;
     private int cancelPolicyDays;
 }

@@ -96,3 +96,52 @@ Claude Code가 이 프로젝트에서 수정한 내용을 시간순으로 기록
     (room_status/plan_sales/admin_requests + 로그인 필요한 나머지는 컴파일·구조 검증)를 직접 렌더링해
     active 상태·계정 정보·"계정 신청" 노출 여부까지 확인.
 - `application.properties`의 평문 DB 비밀번호는 **의도적으로 그대로 둠** — 팀원이 별도로 처리 예정.
+
+## 2026-09-21 (관리자 대시보드 · 매출현황 실 구현)
+
+먼저 샘플 목업(스크래치패드, git 밖)으로 화면 구성을 여러 차례 다듬은 뒤, 사용자가 "이대로 프로젝트 작업해줘"라고
+확정한 시점에 실제 서비스/화면으로 옮겼다. 대시보드/매출현황(월매출조회/일자별 매출조회) 3개 화면 전부 신규.
+
+- **DB 스키마 재검토 후 목업의 일부 내용을 실 데이터에 맞게 조정** (DB에 없는 내용은 만들지 않는다는 기존
+  원칙에 따름):
+  - RESERVATION/ROOM_RESERVATION에는 결제상태로 `결제완료`/`결제대기`만 존재하고 취소·환불 개념 자체가
+    없음(취소 기능 미구현) → 일자별 매출조회의 "취소·환불 내역"을 "결제대기 내역"으로 대체.
+  - 체크인/체크아웃 목록의 VIP·얼리체크인·레이트체크아웃 태그는 대응 컬럼이 없어 제외. 대신 실제로 계산
+    가능한 "연박"(체크인·체크아웃 날짜 차이)과 "요청사항"(RESV_REQUEST 비어있지 않음, 실제 텍스트 노출)만 사용.
+  - RESERVATION에는 시각 정보가 없어(RESV_DAY는 날짜만) 거래 내역의 "결제일시" 컬럼을 "체크인일"로 변경 —
+    이 프로젝트 전체가 체크인 날짜 기준 집계라는 원칙과도 일치.
+  - 결제수단(카드/계좌이체 등)은 Toss가 반환하는 실제 값을 그대로 집계해 존재하는 수단만큼만 타일을
+    동적으로 표시(카드/계좌이체 두 개로 미리 못박지 않음).
+- **신규 매출 집계 쿼리**: `RoomReservationMapper.findByAdminAndCheckInRange`(관리자+체크인 날짜 범위,
+  집계용) 추가, 신규 `RevenueMapper`(고객명/객실명/플랜명 조인 — 거래 목록·오늘 체크인/체크아웃 목록용) 추가.
+  모두 체크인 날짜 기준이며 매출 판정은 `RESV_PAY_STATUS='결제완료'`만 인정.
+- **신규 서비스**: `RevenueService`(월 요약/캘린더/요일별 분포/월별 추이/객실별 비중/플랜별 정산/거래 목록,
+  OCC·ADR 계산 포함), `DashboardService`(오늘 KPI, 오늘 체크인/체크아웃 목록, 도착 희망시간 vs 현재시각
+  비교로 완료/예정 판정).
+- **신규 컨트롤러**: `AdminDashboardController`(`/Admin/dashboard`), `AdminRevenueController`
+  (`/Admin/revenue_monthly?ym=yyyy-MM`, `/Admin/revenue_daily?period=today|week|month|lastmonth|custom`).
+  월매출조회는 이전/다음 달 네비게이션(현재 달 이후로는 못 감), 일자별 매출조회는 기간 필터가 실제로
+  서버 쿼리를 바꾸는 형태로 동작(목업 단계의 "클릭해도 안 바뀜" 한계를 해소).
+- **신규 DTO 9개**: `RevenueTxnDto`, `RevenueDayDto`, `RevenueMonthSummaryDto`, `MonthlyTrendPointDto`,
+  `RoomShareDto`, `PlanSettlementDto`, `CheckInOutRowDto`, `DashboardStatsDto`, `PaymentMethodStatDto`.
+- **신규 템플릿 3개**: `admin/dashboard.html`, `admin/revenue_monthly.html`, `admin/revenue_daily.html`.
+  대시보드의 "매출 및 예약 트렌드" 차트는 매출현황(월매출조회) 페이지와 동일한 Chart.js 코드를 그대로 재사용.
+  Chart.js는 jsdelivr CDN, 축 단위(만/万/K)·범례("올해"/"This year"/"今年")는 화면 언어(`#locale.language`)에
+  따라 분기.
+- **`admin_shell.html` 공통 프래그먼트 확장**: 그동안 사이드바에 아예 없었고 상단바 링크도 `href="#"`로
+  죽어있던 "대시보드"를 실제 라우트로 연결. "매출현황"을 상단바·사이드바에 신규 추가하고, 기존
+  "정보등록"의 인페이지 서브메뉴(`showInfoSubmenu`)와 같은 패턴으로 `showRevenueSubmenu` 파라미터를 추가해
+  월매출조회/일자별 매출조회 서브메뉴 표시. 프래그먼트 시그니처가 바뀌어 이 프래그먼트를 호출하던 기존
+  6개 관리자 화면 전부에 `showRevenueSubmenu=false` 인자를 추가.
+- `common.css`에 캘린더(`.rev-cal`)·월 네비게이터(`.month-nav`)·거래 표(`.txn-table`)·기간 필터
+  (`.period-filter`)·오늘 체크인/체크아웃 표(`.ops-table`) 등 새 화면 전용 스타일 추가. 캘린더 주말(금·토)
+  칸은 배경색만 쓰고 진한 테두리(box-shadow)는 넣지 않음(사용자 피드백 — "정신사납다").
+- `messages*.properties`(KO/EN/JA) 3개 파일에 새 화면 라벨 60여 개 추가, 기존 `resv.status.*`
+  (결제완료/결제대기 번역)와 `@tr.t()`/`@tr.label()` 헬퍼를 그대로 재사용해 다른 관리자 화면과 동일하게
+  전체 다국어 적용.
+- 로그인 가능한 관리자 계정 정보가 없어 실제 로그인 렌더링 확인은 못 했고(사용자가 "코드 검토로 대체"
+  선택), 대신 `mvnw compile` 통과 + `curl`로 3개 라우트의 로그인 리다이렉트(302) 확인 +
+  Thymeleaf 소스(`TemporalObjects`/`TemporalFormattingUtils`)까지 뒤져 `#temporals.format(YearMonth, ...)`
+  동작을 직접 검증하는 등 코드 리뷰로 꼼꼼히 대체 검증. 리뷰 중 실제로 메시지 키 오용(체크인 완료 건수에
+  엉뚱한 "체크인 예정 없음" 문구를 이어붙이던 버그), 누락된 CSS 클래스(`.ops-table`/`.status-pill2`),
+  3-인자 `#numbers.formatDecimal` EL 표현식의 불확실성(서버 계산으로 대체) 등을 찾아 수정.

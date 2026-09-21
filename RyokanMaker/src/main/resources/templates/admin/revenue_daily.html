@@ -1,0 +1,136 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_revenue_daily}">清流庵 관리자 - 일자별 매출조회</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
+<div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='revenue_daily')}"></div>
+
+<div class="admin-shell">
+
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='revenue_daily', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=true)}"></div>
+
+  <main class="admin-main" th:with="_p1=${@tr.prefetch(paidTxns, 'roomName', 'planName')}, _p2=${@tr.prefetch(pendingTxns, 'roomName', 'planName')}">
+
+    <div class="admin-head">
+      <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue}">매출현황</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue_daily}">일자별 매출조회</span></div>
+      <h1 th:text="#{adm.revenue_daily}">일자별 매출조회</h1>
+      <div class="rule"></div>
+      <p th:text="#{adm.rvd_desc}">선택한 기간의 매출을 만든 개별 예약·결제 내역을 조회합니다.</p>
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <div class="stat-tile accent-gold">
+        <div class="label" th:text="#{adm.rvd_paid_total}">결제완료 총액</div>
+        <div class="value" th:text="'₩' + ${#numbers.formatInteger(paidTotal, 0, 'COMMA')}">₩0</div>
+        <div class="sub" style="color:var(--gold-deep);" th:text="#{adm.count(${paidCount})}">0건</div>
+      </div>
+      <div class="stat-tile" th:each="m : ${methodStats}">
+        <div class="label" th:text="${@tr.t(m.method)}">결제수단</div>
+        <div class="value" th:text="'₩' + ${#numbers.formatInteger(m.total, 0, 'COMMA')}">₩0</div>
+        <div class="sub" style="color:var(--ink-faint);"
+             th:text="#{adm.count(${m.count})} + ' · ' + ${m.percent} + '%'">0건 · 0%</div>
+      </div>
+      <div class="stat-tile accent-muted">
+        <div class="label" th:text="#{adm.rvd_pending}">결제대기</div>
+        <div class="value" th:text="#{adm.count(${pendingCount})}">0건</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2 th:text="#{adm.rvd_txn_list}">거래 내역</h2>
+        <span class="hint" th:text="#{adm.rvd_txn_hint}">결제완료 건만 표시</span>
+      </div>
+      <div class="period-filter">
+        <a class="pf-btn" th:classappend="${period == 'month'} ? 'active'" th:href="@{/Admin/revenue_daily(period='month')}" th:text="#{adm.rvd_period_month}">이번달</a>
+        <a class="pf-btn" th:classappend="${period == 'today'} ? 'active'" th:href="@{/Admin/revenue_daily(period='today')}" th:text="#{adm.rvd_period_today}">오늘</a>
+        <a class="pf-btn" th:classappend="${period == 'week'} ? 'active'" th:href="@{/Admin/revenue_daily(period='week')}" th:text="#{adm.rvd_period_week}">이번주</a>
+        <a class="pf-btn" th:classappend="${period == 'lastmonth'} ? 'active'" th:href="@{/Admin/revenue_daily(period='lastmonth')}" th:text="#{adm.rvd_period_lastmonth}">지난달</a>
+        <form th:action="@{/Admin/revenue_daily}" method="get">
+          <input type="hidden" name="period" value="custom">
+          <span th:text="#{adm.rvd_period_custom}">직접 지정</span>
+          <input type="date" name="start" th:value="${rangeStart}">
+          ~
+          <input type="date" name="end" th:value="${rangeEnd}">
+          <button class="pf-go" type="submit" th:text="#{adm.rvd_go}">조회</button>
+        </form>
+      </div>
+      <div class="panel-body">
+        <table class="txn-table" th:if="${!#lists.isEmpty(paidTxns)}">
+          <thead>
+            <tr>
+              <th th:text="#{adm.rvd_col_checkin}">체크인일</th>
+              <th th:text="#{adm.rvd_col_resv}">예약번호</th>
+              <th th:text="#{adm.rvd_col_guest}">고객명</th>
+              <th th:text="#{adm.rvd_col_room}">객실</th>
+              <th th:text="#{adm.rvd_col_plan}">플랜</th>
+              <th th:text="#{adm.rvd_col_method}">결제수단</th>
+              <th style="text-align:right;" th:text="#{adm.rvd_col_amount}">금액</th>
+              <th th:text="#{adm.rvd_col_status}">상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="t : ${paidTxns}">
+              <td th:text="${#temporals.format(t.resvCheckIn, 'yyyy.MM.dd')}">2026.09.20</td>
+              <td th:text="'#' + ${t.resvNum}">#10456</td>
+              <td class="guest" th:text="${t.userNickname}">고객명</td>
+              <td th:text="${@tr.t(t.roomName)}">객실</td>
+              <td th:text="${t.planName != null} ? ${@tr.t(t.planName)} : '-'">플랜</td>
+              <td><span class="pay-pill" th:text="${@tr.t(t.resvPayMethod)}">카드</span></td>
+              <td class="num" th:text="'₩' + ${#numbers.formatInteger(t.resvPrice, 0, 'COMMA')}">₩0</td>
+              <td><span class="status-pill3 paid" th:text="${@tr.label('resv.status', t.resvPayStatus)}">결제완료</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="checklist-empty" th:if="${#lists.isEmpty(paidTxns)}" th:text="#{adm.rvd_empty}">조회된 거래가 없습니다.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2 th:text="#{adm.rvd_pending_list}">결제대기 내역</h2>
+        <span class="hint" th:text="#{adm.rvd_pending_hint(${pendingCount})}">0건 · 매출 합계에서 제외됨</span>
+      </div>
+      <div class="panel-body" style="padding-bottom:24px;">
+        <table class="txn-table" th:if="${!#lists.isEmpty(pendingTxns)}">
+          <thead>
+            <tr>
+              <th th:text="#{adm.rvd_col_checkin}">체크인일</th>
+              <th th:text="#{adm.rvd_col_resv}">예약번호</th>
+              <th th:text="#{adm.rvd_col_guest}">고객명</th>
+              <th th:text="#{adm.rvd_col_room}">객실</th>
+              <th th:text="#{adm.rvd_col_plan}">플랜</th>
+              <th th:text="#{adm.rvd_col_method}">결제수단</th>
+              <th style="text-align:right;" th:text="#{adm.rvd_col_amount}">금액</th>
+              <th th:text="#{adm.rvd_col_status}">상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="t : ${pendingTxns}" class="void">
+              <td th:text="${#temporals.format(t.resvCheckIn, 'yyyy.MM.dd')}">2026.09.18</td>
+              <td th:text="'#' + ${t.resvNum}">#10453</td>
+              <td class="guest" th:text="${t.userNickname}">고객명</td>
+              <td th:text="${@tr.t(t.roomName)}">객실</td>
+              <td th:text="${t.planName != null} ? ${@tr.t(t.planName)} : '-'">플랜</td>
+              <td><span class="pay-pill" th:text="${t.resvPayMethod != null} ? ${@tr.t(t.resvPayMethod)} : '-'">-</span></td>
+              <td class="num" th:text="'₩' + ${#numbers.formatInteger(t.resvPrice, 0, 'COMMA')}">₩0</td>
+              <td><span class="status-pill3 pending" th:text="${@tr.label('resv.status', t.resvPayStatus)}">결제대기</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="checklist-empty" th:if="${#lists.isEmpty(pendingTxns)}" th:text="#{adm.rvd_pending_empty}">결제대기 내역이 없습니다.</div>
+      </div>
+    </div>
+
+    <div style="height:56px;"></div>
+  </main>
+</div>
+
+</body>
+</html>

@@ -38,7 +38,7 @@
 
 <div class="admin-shell">
 
-  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='reservation', showInfoSubmenu=false, showRequestsLink=false)}"></div>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='reservation', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
   <main class="admin-main" th:with="_p1=${@tr.prefetch(reservationList, 'roomName', 'planName')}, _p2=${detail != null ? @tr.prefetch(detail.rooms, 'roomName', 'planName') : ''}, _p3=${detail != null ? @tr.prefetch(detail.restaurants, 'courseName', 'restaurantSidemenu') : ''}, _p4=${detail != null ? @tr.prefetch(detail.onsens, 'onsenName') : ''}, _p5=${detail != null ? @tr.prefetchAll(detail.resvRequest, detail.userCountry, detail.resvPayMethod) : ''}">

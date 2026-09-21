@@ -117,23 +117,10 @@
 					<span class="num" th:text="${mealStep}">2</span><span class="label" th:text="#{resv.step_meal}">식사(플랜) 선택</span><span class="line"></span>
 				</div>
 
-				<section style="padding: 0 56px 0;">
-					<div class="search-bar" style="margin-bottom: 28px;">
-						<div class="search-field" style="padding-left: 0;">
-							<span class="field-label" th:text="#{resv.use_date}">이용일</span> <span class="field-value"
-								th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')}">2026.09.13</span>
-						</div>
-						<div class="search-field" style="border-right: none;">
-							<span class="field-label" th:text="#{resv.people}">인원</span> <span class="field-value" th:text="#{resv.adult_n(${searchCondition.adultCount})}">성인 2명</span>
-						</div>
-						<button class="btn-gold" style="margin-left: auto;" th:text="#{common.search}">검색</button>
-					</div>
-				</section>
-
-				<section class="course-grid">
+<section class="course-grid">
 					<div class="course-card" th:each="course : ${courses}">
 						<div class="thumb">
-							<img th:src="@{${course.restaurantCourseImage}}" alt="">
+							<img th:if="${course.thumbnailUrl != null}" th:src="@{${course.thumbnailUrl}}" alt="">
 						</div>
 						<div class="body">
 							<h4 th:text="${@tr.t(course.restaurantCourseName)}">달 코스 『계절의 맛 가이세키』</h4>
@@ -141,8 +128,15 @@
 								th:text="${@tr.t(course.restaurantCourseInfo)}">코스 설명</p>
 							<p class="tbd"
 								th:unless="${course.restaurantSaleYn == 'Y'}" th:text="#{resv.course_tbd}">[코스 상세 설명 준비 중입니다]</p>
+							<p style="margin-top: 6px; font-size: 13px;">
+								<span th:text="'₩' + ${#numbers.formatInteger(course.restaurantCoursePrice == null ? 0 : course.restaurantCoursePrice, 0, 'COMMA')}">₩30,000</span>
+								<span class="price" th:if="${course.extraCharge > 0}"
+									th:text="#{resv.extra_charge(${#numbers.formatInteger(course.extraCharge, 0, 'COMMA')})}">(+₩10,000 추가)</span>
+								<span class="price" th:unless="${course.extraCharge > 0}" th:text="#{resv.base_item}">(기준)</span>
+							</p>
 							<input type="radio" name="courseIdx" style="display:none;"
 								th:value="${course.restaurantCourseIdx}"
+								th:attr="data-extra=${course.extraCharge}"
 								th:disabled="${course.restaurantSaleYn != 'Y'}">
 							<button type="button" class="btn-gold" style="margin-top: 8px;"
 								th:disabled="${course.restaurantSaleYn != 'Y'}"
@@ -150,6 +144,8 @@
 						</div>
 					</div>
 				</section>
+
+					<p style="font-size: 12px; color: var(--ink-faint); padding: 0 56px; margin: 8px 0 24px;" th:text="#{resv.course_per_night_note}">※ 코스 추가요금은 1박 기준이며 숙박 일수만큼 적용됩니다.</p>
 			</div>
 
 			<!-- ③ 온천 선택 : 이 플랜에 온천이 포함된 경우에만 표시 -->
@@ -159,46 +155,58 @@
 				</div>
 
 				<section style="padding: 0 56px 0;">
-					<div class="search-bar" style="margin-bottom: 24px;">
-						<div class="search-field"
-							style="padding-left: 0; border-right: none;">
-							<span class="field-label" th:text="#{resv.use_date}">이용일</span> <span class="field-value"
-								th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')}">2026.09.13</span>
+						<div class="search-bar" style="margin-bottom: 24px;">
+							<div class="search-field" style="padding-left: 0; border-right: none;">
+								<span class="field-label" th:text="#{resv.use_date}">이용일</span>
+								<span class="field-value" th:text="${#temporals.format(searchCondition.checkIn, 'yyyy.MM.dd')} + ' ~ ' + ${#temporals.format(searchCondition.checkOut, 'yyyy.MM.dd')}">2026.09.22 ~ 2026.09.24</span>
+							</div>
+							<p style="font-size: 12px; color: var(--ink-faint); margin: 0 0 0 24px;" th:text="#{resv.onsen_intro}">전세탕(대절) 예약 — 원하시는 시간대를 선택해주세요.</p>
 						</div>
-						<p
-							style="font-size: 12px; color: var(--ink-faint); margin: 0 0 0 24px;" th:text="#{resv.onsen_intro}">전세탕(대절) 예약 — 원하시는 시간대를 선택해주세요.</p>
-					</div>
-				</section>
+					</section>
 
 				<section style="padding: 0 56px 40px;">
-					<div style="overflow-x: auto;">
-						<table class="slot-table">
-							<thead>
-								<tr>
-									<th style="text-align: left; padding-left: 16px;" th:text="#{resv.private_bath}">전세탕</th>
-									<th th:each="slot : ${baths[0].slots}" th:text="${slot.time}">15:00</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="bath : ${baths}">
-									<td class="roomname" th:text="${@tr.t(bath.bathName)}">노천탕 (露天湯)</td>
-									<td th:each="slot : ${bath.slots}">
-										<input type="radio" name="onsenIdx" style="display:none;"
-											th:value="${bath.onsenIdx}"
-											th:attr="data-time=${slot.time}"
-											th:disabled="${!slot.available}">
-										<button type="button" class="slot-btn"
-											th:classappend="${slot.available} ? '' : 'taken'"
-											th:disabled="${!slot.available}"
-											th:text="${slot.available} ? #{resv.slot_ok} : #{resv.full}"
-											onclick="this.previousElementSibling.click()">예약가능</button>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+					<p style="font-size: 12px; color: var(--ink-faint); margin: 0 0 14px;" th:text="#{resv.onsen_hint}">날짜별로 원하시는 전세탕과 시간대를 선택해주세요.</p>
+					<div class="onsen-days" style="max-height: 520px; overflow-y: auto; border: 1px solid var(--line);">
+						<details class="onsen-day" th:each="day : ${onsenDays}" style="border-bottom: 1px solid var(--line);">
+							<summary style="cursor: pointer; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; font-family: var(--serif);">
+								<span th:text="${#temporals.format(day.date, 'M/d (E)')}">9/19 (토)</span>
+								<span class="onsen-day-pick price" th:attr="data-date=${day.date}"></span>
+							</summary>
+							<div style="overflow-x: auto; padding: 0 12px 12px;">
+								<table class="slot-table">
+									<thead>
+										<tr>
+											<th style="text-align: left; padding-left: 16px;" th:text="#{resv.private_bath}">전세탕</th>
+											<th th:each="slot : ${#lists.isEmpty(day.baths) ? {} : day.baths[0].slots}" th:text="${slot.time}">15:00</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr th:each="bath : ${day.baths}">
+											<td class="roomname">
+												<span th:text="${@tr.t(bath.bathName)}">노천탕 (露天湯)</span>
+												<span class="price" style="display:block;" th:if="${bath.extraCharge > 0}"
+													th:text="#{resv.extra_charge(${#numbers.formatInteger(bath.extraCharge, 0, 'COMMA')})}">(+₩10,000 추가)</span>
+												<span class="price" style="display:block;" th:unless="${bath.extraCharge > 0}"
+													th:text="#{resv.base_item}">(기준)</span>
+											</td>
+											<td th:each="slot : ${bath.slots}">
+												<input type="radio" class="onsen-radio" style="display:none;"
+													th:name="'onsen-' + ${day.date}"
+													th:value="${day.date} + '|' + ${bath.onsenIdx} + '|' + ${slot.time}"
+													th:attr="data-time=${slot.time},data-extra=${bath.extraCharge}"
+													th:disabled="${!slot.available}">
+												<button type="button" class="slot-btn"
+													th:classappend="${slot.available} ? '' : 'taken'"
+													th:disabled="${!slot.available}"
+													th:text="${slot.available} ? #{resv.slot_ok} : #{resv.full}"
+													onclick="pickOnsen(this)">예약가능</button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</details>
 					</div>
-					<p
-						style="font-size: 12px; color: var(--ink-faint); margin-top: 14px;" th:text="#{resv.onsen_hint}">시간대를 선택하시면 선택하신 전세탕과 시간이 하단 예약 요약에 담깁니다.</p>
 				</section>
 			</div>
 
@@ -213,6 +221,7 @@
                          data-plan-price=${selectedPlan.planPrice},
                          data-check-in=${searchCondition.checkIn},
                          data-check-out=${searchCondition.checkOut},
+                         data-nights=${nights},
                          data-adult-count=${searchCondition.adultCount},
                          data-child-count=${searchCondition.childCount},
                          data-room-count=${searchCondition.roomCount},
@@ -240,14 +249,16 @@
 					return;
 				}
 
-				var selectedOnsen = document.querySelector('input[name="onsenIdx"]:checked');
-				if (onsenRequired && !selectedOnsen) {
+				var selectedOnsen = document.querySelectorAll('input.onsen-radio:checked');
+				if (onsenRequired && selectedOnsen.length === 0) {
 					alert(this.getAttribute('data-msg-onsen'));
 					return;
 				}
 
 				var planPrice = parseInt(this.getAttribute('data-plan-price'), 10);
-				var extraCharge = parseInt(selectedRoom.getAttribute('data-extra'), 10);
+				var extraCharge = parseInt(selectedRoom.getAttribute('data-extra'), 10)
+						+ (selectedCourse ? parseInt(selectedCourse.getAttribute('data-extra'), 10) * parseInt(this.getAttribute('data-nights'), 10) : 0)
+						+ Array.prototype.reduce.call(selectedOnsen, function (sum, r) { return sum + parseInt(r.getAttribute('data-extra'), 10); }, 0);
 				var totalAmount = planPrice + extraCharge;
 
 				var params = new URLSearchParams();
@@ -260,16 +271,33 @@
 				params.set('childCount', this.getAttribute('data-child-count'));
 				params.set('roomCount', this.getAttribute('data-room-count'));
 				if (selectedCourse) params.set('courseIdx', selectedCourse.value);
-				if (selectedOnsen) {
-					params.set('onsenIdx', selectedOnsen.value);
-					params.set('onsenTimeSlot', selectedOnsen.getAttribute('data-time'));
-				}
+				selectedOnsen.forEach(function (r) {
+					params.append('onsen', r.value);
+				});
 
 				window.location.href = '/payment?' + params.toString();
 			});
 
-			// 선택된 코스/온천 시간대 버튼에 시각적 표시
-			document.querySelectorAll('input[name="courseIdx"], input[name="onsenIdx"]').forEach(function (radio) {
+			// 온천 날짜 목록은 첫날만 펼쳐서 시작
+			var firstOnsenDay = document.querySelector('.onsen-day');
+			if (firstOnsenDay) firstOnsenDay.setAttribute('open', '');
+
+			// 온천 시간대: 다시 누르면 선택 해제, 하루에 하나만 선택되고 날짜 헤더에 선택 내용을 표시
+			function pickOnsen(btn) {
+				var radio = btn.previousElementSibling;
+				if (radio.disabled) return;
+				radio.checked = !radio.checked;
+				var checked = null;
+				document.querySelectorAll('input[name="' + radio.name + '"]').forEach(function (r) {
+					r.nextElementSibling.classList.toggle('btn-selected', r.checked);
+					if (r.checked) checked = r;
+				});
+				var label = document.querySelector('.onsen-day-pick[data-date="' + radio.name.replace('onsen-', '') + '"]');
+				if (label) label.textContent = checked ? checked.closest('tr').querySelector('.roomname span').textContent.trim() + ' ' + checked.getAttribute('data-time') : '';
+			}
+
+			// 선택된 코스 버튼에 시각적 표시
+			document.querySelectorAll('input[name="courseIdx"]').forEach(function (radio) {
 				radio.addEventListener('change', function () {
 					document.querySelectorAll('input[name="' + this.name + '"]').forEach(function (r) {
 						if (r.nextElementSibling) r.nextElementSibling.classList.remove('btn-selected');

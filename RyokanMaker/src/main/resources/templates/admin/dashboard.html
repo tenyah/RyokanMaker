@@ -1,0 +1,214 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_dashboard}">清流庵 관리자 - 대시보드</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
+<div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='dashboard')}"></div>
+
+<div class="admin-shell">
+
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='dashboard', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
+
+  <main class="admin-main"
+        th:with="_p1=${@tr.prefetch(todayCheckIns, 'roomName', 'planName')}, _p2=${@tr.prefetch(todayCheckOuts, 'roomName', 'planName')}, _p3=${@tr.prefetch(roomShare, 'roomName')}, _p4=${@tr.prefetch(planSettlement, 'planName')}">
+
+    <div class="admin-head" style="display:flex;align-items:flex-end;justify-content:space-between;">
+      <div>
+        <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.dashboard}">대시보드</span></div>
+        <h1 th:text="#{adm.dashboard}">대시보드</h1>
+        <div class="rule"></div>
+        <p th:text="#{adm.dash_desc}">오늘 운영 현황을 한눈에 확인합니다.</p>
+      </div>
+    </div>
+
+    <!-- KPI 요약 -->
+    <div class="stat-grid cols-4">
+      <div class="stat-tile accent-gold">
+        <div class="label" th:text="#{adm.dash_occ}">오늘 객실 가동률 (OCC)</div>
+        <div class="value" th:text="${stats.occupancyRate} + '%'">0%</div>
+        <div class="sub" style="color:var(--gold-deep);" th:text="#{adm.dash_occ_sub(${stats.roomsTotal}, ${stats.roomsOccupiedToday})}">전체 객실 0개 중 0개 재실</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label" th:text="#{adm.dash_checkin}">오늘 체크인</div>
+        <div class="value" th:text="#{adm.count(${stats.checkInsToday})}">0건</div>
+        <div class="sub" style="color:var(--ink-faint);" th:text="#{adm.dash_completed_n(${stats.checkInsCompleted})}">0건 완료</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label" th:text="#{adm.dash_checkout}">오늘 체크아웃</div>
+        <div class="value" th:text="#{adm.count(${stats.checkOutsToday})}">0건</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label" th:text="#{adm.dash_today_revenue}">오늘 매출</div>
+        <div class="value" th:text="'₩' + ${#numbers.formatInteger(stats.todayRevenue, 0, 'COMMA')}">₩0</div>
+        <div class="sub" style="color:var(--ink-faint);" th:text="#{adm.dash_mtd_revenue} + ' ₩' + ${#numbers.formatInteger(stats.monthToDateRevenue, 0, 'COMMA')}">이번 달 누적 매출 ₩0</div>
+      </div>
+    </div>
+
+    <!-- 매출 및 예약 트렌드 -->
+    <div class="section-label" style="padding:40px 56px 0;display:flex;align-items:baseline;justify-content:space-between;">
+      <div>
+        <h2 style="font-family:var(--serif);font-weight:400;font-size:19px;color:var(--ink);margin:0;" th:text="#{adm.dash_trend}">매출 및 예약 트렌드</h2>
+      </div>
+      <a style="font-size:12px;color:var(--gold-deep);" th:href="@{/Admin/revenue_monthly}" th:text="#{adm.dash_trend_link} + ' →'">전체보기 →</a>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2 th:text="#{adm.rvm_trend}">월별 매출 추이</h2>
+        <span class="hint" th:text="#{adm.rvm_trend_hint}">올해(실선) vs 전년(점선)</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box tall"><canvas id="chartMonthly"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel-row">
+      <div class="panel">
+        <div class="panel-header"><h2 th:text="#{adm.rvm_room_share}">객실별 매출 비중</h2></div>
+        <div class="panel-body">
+          <div class="chart-box"><canvas id="chartRoom"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2 th:text="#{adm.rvm_plan_settle}">플랜별 매출 정산</h2></div>
+        <div class="panel-body">
+          <div class="chart-box"><canvas id="chartPlan"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오늘 체크인/체크아웃 -->
+    <div class="panel-row" style="margin-top:40px;">
+      <div class="panel">
+        <div class="panel-header"><h2 th:text="#{adm.dash_checkin_list(${#lists.size(todayCheckIns)})}">오늘 체크인</h2></div>
+        <div class="panel-body" style="padding:0 26px 10px;">
+          <table class="ops-table" th:if="${!#lists.isEmpty(todayCheckIns)}">
+            <thead>
+              <tr>
+                <th th:text="#{adm.rvd_col_guest}">고객명</th>
+                <th th:text="#{adm.rvd_col_room}">객실</th>
+                <th>시간</th>
+                <th th:text="#{adm.rvd_col_status}">상태</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="row : ${todayCheckIns}" th:classappend="${row.completed} ? 'is-done'">
+                <td class="guest" th:text="${row.userNickname}">고객명</td>
+                <td th:text="${@tr.t(row.roomName)}">객실</td>
+                <td class="time" th:text="${row.resvArrivalTime != null} ? (${row.resvArrivalTime} + ':00') : '-'">15:00</td>
+                <td>
+                  <span th:if="${row.completed}" class="status-pill2 done" th:text="#{adm.dash_arrived}">완료</span>
+                  <span th:unless="${row.completed}" class="status-pill2 pending" th:text="#{adm.dash_pending_arrival}">예정</span>
+                </td>
+                <td>
+                  <span th:if="${row.nights > 1}" class="tag note" th:text="#{adm.dash_nights(${row.nights})}">2박</span>
+                  <span th:if="${row.hasRequest}" class="tag note" th:text="${@tr.t(row.resvRequest)}">요청사항</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="checklist-empty" th:if="${#lists.isEmpty(todayCheckIns)}" th:text="#{adm.dash_no_checkin}">오늘 체크인 예정이 없습니다.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h2 th:text="#{adm.dash_checkout_list(${#lists.size(todayCheckOuts)})}">오늘 체크아웃</h2></div>
+        <div class="panel-body" style="padding:0 26px 10px;">
+          <table class="ops-table" th:if="${!#lists.isEmpty(todayCheckOuts)}">
+            <thead>
+              <tr>
+                <th th:text="#{adm.rvd_col_guest}">고객명</th>
+                <th th:text="#{adm.rvd_col_room}">객실</th>
+                <th>비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="row : ${todayCheckOuts}">
+                <td class="guest" th:text="${row.userNickname}">고객명</td>
+                <td th:text="${@tr.t(row.roomName)}">객실</td>
+                <td>
+                  <span th:if="${row.nights > 1}" class="tag note" th:text="#{adm.dash_nights(${row.nights})}">2박</span>
+                  <span th:if="${row.hasRequest}" class="tag note" th:text="${@tr.t(row.resvRequest)}">요청사항</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="checklist-empty" th:if="${#lists.isEmpty(todayCheckOuts)}" th:text="#{adm.dash_no_checkout}">오늘 체크아웃 예정이 없습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:56px;"></div>
+  </main>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+const GOLD = '#B79966', GOLD_DEEP = '#8F7748', GOLD_PALE = '#F1E7D3', INK_SOFT = '#6E675C', INK_FAINT = '#A79E8F', LINE = '#EDE6D8', MAINT = '#F3ECE3', BG_SOFT = '#F7F5F0';
+
+const locale = /*[[${#locale.language}]]*/ 'ko';
+const axisDivisor = locale === 'en' ? 1000 : 10000;
+const axisSuffix = locale === 'en' ? 'K' : (locale === 'ja' ? '万' : '만');
+const axisFormat = v => Math.round(v / axisDivisor) + axisSuffix;
+
+const thisYearLabel = /*[[#{adm.chart_this_year}]]*/ '올해';
+const lastYearLabel = /*[[#{adm.chart_last_year}]]*/ '전년';
+const monthLabel = m => locale === 'en' ? ('M' + m) : (m + (locale === 'ja' ? '月' : '월'));
+
+const trend = /*[[${monthlyTrend}]]*/ [];
+new Chart(document.getElementById('chartMonthly'), {
+  type: 'bar',
+  data: {
+    labels: trend.map(p => monthLabel(p.month)),
+    datasets: [
+      { label: thisYearLabel, type: 'bar', data: trend.map(p => p.currentYearAmount), backgroundColor: GOLD, borderRadius: 3, order: 2 },
+      { label: lastYearLabel, type: 'line', data: trend.map(p => p.prevYearAmount), borderColor: INK_SOFT, backgroundColor: 'transparent', borderDash: [5,4], tension: 0.3, order: 1, pointRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      y: { ticks: { callback: axisFormat }, grid: { color: LINE } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+const roomShare = /*[[${roomShare}]]*/ [];
+const roomPalette = [GOLD_DEEP, GOLD, INK_FAINT, GOLD_PALE, MAINT, BG_SOFT];
+new Chart(document.getElementById('chartRoom'), {
+  type: 'doughnut',
+  data: {
+    labels: roomShare.map(r => r.roomName),
+    datasets: [{ data: roomShare.map(r => r.amount), backgroundColor: roomShare.map((r,i) => roomPalette[i % roomPalette.length]), borderColor: '#fff', borderWidth: 2 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10.5 } } } } }
+});
+
+const planSettlement = /*[[${planSettlement}]]*/ [];
+new Chart(document.getElementById('chartPlan'), {
+  type: 'bar',
+  data: {
+    labels: planSettlement.map(p => p.planName),
+    datasets: [{ data: planSettlement.map(p => p.amount), backgroundColor: GOLD, borderRadius: 3, barThickness: 16 }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { x: { ticks: { callback: axisFormat, font: { size: 10 } }, grid: { color: LINE } }, y: { grid: { display: false }, ticks: { font: { size: 10.5 } } } }
+  }
+});
+/*]]>*/
+</script>
+
+</body>
+</html>

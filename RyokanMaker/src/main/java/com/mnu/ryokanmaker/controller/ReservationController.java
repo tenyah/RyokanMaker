@@ -141,8 +141,12 @@ public class ReservationController {
         model.addAttribute("selectedPlan", selectedPlan);
         model.addAttribute("searchCondition", new SearchConditionDto(checkIn, checkOut, adultCount, childCount, roomCount));
         model.addAttribute("rooms", reservationService.getRoomAvailability(checkIn, checkOut, adultCount, childCount));
+        model.addAttribute("nights", java.time.temporal.ChronoUnit.DAYS.between(checkIn, checkOut));
         model.addAttribute("courses", reservationService.getCourses());
-        model.addAttribute("baths", reservationService.getBathAvailability());
+        List<com.mnu.ryokanmaker.dto.OnsenDayDto> onsenDays = reservationService.getOnsenDays(checkIn, checkOut);
+        model.addAttribute("onsenDays", onsenDays);
+        // 온천 이름 번역 프리패치용 (날짜와 무관하게 이름은 동일)
+        model.addAttribute("baths", onsenDays.isEmpty() ? Collections.emptyList() : onsenDays.get(0).getBaths());
 
         return "reservation/reservation";
     }

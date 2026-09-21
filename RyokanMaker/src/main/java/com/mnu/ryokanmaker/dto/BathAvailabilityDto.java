@@ -15,4 +15,5 @@ public class BathAvailabilityDto {
     private Integer onsenIdx;
     private String bathName;
     private List<SlotDto> slots;
+    private Integer extraCharge; // 판매중 온천 최저가 대비 추가요금
 }

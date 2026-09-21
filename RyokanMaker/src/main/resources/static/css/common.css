@@ -732,4 +732,86 @@ img { max-width: 100%; display: block; }
   resize: vertical; line-height: 1.8; font-size: 16px; min-height: 260px; width: 100%; box-sizing: border-box;
 }
 .form-actions { display: flex; gap: 12px; justify-content: center; padding-top: 8px; }
+
+/* ============================================================
+   관리자 - 대시보드 / 매출현황 전용 스타일
+   ============================================================ */
+
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 56px 0; }
+.panel-row .panel { margin: 0; }
+.chart-box { position: relative; height: 260px; }
+.chart-box.tall { height: 300px; }
+.chart-box.short { height: 200px; }
+
+/* ---- 월 이동 네비게이터 (월매출조회) ---- */
+.month-nav { display: flex; align-items: center; gap: 14px; }
+.month-nav button {
+  width: 30px; height: 30px; border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+  cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.month-nav button:hover:not(:disabled) { border-color: var(--gold-deep); color: var(--gold-deep); }
+.month-nav button:disabled { color: var(--line); cursor: not-allowed; }
+.month-nav .label { font-family: var(--serif); font-size: 16px; color: var(--ink); min-width: 96px; text-align: center; }
+
+/* ---- 매출 캘린더 (월매출조회) ---- */
+.rev-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.rev-cal .dow { text-align: center; font-size: 11px; color: var(--ink-faint); padding-bottom: 6px; }
+.rev-cal .day { border: 1px solid var(--line); min-height: 64px; padding: 8px; font-size: 11px; background: #fff; }
+.rev-cal .day.empty { border: none; background: transparent; }
+.rev-cal .day.weekend { background: var(--gold-pale); border-color: var(--gold-pale); }
+.rev-cal .day.future { color: var(--ink-faint); background: var(--bg-soft); border-color: var(--line); }
+.rev-cal .day .d { font-family: var(--serif); font-size: 13px; color: var(--ink); margin-bottom: 4px; }
+.rev-cal .day .amt { font-size: 11px; color: var(--gold-deep); font-weight: 500; }
+.rev-cal .day.weekend .d { color: var(--gold-deep); }
+.rev-cal .day.future .amt { color: var(--ink-faint); }
+
+.total-banner { display: flex; align-items: baseline; justify-content: space-between; margin-top: 20px; padding: 18px 24px; background: var(--gold-pale); border: 1px solid var(--gold-pale); }
+.total-banner .label { font-size: 13px; color: var(--gold-deep); font-weight: 500; }
+.total-banner .value { font-family: var(--serif); font-size: 26px; color: var(--gold-deep); font-weight: 500; }
+
+.legend2 { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 12px; color: var(--ink-soft); }
+.legend2 .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+
+/* ---- 기간 필터 (일자별 매출조회) ---- */
+.period-filter { display: flex; gap: 8px; padding: 20px 28px 0; flex-wrap: wrap; }
+.period-filter a.pf-btn {
+  font-family: var(--sans); font-size: 12.5px; font-weight: 400; padding: 8px 16px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink-soft); cursor: pointer; text-decoration: none;
+}
+.period-filter a.pf-btn.active { background: var(--gold-pale); border-color: var(--gold); color: var(--gold-deep); font-weight: 500; }
+.period-filter form { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-faint); }
+.period-filter input[type="date"] { border: 1px solid var(--line); padding: 7px 8px; font-family: var(--sans); font-size: 12px; color: var(--ink); }
+.period-filter button.pf-go { border: 1px solid var(--line); background: #fff; color: var(--ink-soft); padding: 7px 14px; font-size: 12px; cursor: pointer; }
+
+/* ---- 거래 내역 표 (일자별 매출조회) ---- */
+.txn-table { width: 100%; border-collapse: collapse; }
+.txn-table th, .txn-table td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); font-size: 12.5px; white-space: nowrap; }
+.txn-table th { color: var(--ink-faint); font-weight: 400; font-size: 11px; letter-spacing: .04em; border-bottom: 2px solid var(--line); }
+.txn-table td.num { text-align: right; font-family: var(--serif); font-size: 13.5px; color: var(--ink); }
+.txn-table td.guest { font-family: var(--serif); font-size: 13px; color: var(--ink); }
+.txn-table tr:last-child td { border-bottom: none; }
+.txn-table tr.void td { opacity: .6; }
+
+.pay-pill { font-size: 10.5px; padding: 3px 9px; border-radius: 20px; display: inline-block; background: var(--maint); color: var(--ink-soft); }
+.status-pill3 { font-size: 10.5px; font-weight: 500; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+.status-pill3.paid { background: var(--gold-pale); color: var(--gold-deep); }
+.status-pill3.pending { background: var(--warn-bg); color: var(--warn); }
+
+/* ---- 오늘 체크인/체크아웃 목록 (대시보드) ---- */
+.ops-table { width: 100%; border-collapse: collapse; }
+.ops-table th, .ops-table td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+.ops-table th { color: var(--ink-faint); font-weight: 400; font-size: 11px; letter-spacing: .04em; border-bottom: 2px solid var(--line); }
+.ops-table td.guest { font-family: var(--serif); font-size: 13.5px; color: var(--ink); }
+.ops-table td.time { font-family: var(--serif); color: var(--ink); white-space: nowrap; }
+.ops-table tr:last-child td { border-bottom: none; }
+.ops-table tr.is-done { opacity: .55; }
+
+.status-pill2 { font-size: 10.5px; font-weight: 500; padding: 3px 10px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+.status-pill2.done { background: var(--bg-soft); color: var(--ink-faint); }
+.status-pill2.pending { background: var(--gold-pale); color: var(--gold-deep); }
+
+.tag { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-right: 4px; }
+.tag.note { background: var(--bg-soft); color: var(--ink-soft); }
+.tag.pending { background: var(--warn-bg); color: var(--warn); }
+.checklist-empty { padding: 32px 4px; text-align: center; color: var(--ink-faint); font-size: 13px; }
 .account-dropdown-item.danger:hover svg { color: var(--warn); }

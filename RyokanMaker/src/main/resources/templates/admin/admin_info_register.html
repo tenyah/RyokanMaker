@@ -74,7 +74,7 @@
 
 <div class="admin-shell">
 
-  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false)}"></div>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
   <main class="admin-main" th:with="_p1=${@tr.prefetch(roomList, 'roomName', 'roomLevel', 'roomMemo')}, _p2=${@tr.prefetch(courseList, 'restaurantCourseName', 'restaurantCourseInfo', 'restaurantCourseMemo')}, _p3=${@tr.prefetch(onsenList, 'onsenName', 'onsenInfo', 'onsenMemo')}, _p4=${@tr.prefetch(planList, 'planName', 'planInfo')}, _p5=${@tr.prefetch(facilityList, 'facilityName', 'facilityInfo', 'facilityMemo')}, _p6=${@tr.prefetch(noticeList, 'noticeTitle', 'noticeContent')}">
@@ -258,7 +258,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(courseList)}" th:text="#{adm.ir_course_empty}">등록된 코스가 없습니다.</div>
 
           <div class="list-item" th:each="course : ${courseList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${course.restaurantCourseIdx},data-name=${course.restaurantCourseName},data-info=${course.restaurantCourseInfo},data-memo=${course.restaurantCourseMemo},data-sale=${course.restaurantSaleYn}">
+               th:attr="data-idx=${course.restaurantCourseIdx},data-name=${course.restaurantCourseName},data-info=${course.restaurantCourseInfo},data-memo=${course.restaurantCourseMemo},data-price=${course.restaurantCoursePrice},data-sale=${course.restaurantSaleYn}">
             <div class="thumb">
               <img th:if="${course.thumbnailUrl != null}" th:src="@{${course.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${course.thumbnailUrl != null}" width="20" height="20"><use href="#i-image"/></svg>
@@ -315,6 +315,7 @@
 
         <div class="field-row">
           <div class="field"><label th:text="#{adm.ir_course_name}">코스 이름</label><input type="text" id="restaurantCourseName" name="restaurantCourseName" th:placeholder="#{adm.ir_course_name_ph}" required></div>
+          <div class="field"><label th:text="#{adm.ir_course_price}">코스 가격</label><input type="number" min="0" step="1" id="restaurantCoursePrice" name="restaurantCoursePrice" th:placeholder="#{adm.ir_price_ph}" required></div>
         </div>
 
         <div class="field-row">
@@ -351,7 +352,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(onsenList)}" th:text="#{adm.ir_onsen_empty}">등록된 온천이 없습니다.</div>
 
           <div class="list-item" th:each="onsen : ${onsenList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${onsen.onsenIdx},data-name=${onsen.onsenName},data-info=${onsen.onsenInfo},data-memo=${onsen.onsenMemo},data-sale=${onsen.onsenSaleYn},data-start=${onsen.onsenStartTime},data-end=${onsen.onsenEndTime}">
+               th:attr="data-idx=${onsen.onsenIdx},data-name=${onsen.onsenName},data-info=${onsen.onsenInfo},data-memo=${onsen.onsenMemo},data-price=${onsen.onsenPrice},data-sale=${onsen.onsenSaleYn},data-start=${onsen.onsenStartTime},data-end=${onsen.onsenEndTime}">
             <div class="thumb">
               <img th:if="${onsen.thumbnailUrl != null}" th:src="@{${onsen.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${onsen.thumbnailUrl != null}" width="20" height="20"><use href="#i-image"/></svg>
@@ -409,6 +410,7 @@
 
         <div class="field-row">
           <div class="field"><label th:text="#{adm.ir_onsen_name}">온천 이름</label><input type="text" id="onsenName" name="onsenName" th:placeholder="#{adm.ir_onsen_name_ph}" required></div>
+          <div class="field"><label th:text="#{adm.ir_onsen_price}">온천 가격</label><input type="number" min="0" step="1" id="onsenPrice" name="onsenPrice" th:placeholder="#{adm.ir_price_ph}" required></div>
         </div>
 
         <div class="field-row time-row">
@@ -840,6 +842,7 @@ function editCourse(btn) {
   document.getElementById('restaurantCourseName').value = item.dataset.name || '';
   document.getElementById('restaurantCourseInfo').value = item.dataset.info || '';
   document.getElementById('restaurantCourseMemo').value = item.dataset.memo || '';
+  document.getElementById('restaurantCoursePrice').value = item.dataset.price || '0';
   document.getElementById('restaurantSaleYn').checked = (item.dataset.sale === 'Y');
   document.getElementById('courseFormTitle').textContent = T.courseEdit;
   document.getElementById('courseSubmitLabel').textContent = T.save;
@@ -864,6 +867,7 @@ function editOnsen(btn) {
   document.getElementById('onsenName').value = item.dataset.name || '';
   document.getElementById('onsenInfo').value = item.dataset.info || '';
   document.getElementById('onsenMemo').value = item.dataset.memo || '';
+  document.getElementById('onsenPrice').value = item.dataset.price || '0';
   document.getElementById('onsenStartTime').value = item.dataset.start || '';
   document.getElementById('onsenEndTime').value = item.dataset.end || '';
   document.getElementById('onsenSaleYn').checked = (item.dataset.sale === 'Y');

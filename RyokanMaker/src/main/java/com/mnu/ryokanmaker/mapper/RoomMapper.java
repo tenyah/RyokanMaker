@@ -20,8 +20,8 @@ public interface RoomMapper {
 	/** 예약 시 선택한 방 상세 조회 */
 	public RoomDto findById(@Param("roomIdx") Integer roomIdx);
 
-	/** 특정 등급(roomLevel) 중 최저가 조회 -> 플랜 기준가(작은방)로 사용 */
-	public Long findMinPriceByLevel(@Param("roomLevel") String roomLevel);
+	/** 판매중인 객실 전체 중 최저가 조회 -> 플랜 기준가로 사용 (특정 등급 고정 X) */
+	public Long findMinPrice();
 
 	/** 판매 여부(ROOM_SALE_YN)만 토글 */
 	public int updateSaleYn(@Param("roomIdx") Integer roomIdx, @Param("adminIdx") Integer adminIdx,

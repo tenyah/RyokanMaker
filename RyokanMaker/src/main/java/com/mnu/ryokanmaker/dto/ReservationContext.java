@@ -23,6 +23,5 @@ public class ReservationContext {
     private Integer totalAmount;
     private Integer people;
     private Integer courseIdx;
-    private Integer onsenIdx;
-    private String onsenTimeSlot;
+    private java.util.List<OnsenPickDto> onsenPicks;
 }
