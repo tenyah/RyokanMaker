@@ -25,10 +25,34 @@
 
 **검증:** `mvnw clean compile` + `test-compile` BUILD SUCCESS. **서버 기동/화면 확인은 아직 안 함.** 다국어 전환(KO/EN/JA)에서 방금 손댄 관리자 화면 4개가 제대로 나오는지, 특히 새로 추가한 키 12개와 페이지 넘김이 3개 언어에서 다 보이는지 확인 필요.
 
-**남은 통합 작업:**
-- `origin/eartth21`의 `1032d84`(대시보드 매출현) 반영
-- `origin/yeseong`의 `381d1d0`(예약페이지 시간 추가) 반영
-- 그 다음 push
+**→ 팀 합의로 `domain` 확정 (2026-09-22).** 앞으로 팀원 브랜치를 병합할 때 `dto`로 들어오는 파일은 전부 `domain`으로 옮기고 참조를 치환할 것.
+
+---
+
+## eartth21 · yeseong 병합 완료 + push (2026-09-22) — 팀원 브랜치 전부 통합됨
+
+**결과:** Choiyeongsu13 / eartth21 / yeseong / Test 모두 `HEAD..origin/<branch>` = 0. `origin/june47087-byte`에 push 완료(`300dcfe..254d17a`, 40커밋). origin/master의 2커밋은 `0916 은예성` 추가 후 바로 Revert한 실질 변경 0이라 제외.
+
+**eartth21 (`0535e17`):** `1032d84 대시보드 매출현` — 대시보드(`/Admin/dashboard`), 월/일자별 매출(`/Admin/revenue_monthly`, `/Admin/revenue_daily`), 예약 화면 가격 세부 표시. 새 DTO 12개는 git이 rename을 따라 `domain/`에 자동 배치했고 package 선언과 새 컨트롤러·서비스·매퍼(22개 파일)의 참조를 `domain`으로 치환. 실제 충돌 7개: PaymentController(import·필드 합집합), RoomReservationMapper.java/.xml(양쪽이 다른 메서드 추가 → 둘 다 유지), ReservationService(import, eartth21 쪽이 상위집합), messages 3종(파일 끝 양쪽 추가 → 둘 다 유지). **메시지 키는 3개 언어 모두 667개로 일치, 중복 0** (adf5419에서 팀원이 막 고친 중복 키 버그 재발 방지 차원에서 확인).
+
+**yeseong (`254d17a`) — `-s ours`로 기록 + 고유분만 반영:**
+- `381d1d0`은 오래된 `e3e277e`(9/18) 위에 9/21 시점 프로젝트 전체를 통째로 붙여넣은 커밋이라 그냥 병합하면 **충돌 96개**. 팀 커밋들과 트리 diff를 비교해 **`104a4b1`(관리자 화면 다국어 적용) 스냅샷을 복사해 간 것**으로 판단(diff 479줄로 최소).
+- `104a4b1 → 381d1d0` 실제 변경은 23개 파일. **그중 17개는 eartth21 `1032d84`와 blob이 완전히 동일**(jiji가 yeseong 작업을 가져가 그 위에 대시보드를 얹은 것). 나머지 6개 중 messages 3종·admin_info_register는 eartth21이 상위집합.
+- **yeseong에만 있던 것은 `OnsenService`·`RestaurantCourseService`의 가격 기본값 처리(null·음수면 0) 4줄씩뿐** → 이것만 옮겨옴. 관리자가 가격 칸을 비우고 저장하면 null이 그대로 들어가던 걸 막는다.
+- 검증: yeseong이 추가한 모든 줄(dto→domain 치환 후)이 현재 트리에 존재함을 줄 단위로 확인(누락 0).
+
+**서버 기동 확인:** 에러 없이 기동. 공개 화면 9개(`/`, `/reservation/plan`, `/rooms`, `/onsen`, `/dining`, `/facility`, `/access`, `/member/login`, `/member/forgot`) × KO/EN/JA 전부 200. 관리자 화면 9개는 비로그인 시 전부 302 → `/Admin/admin_login`(500 없음). 렌더링된 HTML 30개에서 `??키_ko??` 형태의 **누락 메시지 키 0건**. 요청 처리 중 서버 로그 ERROR 0건. **관리자 로그인 후 화면(특히 병합 충돌을 풀었던 4개 + 대시보드/매출)은 아직 육안 확인 안 함.**
+
+**⚠️ 메일·번역 설정이 환경변수로 바뀜 — 이 PC에선 현재 메일이 안 나간다:**
+- Choiyeongsu13이 `application.properties`의 평문 Gmail 계정/앱 비밀번호를 `spring.mail.username=${MAIL_USERNAME:}` / `spring.mail.password=${MAIL_PASSWORD:}`로 바꿨다. 그 밖에 `gemini.api.key=${GEMINI_API_KEY:}`, `mail.secret.key=${MAIL_SECRET_KEY:}` 추가.
+- **이 PC에는 네 환경변수가 셸·Windows 사용자·시스템 어디에도 없다.** 기본값이 빈 문자열이라 서버는 뜨지만 → 플랫폼 공용 메일 계정 미설정, Gemini 자동 번역 비활성(EN/JA에서 DB 콘텐츠가 원문 그대로).
+- 고객 안내 메일 3종(가입/문의답변/예약완료)은 `sendQuietly`라 **조용히 건너뛰고 경고 로그만 남김** — 화면상 에러가 안 나서 모르고 지나치기 쉬움.
+- 메일 발송 구조도 바뀜: `EmailService.resolveSiteSender()`가 료칸 관리자 메일 주소 + DB에 암호화 저장된 앱 비밀번호(`SecretCipher`, 키는 `MAIL_SECRET_KEY`)를 먼저 쓰고, 없으면 플랫폼 공용 계정(`MAIL_USERNAME`/`MAIL_PASSWORD`)으로 보낸다.
+- **평문 비밀번호를 properties에 다시 넣지 않았음** — 팀원이 의도적으로 뺀 것이고 공개 저장소라서. 사용자는 시연까지 Gmail 발송이 필요하다고 했으므로 **Eclipse 실행 구성(Run Configurations → Environment) 또는 Windows 사용자 환경변수에 `MAIL_USERNAME`/`MAIL_PASSWORD`를 넣어야 한다.** 번역도 쓰려면 `GEMINI_API_KEY`.
+
+**기타:**
+- 이 세션 초반에 띄운 서버를 `TaskStop`으로 껐는데 **mvnw 래퍼만 죽고 자식 java 프로세스(PID 8912)가 8080을 잡은 채 남아 있었다.** 다음 기동 때 "Port 8080 was already in use"로 실패. `Get-NetTCPConnection -LocalPort 8080`으로 PID를 찾아 정리함. 세션 맨 처음 사용자가 물었던 "서버 오류"가 이런 종류였을 가능성 있음 — Eclipse에서 8080 충돌이 나면 이것부터 의심할 것.
+- `remote.origin.fetch` refspec은 여전히 `june47087-byte` 하나만 추적 중(사용자 확인 없이 config 변경 안 함).
 
 ---
 
