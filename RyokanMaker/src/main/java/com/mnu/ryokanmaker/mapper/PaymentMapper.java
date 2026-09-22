@@ -1,7 +1,7 @@
 package com.mnu.ryokanmaker.mapper;
 
-import com.mnu.ryokanmaker.domain.ReservationDto;
-import com.mnu.ryokanmaker.domain.RoomReservationDto;
+import com.mnu.ryokanmaker.dto.ReservationDto;
+import com.mnu.ryokanmaker.dto.RoomReservationDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

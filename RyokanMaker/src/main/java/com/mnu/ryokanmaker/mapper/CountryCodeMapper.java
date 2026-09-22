@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.mapper;
 
-import com.mnu.ryokanmaker.domain.CountryCodeDto;
+import com.mnu.ryokanmaker.dto.CountryCodeDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

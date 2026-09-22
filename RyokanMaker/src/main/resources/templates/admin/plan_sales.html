@@ -1,41 +1,18 @@
 <!doctype html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>清流庵 관리자 - 판매 관리</title>
-<link rel="stylesheet" th:href="@{/css/common.css}">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_plan}">清流庵 관리자 - 판매 관리</title>
+<link rel="stylesheet" th:href="@{/css/common.css}"> 
 </head>
 <body>
 
-<!-- 아이콘 스프라이트 -->
+<!-- 이 화면 본문 전용 아이콘 스프라이트 (헤더/사이드바 공통 아이콘은 admin_shell fragment가 제공) -->
 <svg width="0" height="0" style="position:absolute">
   <defs>
-    <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12.5h6M9 16h6"/>
-    </symbol>
-    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3.5" y="5" width="17" height="15.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>
-    </symbol>
-    <symbol id="i-bed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 18v2M21 18v2"/>
-      <path d="M3 13V8a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3"/><circle cx="7" cy="10" r="1"/>
-    </symbol>
-    <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12.5 3.5H20a.5.5 0 0 1 .5.5v7.5a1 1 0 0 1-.3.7l-8.8 8.8a1 1 0 0 1-1.4 0l-6.7-6.7a1 1 0 0 1 0-1.4l8.8-8.8a1 1 0 0 1 .4-.3Z"/>
-      <circle cx="16" cy="8" r="1.3"/>
-    </symbol>
-    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m6 9 6 6 6-6"/>
-    </symbol>
-    <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>
-    </symbol>
     <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="10.5" cy="10.5" r="6.5"/><path d="m20 20-4.6-4.6"/>
-    </symbol>
-    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="5.5" width="18" height="13"/><path d="m3.5 6 8.5 7 8.5-7"/>
     </symbol>
     <symbol id="i-bowl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 11h18a9 9 0 0 1-18 0Z"/><path d="M7 11c0-3 2-5 5-5s5 2 5 5"/>
@@ -54,125 +31,39 @@
       <path d="M7 16a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17.3 9.02 4.5 4.5 0 0 1 16.5 18H7Z"/>
       <path d="M12 12v6"/><path d="m9.5 14.5 2.5-2.5 2.5 2.5"/>
     </symbol>
-    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="4.5" y="10.5" width="15" height="10" rx="1"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
-    </symbol>
-    <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
-    </symbol>
   </defs>
 </svg>
+<div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
 
-<!-- 사이트 공통 헤더 -->
-<div class="site-header">
-  <div class="logo">
-    <span class="kanji">清流庵</span>
-    <span class="romaji">OTARU FURUKAWA &nbsp;·&nbsp; ADMIN</span>
-  </div>
-  <nav style="gap:44px;">
-    <a class="navlink" href="#">대시보드</a>
-    <a class="navlink" th:href="@{/Admin/admin_info_register}" href="/Admin/admin_info_register">정보등록</a>
-    <a class="navlink" th:href="@{/Admin/reservation_status}" href="/Admin/reservation_status">예약 현황</a>
-    <a class="navlink" th:href="@{/Admin/room_status}" href="/Admin/room_status">객실 현황</a>
-    <a class="navlink active" th:href="@{/Admin/plan_sales}" href="/Admin/plan_sales">판매 관리</a>
-    <a class="navlink" th:href="@{/Admin/admin_inquiry}">문의 관리</a>
-    <a class="btn-line" th:href="@{/}" target="_blank" style="padding:10px 20px;font-size:12px;gap:7px;text-decoration:none;"><svg width="14" height="14"><use href="#i-eye"/></svg>&nbsp;사이트 보기</a>
-    <div class="account-menu" id="accountMenu">
-      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">관</button>
-      <div class="account-dropdown">
-        <div class="account-dropdown-head">
-          <div class="avatar-sm">관</div>
-          <div>
-            <div class="name">清流庵 관리자</div>
-            <div class="sub">ADMIN_ID</div>
-          </div>
-        </div>
-        <a class="account-dropdown-item" th:href="@{/Admin/admin_pwreset}" href="admin-pwreset.html">
-          <svg width="15" height="15"><use href="#i-lock"/></svg>비밀번호 변경
-        </a>
-        <a class="account-dropdown-item danger" th:href="@{/Admin/admin_logout}" href="admin-login.html">
-          <svg width="15" height="15"><use href="#i-logout"/></svg>로그아웃
-        </a>
-      </div>
-    </div>
-  </nav>
-</div>
+<div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='plan')}"></div>
 
 <div class="admin-shell">
 
-  <!-- 사이드바 -->
-  <aside class="admin-sidebar">
-    <div class="menu-label">관리자 메뉴</div>
-
-    <div class="tenant-card">
-      <div class="mark">淸</div>
-      <div class="who">
-        <div class="label">관리 중인 여관</div>
-        <div class="name">清流庵 (오타루)</div>
-      </div>
-      <svg width="14" height="14" style="color:var(--ink-faint);flex:0 0 auto;"><use href="#i-chevron"/></svg>
-    </div>
-
-    <nav class="admin-nav">
-      <a class="admin-nav-item" th:href="@{/Admin/admin_info_register}" href="/Admin/admin_info_register">
-        <svg width="17" height="17"><use href="#i-doc"/></svg>
-        <span>정보등록</span>
-      </a>
-      <a class="admin-nav-item" th:href="@{/Admin/reservation_status}" href="/Admin/reservation_status">
-        <svg width="17" height="17"><use href="#i-cal"/></svg>
-        <span>예약 현황</span>
-      </a>
-      <a class="admin-nav-item" th:href="@{/Admin/room_status}" href="/Admin/room_status">
-        <svg width="17" height="17"><use href="#i-bed"/></svg>
-        <span>객실 현황</span>
-      </a>
-      <a class="admin-nav-item active" th:href="@{/Admin/plan_sales}" href="/Admin/plan_sales">
-        <svg width="17" height="17"><use href="#i-tag"/></svg>
-        <span>판매 관리</span>
-      </a>
-
-      <a class="admin-nav-item" th:href="@{/Admin/admin_inquiry}">
-        <svg width="17" height="17"><use href="#i-mail"/></svg>
-        <span>문의 관리</span>
-        <span th:if="${pendingInquiryCount > 0}" style="margin-left:auto;background:var(--warn);color:#fff;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 7px;" th:text="${pendingInquiryCount}">3</span>
-      </a>
-    </nav>
-
-    <div style="flex:1;"></div>
-
-    <div style="height:1px;background:var(--line);margin:16px 0 14px 0;"></div>
-    <div class="admin-profile">
-      <div class="avatar">관</div>
-      <div>
-        <div class="name">관리자</div>
-        <div class="mail">admin@seiryuan.jp</div>
-      </div>
-    </div>
-  </aside>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='plan', showInfoSubmenu=false, showRequestsLink=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
-  <main class="admin-main">
+  <main class="admin-main" th:with="_p=${@tr.prefetch(planList, 'planName', 'planInfo')}">
 
     <div class="admin-head">
-      <div class="crumb">관리자 &nbsp;/&nbsp; 판매 관리</div>
-      <h1>판매 관리</h1>
+      <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.plan}">판매 관리</span></div>
+      <h1 th:text="#{adm.plan}">판매 관리</h1>
       <div class="rule"></div>
-      <p>객실과 가이세키 · 온천을 묶어 파는 판매 플랜을 등록하고 판매 여부를 관리합니다. 날짜별 예약 현황도 함께 확인할 수 있습니다.</p>
+      <p th:text="#{adm.ps_desc}">판매 플랜을 등록하고 판매 여부를 관리합니다.</p>
     </div>
 
     <!-- 통계 타일 -->
     <div class="stat-grid cols-3">
-      <div class="stat-tile"><div class="label">운영 중인 플랜</div><div class="value" th:text="${#lists.size(planList)}">0</div></div>
-      <div class="stat-tile accent-gold"><div class="label">판매중</div>
+      <div class="stat-tile"><div class="label" th:text="#{adm.ps_running}">운영 중인 플랜</div><div class="value" th:text="${#lists.size(planList)}">0</div></div>
+      <div class="stat-tile accent-gold"><div class="label" th:text="#{adm.on_sale}">판매중</div>
         <div class="value" th:text="${#lists.size(planList.?[planSaleYn == 'Y'])}">0</div></div>
-      <div class="stat-tile accent-muted"><div class="label">판매 중지</div>
+      <div class="stat-tile accent-muted"><div class="label" th:text="#{adm.sale_stopped}">판매 중지</div>
         <div class="value" th:text="${#lists.size(planList.?[planSaleYn != 'Y'])}">0</div></div>
     </div>
 
     <!-- 판매 플랜 -->
     <div class="section-tag">
       <div class="num">1</div>
-      <div class="label">판매 플랜</div>
+      <div class="label" th:text="#{adm.ps_plans}">판매 플랜</div>
       <div class="line"></div>
     </div>
 
@@ -182,9 +73,9 @@
            th:attr="data-idx=${plan.planIdx},data-name=${plan.planName},data-price=${plan.planPrice},data-info=${plan.planInfo},data-meal=${plan.planIncludesMeal},data-onsen=${plan.planIncludesOnsen}">
         <div class="card-head">
           <div class="badges">
-            <span class="badge">객실</span>
-            <span class="badge" th:if="${plan.planIncludesMeal == 'Y'}">식사</span>
-            <span class="badge" th:if="${plan.planIncludesOnsen == 'Y'}">온천</span>
+            <span class="badge" th:text="#{resv.room}">객실</span>
+            <span class="badge" th:if="${plan.planIncludesMeal == 'Y'}" th:text="#{plans.incl_meal}">식사</span>
+            <span class="badge" th:if="${plan.planIncludesOnsen == 'Y'}" th:text="#{plans.incl_onsen}">온천</span>
           </div>
           <form th:action="@{/Admin/plan_toggle_sale}" method="post">
             <input type="hidden" name="planIdx" th:value="${plan.planIdx}">
@@ -194,22 +85,22 @@
           </form>
         </div>
         <div class="card-body">
-          <h3 th:text="${plan.planName}">객실 플랜</h3>
-          <p th:text="${plan.planInfo != null and !plan.planInfo.isEmpty()} ? ${plan.planInfo} : (${plan.planSaleYn == 'Y'} ? '' : '현재 판매 중지')">숙박만 필요한 고객을 위한 기본 구성</p>
+          <h3 th:text="${@tr.t(plan.planName)}">객실 플랜</h3>
+          <p th:text="${plan.planInfo != null and !plan.planInfo.isEmpty()} ? ${@tr.t(plan.planInfo)} : (${plan.planSaleYn == 'Y'} ? '' : #{adm.ps_stopped_now})">숙박만 필요한 고객을 위한 기본 구성</p>
           <div class="price-row">
-            <div><span class="from">1박 2인 부터</span><span class="amount" th:text="'₩' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
+            <div><span class="from" th:text="#{adm.ps_from}">1박 2인 부터</span><span class="amount" th:text="'₩' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
           </div>
         </div>
       </div>
 
     </div>
-    <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 플랜이 없습니다. 정보 등록 화면에서 플랜을 추가해 주세요.</p>
+    <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;" th:text="#{adm.ps_empty}">등록된 플랜이 없습니다. 정보 등록 화면에서 플랜을 추가해 주세요.</p>
 
 
     <!-- 날짜별 예약 현황 -->
     <div class="section-tag">
       <div class="num">2</div>
-      <div class="label">플랜별 날짜별 예약 현황</div>
+      <div class="label" th:text="#{adm.ps_grid}">플랜별 날짜별 예약 현황</div>
       <div class="line"></div>
     </div>
 
@@ -217,41 +108,41 @@
 
       <div class="search-bar" style="margin-bottom:16px;">
         <div class="search-field" style="border-right:1px solid var(--line);">
-          <div class="field-label">조회 기간</div>
+          <div class="field-label" th:text="#{adm.rs_range}">조회 기간</div>
           <div class="field-value" th:text="${#temporals.format(rangeStart, 'yyyy.MM.dd')} + ' — ' + ${#temporals.format(rangeEnd, 'yyyy.MM.dd')}">2026.09.13 — 2026.09.19</div>
         </div>
         <div style="padding-left:32px;display:flex;gap:8px;">
           <a class="btn-line small" style="text-decoration:none;padding:11px 18px;font-size:12.5px;"
-             th:href="@{/Admin/plan_sales(rangeStart=${rangeStart.minusDays(7)})}">&laquo; 이전 7일</a>
+             th:href="@{/Admin/plan_sales(rangeStart=${rangeStart.minusDays(7)})}">&laquo; <span th:text="#{adm.prev7}">이전 7일</span></a>
           <a class="btn-line small" style="text-decoration:none;padding:11px 18px;font-size:12.5px;"
-             th:href="@{/Admin/plan_sales(rangeStart=${rangeStart.plusDays(7)})}">다음 7일 &raquo;</a>
+             th:href="@{/Admin/plan_sales(rangeStart=${rangeStart.plusDays(7)})}"><span th:text="#{adm.next7}">다음 7일</span> &raquo;</a>
         </div>
       </div>
 
       <table class="status-table" th:if="${!#lists.isEmpty(salesGrid)}">
         <thead>
           <tr>
-            <th>플랜</th>
+            <th th:text="#{resv.plan}">플랜</th>
             <th th:each="d : ${salesGrid[0].days}" th:text="${#temporals.dayOfWeekNameShort(d.day)} + ' ' + ${#temporals.format(d.day, 'MM/dd')}">9/13 일</th>
           </tr>
         </thead>
         <tbody>
           <tr th:each="row : ${salesGrid}" th:style="${row.plan.planSaleYn != 'Y'} ? 'opacity:.55;'">
-            <td class="roomname" th:text="${row.plan.planName}">객실 플랜</td>
-            <td class="cell cell-stopped" th:if="${row.plan.planSaleYn != 'Y'}" colspan="7"><span class="status-label">판매중지</span></td>
+            <td class="roomname" th:text="${@tr.t(row.plan.planName)}">객실 플랜</td>
+            <td class="cell cell-stopped" th:if="${row.plan.planSaleYn != 'Y'}" colspan="7"><span class="status-label" th:text="#{adm.sale_stopped}">판매중지</span></td>
             <td class="cell cell-available" th:if="${row.plan.planSaleYn == 'Y'}" th:each="d : ${row.days}">
-              <span class="status-label" th:text="${d.bookedCount} + '건 예약'">0건 예약</span>
+              <span class="status-label" th:text="#{adm.ps_booked_n(${d.bookedCount})}">0건 예약</span>
             </td>
           </tr>
         </tbody>
       </table>
-      <p th:if="${#lists.isEmpty(salesGrid)}" style="color:var(--ink-faint);font-size:13px;padding:16px 0;">등록된 플랜이 없습니다.</p>
+      <p th:if="${#lists.isEmpty(salesGrid)}" style="color:var(--ink-faint);font-size:13px;padding:16px 0;" th:text="#{adm.ps_empty_short}">등록된 플랜이 없습니다.</p>
     </div>
 
     <!-- 가이세키/온천 한도 -->
     <div class="section-tag">
       <div class="num">3</div>
-      <div class="label">온천 판매 관리</div>
+      <div class="label" th:text="#{adm.ps_onsen_sale}">온천 판매 관리</div>
       <div class="line"></div>
     </div>
 
@@ -260,7 +151,7 @@
       <div class="admin-plan-card" th:each="onsen : ${onsenList}" th:classappend="${onsen.onsenSaleYn != 'Y'} ? 'off'">
         <div class="card-head">
           <div class="badges">
-            <span class="badge">온천</span>
+            <span class="badge" th:text="#{nav.onsen}">온천</span>
           </div>
           <form th:action="@{/Admin/onsen_toggle_sale}" method="post">
             <input type="hidden" name="onsenIdx" th:value="${onsen.onsenIdx}">
@@ -269,20 +160,20 @@
           </form>
         </div>
         <div class="card-body">
-          <h3 th:text="${onsen.onsenName}">노천탕 전세탕</h3>
-          <p th:text="${onsen.onsenInfo != null and !onsen.onsenInfo.isEmpty()} ? ${onsen.onsenInfo} : (${onsen.onsenSaleYn == 'Y'} ? '' : '현재 판매 중지')">온천 설명</p>
+          <h3 th:text="${@tr.t(onsen.onsenName)}">노천탕 전세탕</h3>
+          <p th:text="${onsen.onsenInfo != null and !onsen.onsenInfo.isEmpty()} ? ${@tr.t(onsen.onsenInfo)} : (${onsen.onsenSaleYn == 'Y'} ? '' : #{adm.ps_stopped_now})">온천 설명</p>
           <div class="price-row">
-            <div><span class="from">이용 시간</span><span class="amount" th:text="${onsen.onsenHour != null and !onsen.onsenHour.isEmpty()} ? ${onsen.onsenHour} : '-'">15:00–21:00</span></div>
+            <div><span class="from" th:text="#{onsen.hours}">이용 시간</span><span class="amount" th:text="${onsen.onsenHour != null and !onsen.onsenHour.isEmpty()} ? ${onsen.onsenHour} : '-'">15:00–21:00</span></div>
           </div>
         </div>
       </div>
 
     </div>
-    <p th:if="${#lists.isEmpty(onsenList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;">등록된 온천이 없습니다. 정보 등록 화면에서 온천을 추가해 주세요.</p>
+    <p th:if="${#lists.isEmpty(onsenList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;" th:text="#{adm.ps_onsen_empty}">등록된 온천이 없습니다. 정보 등록 화면에서 온천을 추가해 주세요.</p>
   </main>
 </div>
 
-<script>
+<script th:inline="javascript">
 document.addEventListener('click', function (e) {
   document.querySelectorAll('.account-menu.open').forEach(function (menu) {
     if (!menu.contains(e.target)) menu.classList.remove('open');

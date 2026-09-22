@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "ryokanmaker-boot",
-      "runtimeExecutable": ".\\mvnw.cmd",
-      "runtimeArgs": ["spring-boot:run", "-Dspring-boot.run.arguments=--server.port=8083"],
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "mvnw.cmd", "spring-boot:run", "-Dspring-boot.run.arguments=--server.port=8083"],
       "port": 8083
     }
   ]

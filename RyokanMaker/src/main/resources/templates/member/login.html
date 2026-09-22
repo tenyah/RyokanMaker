@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>로그인 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{nav.login} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">로그인 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -12,39 +12,42 @@
   <div th:replace="~{include/header :: header(activePage='login')}"></div>
 
   <section class="page-title">
-    <div class="crumb">HOME &nbsp;/&nbsp; 로그인</div>
-    <h1>로그인</h1>
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.login}">로그인</span></div>
+    <h1 th:text="#{nav.login}">로그인</h1>
     <div class="rule"></div>
-    <p class="desc">예약, 문의 이용을 위해 로그인해주세요.</p>
+    <p class="desc" th:text="${@pt.t('LOGIN_DESC')}">예약, 문의 이용을 위해 로그인해주세요.</p>
   </section>
 
   <div th:if="${param.signup != null}" class="form-card" style="padding-bottom:0;">
     <div class="answer-block">
-      <div class="answer-body" style="color:var(--gold-deep);">회원가입이 완료되었습니다. 로그인해주세요.</div>
+      <div class="answer-body" style="color:var(--gold-deep);" th:text="#{login.signup_done}">회원가입이 완료되었습니다. 로그인해주세요.</div>
     </div>
   </div>
 
   <div th:if="${error}" class="form-card" style="padding-bottom:0;">
     <div class="answer-block">
-      <div class="answer-body" th:text="${error}" style="color:var(--warn);"></div>
+      <div class="answer-body" th:text="#{${error}}" style="color:var(--warn);"></div>
     </div>
   </div>
 
   <form class="form-card" th:action="@{/member/login}" method="post">
 
     <div class="form-row">
-      <label class="field-label">이메일</label>
+      <label class="field-label" th:text="#{member.email}">이메일</label>
       <input type="text" name="userMail" placeholder="you@example.com" required>
     </div>
 
     <div class="form-row">
-      <label class="field-label">비밀번호</label>
-      <input type="password" name="userPassword" placeholder="비밀번호" required>
+      <label class="field-label" th:text="#{member.password}">비밀번호</label>
+      <input type="password" name="userPassword" th:placeholder="#{member.password}" required>
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-gold">로그인</button>
-      <a class="btn-line" th:href="@{/member/signup}">회원가입</a>
+      <button type="submit" class="btn-gold" th:text="#{nav.login}">로그인</button>
+      <a class="btn-line" th:href="@{/member/signup}" th:text="#{nav.signup}">회원가입</a>
+    </div>
+    <div style="text-align:center; margin-top:14px; font-size:13px;">
+      <a th:href="@{/member/forgot}" th:text="#{member.forgot_link}">비밀번호를 잊으셨나요?</a>
     </div>
   </form>
 

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>문의 작성 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{inquiry.write} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">문의 작성 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -12,28 +12,28 @@
   <div th:replace="~{include/header :: header(activePage='contact')}"></div>
 
   <section class="page-title">
-    <div class="crumb">HOME &nbsp;/&nbsp; 문의하기 &nbsp;/&nbsp; 문의 작성</div>
-    <h1>문의 작성</h1>
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.contact}">문의하기</span> &nbsp;/&nbsp; <span th:text="#{inquiry.write}">문의 작성</span></div>
+    <h1 th:text="#{inquiry.write}">문의 작성</h1>
     <div class="rule"></div>
-    <p class="desc">궁금하신 점을 남겨주시면 확인 후 답변드리겠습니다.</p>
+    <p class="desc" th:text="${@pt.t('INQUIRY_WRITE_DESC')}">궁금하신 점을 남겨주시면 확인 후 답변드리겠습니다.</p>
   </section>
 
   <form class="form-card" th:action="@{/inquiry/write}" method="post">
     <input type="hidden" name="adminIdx" th:value="${adminIdx}">
 
     <div class="form-row">
-      <label class="field-label">제목</label>
-      <input type="text" name="inquiryTitle" placeholder="문의 제목을 입력해주세요" required>
+      <label class="field-label" th:text="#{inquiry.col_title}">제목</label>
+      <input type="text" name="inquiryTitle" th:placeholder="#{inquiry.title_ph}" required>
     </div>
 
     <div class="form-row">
-      <label class="field-label">내용</label>
-      <textarea name="inquiryContent" rows="10" placeholder="문의하실 내용을 입력해주세요" required></textarea>
+      <label class="field-label" th:text="#{inquiry.content}">내용</label>
+      <textarea name="inquiryContent" rows="10" th:placeholder="#{inquiry.content_ph}" required></textarea>
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-gold">문의 등록</button>
-      <a class="btn-line" th:href="@{/inquiry/list}">취소</a>
+      <button type="submit" class="btn-gold" th:text="#{inquiry.submit}">문의 등록</button>
+      <a class="btn-line" th:href="@{/inquiry/list}" th:text="#{common.cancel}">취소</a>
     </div>
   </form>
 

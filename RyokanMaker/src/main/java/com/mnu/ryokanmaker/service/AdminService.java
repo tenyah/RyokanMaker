@@ -3,22 +3,30 @@ package com.mnu.ryokanmaker.service;
 import java.io.IOException;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.mnu.ryokanmaker.domain.AdminDto;
+import com.mnu.ryokanmaker.dto.AdminDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
 import com.mnu.ryokanmaker.util.PasswordUtil;
+import com.mnu.ryokanmaker.util.SecretCipher;
 
 @Service
 public class AdminService {
+
+	private static final Logger log = LoggerFactory.getLogger(AdminService.class);
 
 	private static final int MAX_MAIN_IMAGES = 10;
 
 	@Autowired
 	private AdminMapper adminMapper;
+
+	@Autowired
+	private SecretCipher secretCipher;
 
 	/**
 	 * 로그인 : 아이디/비밀번호가 맞으면 관리자 정보를, 아니면 null을 반환.
@@ -72,6 +80,11 @@ public class AdminService {
 		adminMapper.updateRyokanAccess(adminDto);
 	}
 
+	/** 여관 기본정보 조회 (메인 화면 히어로 캐러셀 등 비로그인 공개 화면에서 사용). */
+	public AdminDto getRyokanInfo(int adminIdx) {
+		return adminMapper.selectByAdminIdx(adminIdx);
+	}
+
 	/**
 	 * 비밀번호 변경 : 현재 비밀번호가 맞으면 새 비밀번호로 바꾸고 true, 아니면 false.
 	 * 이 경로는 PW_RESET_YN='N'(가입 직후=평문 저장) 상태에서 호출되므로 현재 비밀번호는 평문으로 비교하고,
@@ -84,5 +97,48 @@ public class AdminService {
 		}
 		adminMapper.updatePassword(adminIdx, PasswordUtil.sha256(newPassword));
 		return true;
+	}
+
+	public AdminDto findByAdminIdx(Integer adminIdx) {
+		return adminMapper.selectByAdminIdx(adminIdx);
+	}
+
+	/** 메일 앱 비밀번호를 암호화해서 저장할 수 있는 상태인지 (MAIL_SECRET_KEY 설정 여부) */
+	public boolean isMailSecretAvailable() {
+		return secretCipher.isAvailable();
+	}
+
+	/** 저장된 메일 앱 비밀번호가 있는지. 컬럼이 아직 없거나 DB 오류면 없는 것으로 본다. */
+	public boolean hasMailPassword(Integer adminIdx) {
+		try {
+			String stored = adminMapper.selectMailPassword(adminIdx);
+			return stored != null && !stored.isBlank();
+		} catch (Exception e) {
+			log.warn("메일 앱 비밀번호를 조회하지 못했습니다 (ADMIN.MAIL_APP_PASSWORD 컬럼 확인 필요): {}", e.getMessage());
+			return false;
+		}
+	}
+
+	/** 복호화한 메일 앱 비밀번호. 없거나 복호화할 수 없으면 null. 발송 직전에만 쓰고 화면에는 절대 내보내지 않는다. */
+	public String getMailPassword(Integer adminIdx) {
+		try {
+			String stored = adminMapper.selectMailPassword(adminIdx);
+			if (stored == null || stored.isBlank() || !secretCipher.isAvailable()) {
+				return null;
+			}
+			return secretCipher.decrypt(stored);
+		} catch (Exception e) {
+			log.warn("메일 앱 비밀번호를 읽지 못했습니다", e);
+			return null;
+		}
+	}
+
+	/** 메일 앱 비밀번호 저장(암호화). 키가 없으면 IllegalStateException. */
+	public void saveMailPassword(Integer adminIdx, String plainPassword) {
+		adminMapper.updateMailPassword(adminIdx, secretCipher.encrypt(plainPassword.strip()));
+	}
+
+	public void clearMailPassword(Integer adminIdx) {
+		adminMapper.updateMailPassword(adminIdx, null);
 	}
 }

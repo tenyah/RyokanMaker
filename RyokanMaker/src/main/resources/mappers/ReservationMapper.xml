@@ -7,7 +7,7 @@
         대표 객실명/플랜명은 그 예약에 딸린 ROOM_RESERVATION 중 ROOM_RESV_NUM이 가장 작은 1건만 조인해서 보여준다.
         AdminReservationMapper.selectReservationList와 동일한 조인이지만 USER_MAIL 기준으로 필터링한다.
     -->
-    <select id="selectReservationListByUserMail" resultType="com.mnu.ryokanmaker.domain.AdminReservationListItemDto">
+    <select id="selectReservationListByUserMail" resultType="com.mnu.ryokanmaker.dto.AdminReservationListItemDto">
         SELECT
             r.RESV_NUM          AS resvNum,
             m.USER_NICKNAME     AS userNickname,

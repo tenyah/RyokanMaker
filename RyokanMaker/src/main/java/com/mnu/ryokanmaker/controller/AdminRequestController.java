@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.domain.AdminRequestDto;
+import com.mnu.ryokanmaker.dto.AdminRequestDto;
 import com.mnu.ryokanmaker.service.AdminRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -44,14 +44,14 @@ public class AdminRequestController {
     @PostMapping("/Admin/admin_requests/{requestIdx}/approve")
     public String approve(@PathVariable int requestIdx, RedirectAttributes redirectAttributes) {
         adminRequestService.approve(requestIdx);
-        redirectAttributes.addFlashAttribute("message", "승인 처리되었고 계정 정보를 메일로 발송했습니다.");
+        redirectAttributes.addFlashAttribute("message", "adm.msg_approved");
         return "redirect:/Admin/admin_requests";
     }
 
     @PostMapping("/Admin/admin_requests/{requestIdx}/reject")
     public String reject(@PathVariable int requestIdx, RedirectAttributes redirectAttributes) {
         adminRequestService.reject(requestIdx);
-        redirectAttributes.addFlashAttribute("message", "반려 처리되었습니다.");
+        redirectAttributes.addFlashAttribute("message", "adm.msg_rejected");
         return "redirect:/Admin/admin_requests";
     }
 }

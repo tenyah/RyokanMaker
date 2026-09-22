@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>문의 상세 | 清流庵 오타루 후루카와</title>
+  <title th:text="#{inquiry.detail} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">문의 상세 | 清流庵 오타루 후루카와</title>
   <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 <body>
@@ -12,39 +12,39 @@
   <div th:replace="~{include/header :: header(activePage='contact')}"></div>
 
   <section class="page-title">
-    <div class="crumb">HOME &nbsp;/&nbsp; 문의하기 &nbsp;/&nbsp; 문의 상세</div>
-    <h1>문의 상세</h1>
+    <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{nav.contact}">문의하기</span> &nbsp;/&nbsp; <span th:text="#{inquiry.detail}">문의 상세</span></div>
+    <h1 th:text="#{inquiry.detail}">문의 상세</h1>
     <div class="rule"></div>
   </section>
 
   <section class="content-card">
-    <div class="content-head">
-      <h2 th:text="${inquiry.inquiryTitle}">문의 제목</h2>
+    <div class="content-head" th:with="_p=${@tr.prefetchAll(inquiry.inquiryTitle, inquiry.inquiryContent, inquiry.inquiryAnswerContent)}">
+      <h2 th:text="${@tr.t(inquiry.inquiryTitle)}">문의 제목</h2>
       <div class="content-meta">
         <span th:text="${#temporals.format(inquiry.inquiryCreatedAt, 'yyyy.MM.dd')}">2026.01.01</span>
         <span class="sep">·</span>
         <span class="status-pill" th:classappend="${inquiry.inquiryStatus == '답변완료'} ? 'done' : 'wait'"
-              th:text="${inquiry.inquiryStatus}">답변대기</span>
+              th:text="${@tr.label('inquiry.status', inquiry.inquiryStatus)}">답변대기</span>
       </div>
     </div>
 
-    <div class="content-body" th:text="${inquiry.inquiryContent}">
+    <div class="content-body" th:text="${@tr.t(inquiry.inquiryContent)}">
       문의 내용
     </div>
 
     <div class="answer-block" th:if="${inquiry.inquiryAnswerContent != null}">
-      <div class="answer-label">답변</div>
-      <div class="answer-body" th:text="${inquiry.inquiryAnswerContent}">답변 내용</div>
+      <div class="answer-label" th:text="#{inquiry.answer}">답변</div>
+      <div class="answer-body" th:text="${@tr.t(inquiry.inquiryAnswerContent)}">답변 내용</div>
     </div>
-    <div class="answer-block pending" th:if="${inquiry.inquiryAnswerContent == null}">
+    <div class="answer-block pending" th:if="${inquiry.inquiryAnswerContent == null}" th:text="#{inquiry.no_answer}">
       아직 답변이 등록되지 않았습니다. 조금만 기다려주세요.
     </div>
 
     <div class="content-actions">
-      <a class="btn-line" th:href="@{/inquiry/list}">목록으로</a>
-      <form th:action="@{/inquiry/delete}" method="post" onsubmit="return confirm('이 문의를 삭제하시겠습니까?');">
+      <a class="btn-line" th:href="@{/inquiry/list}" th:text="#{common.list}">목록으로</a>
+      <form th:action="@{/inquiry/delete}" method="post" th:data-confirm="#{inquiry.delete_confirm}" onsubmit="return confirm(this.dataset.confirm);">
         <input type="hidden" name="idx" th:value="${inquiry.inquiryIdx}">
-        <button type="submit" class="btn-line" style="color:var(--warn); border-color:var(--warn);">삭제</button>
+        <button type="submit" class="btn-line" style="color:var(--warn); border-color:var(--warn);" th:text="#{common.delete}">삭제</button>
       </form>
     </div>
   </section>

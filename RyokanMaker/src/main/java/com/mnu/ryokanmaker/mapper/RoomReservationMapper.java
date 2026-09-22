@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.mnu.ryokanmaker.domain.RoomReservationDto;
+import com.mnu.ryokanmaker.dto.RoomReservationDto;
 
 @Mapper
 public interface RoomReservationMapper {

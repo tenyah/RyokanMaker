@@ -117,6 +117,150 @@
 - plan_sales 온천 카드/토글 실제 동작 확인.
 - 아직 push 안 함 (`origin/june47087-byte`).
 - 결제 예약 저장(ORA-17004 수정 후) 골든패스 검증, 온천/식사 예약 테이블 저장 미구현 등은 그대로 남아 있음.
+## 관리자가 손님 화면 소개·설명 문구를 수정하는 기능 (PAGE_CONTENT) (2026-09-21)
+
+**배경:** 페이지마다 소개·설명 문구가 `messages*.properties`(코드)에 박혀 있어 관리자가 고칠 수 없었음. 특히 교통안내는 버스 노선·요금이 바뀔 수 있는 내용인데 `ADMIN.RYOKAN_ACCESS` 한 줄(당시 33자)뿐이었음. 브랜치 `Choiyeongsu13` (Test에는 아직 미반영).
+
+**DB (새 테이블 1개, 추가 컬럼 없음):** `PAGE_CONTENT(ADMIN_IDX, PAGE_KEY, CONTENT_TEXT)`, PK `(ADMIN_IDX, PAGE_KEY)`, FK → `ADMIN`. 문구를 열이 아니라 **행**으로 저장해서, 문구가 늘어도 DB는 그대로. `ADMIN`에 컬럼을 늘리는 방식은 문구마다 `ALTER TABLE`이 필요하고 로그인 정보 테이블이 비대해져서 채택하지 않음. `sql/page_content.sql`, ERDCloud에도 반영 완료(ERD는 `ADMIN.Ryokan_Access`도 100→1000으로 수정).
+
+**구조:**
+- `PageTextDefs`: 수정 가능한 문구 32개 목록(그룹/키/기본 messages 키/여러 줄 여부). 관리자 화면과 손님 화면이 이 목록을 함께 씀. **새 문구 추가 = 이 목록에 한 줄 + messages 3개 파일에 라벨/기본문구 키.**
+- `PageContentService`: 조회(손님용은 20초 캐시, 저장 시 즉시 무효화), 그룹 단위 저장(빈 값이면 행 삭제 = 기본 문구로 복귀). 테이블이 없거나 DB 오류여도 예외 없이 기본 문구로 표시.
+- `PageTextHelper`(`@pt`): 템플릿에서 `${@pt.t('KEY')}`. 저장된 값(한국어 원문)이 있으면 기존 Gemini 번역(`GeminiTranslationService`)으로 현재 언어로 보여주고, 없으면 messages 기본 문구. **한국어로만 입력하면 EN/JA는 자동 번역.**
+- 관리자 정보등록 화면: 교통안내 섹션은 목록 반복 입력으로 교체, 새 "페이지 문구" 섹션(`#section-pagetext`) 추가, 사이드바 메뉴 링크 추가. 저장은 `POST /Admin/admin_access_save`(교통안내+한 줄 안내), `POST /Admin/admin_page_text_save`(그룹 코드).
+
+**수정 가능한 문구 (32개):** 메인(첫 화면 한 줄, 소개 제목/본문, 객실·온천·식사 카드 설명) 6 / 교통안내(소개문, 지도 글자 3, 도보·버스·택시 안내와 요금) 9 / 객실·온천·식사·시설 페이지(제목 4, 소개문 4, 온천·식사 하단 안내 2) 10 / 플랜 선택(제목, 소개문) 2 / 로그인·회원가입·마이페이지 소개문 3 / 문의 목록·작성 소개문 2. 객실·온천·식사·시설 각 항목의 설명은 원래 관리자 화면에서 수정 가능했음. 메뉴·버튼·폼 항목명·푸터 문구·결제 화면 안내는 대상 아님(고정 라벨).
+
+**정리한 것:** 어디에서도 링크되지 않던 옛 단독 화면 `/Admin/access_edit`와 `updateAccess`(서비스/매퍼/XML)는 삭제하고 주소는 정보등록의 교통안내 섹션으로 리다이렉트. 교통안내 화면의 도보/버스/택시 카드와 지도 그림 글자도 이제 DB 문구를 사용.
+
+**글자 수 제한 (중요):** DB는 `NLS_LENGTH_SEMANTICS=BYTE`, 문자셋 `AL32UTF8`이라 `VARCHAR2(1000)`은 1000**바이트**. 한글·일본어는 글자당 3바이트라 약 333자가 한계이고 처음 33자 제한도 `100바이트÷3`에서 나온 값이었음. `ADMIN.RYOKAN_ACCESS`가 100→1000으로 늘어서 입력 제한을 **33자→300자**로 풀고, 페이지 문구 입력칸도 300자로 제한. 브라우저 제한을 우회해도 서버에서 UTF-8 1000바이트 이내로 자르도록 `PageContentService.truncateUtf8` 적용(400자 넘는 한글+일본어 저장 시 333자/999바이트로 잘려 오류 없이 저장됨을 확인).
+
+**작업 중 발견/수정한 문제:**
+- 메인 소개 제목의 `<br>`를 `th:utext`로 출력하려다 Thymeleaf가 `th:utext`에서 빈 호출을 막아 메인 화면이 오류남. 줄바꿈을 `\n` + CSS `white-space: pre-line`(`th:text`)으로 바꿔 해결(기본 문구도 `<br>` → `\n`).
+- 메시지 파일 일괄 수정 중 `sed`가 `\n`을 진짜 줄바꿈으로 해석해 `index.intro_title` 줄이 3개 파일에서 둘로 쪼개졌던 것을 바로 복구(세 파일 줄 수 동일 확인).
+- ERDCloud에서 `PAGE_CONTENT`의 PK가 `PAGE_KEY` 하나로 되어 있던 것을 복합키로 수정(료칸이 둘 이상이면 같은 키를 못 쓰는 문제였음). `CONTENT_TEXT` NOT NULL→NULL, `VARCHAR`→`VARCHAR2`도 실제 DB에 맞춤.
+
+**검증:** `mvnw clean compile` 성공. 관리자 로그인 없이 세션에 관리자 객체를 넣은 임시 MockMvc 테스트(커밋 안 함)로 실제 DB에 대해: 관리자 화면 KO/EN/JA 200·입력칸 표시, 저장→손님 화면 반영→관리자 화면 재표시→비워서 저장 시 기본 문구 복귀(메인/교통안내/객실·온천·식사·시설 모두), 빈 소개문은 화면에 표시되지 않음, 긴 문구 저장 시 바이트 제한 동작. 시험 값은 모두 지워서 `PAGE_CONTENT`는 비어 있음. **관리자 화면을 사람이 직접 브라우저로 열어 눌러본 것은 아님(로그인 계정 없이 검증).**
+
+**다음 할 일 / 주의:**
+- `Test`에 합칠 때 팀원 DB에 `sql/page_content.sql` 실행 필요(각자 다른 DB를 쓰는 경우). 테이블이 없어도 앱은 죽지 않고 기본 문구만 표시됨.
+- 아직 고정인 것: 메뉴·버튼·폼 항목명, 페이지 breadcrumb(`Guestroom / お部屋` 등), 푸터 저작권 문구, 메인 하단 공지 제목·관리자 신청 안내, 결제·예약 화면 안내. 필요하면 `PageTextDefs`에 추가하면 됨.
+- 손님 화면은 관리자 1번(`SITE_ADMIN_IDX = 1`)의 문구를 보여줌(다른 컨트롤러의 `MAIN_ADMIN_IDX`와 같은 단일 료칸 가정).
+
+---
+
+## 사용자 화면 전체 다국어(KO/EN/JA) 적용 (2026-09-21)
+
+**목표:** 외국인 이용을 고려해, 어떤 언어(한국어/일본어/영어)로 쓴 내용이든 보는 사람이 고른 언어로 보이게 한다. 브랜치 `i18n-all`.
+
+**구조 (문구 종류별로 두 층):**
+1. **고정 UI 문구**(라벨/버튼/안내문/오류·확인창): `messages.properties`(KO) / `messages_en` / `messages_ja`에 키를 넣고 템플릿을 `#{...}`로 교체. 번역은 직접 작성해서 API 없이 즉시 표시. 키 약 220개 추가(총 242개, 세 언어 파일의 키가 동일한지 검사함). `<html lang>`도 현재 언어로 설정.
+2. **DB에서 온 자유 텍스트**(객실·플랜·온천·코스·시설 이름/설명, 공지, 회원 문의·답변, 국가명, 푸터 주소 등): `GeminiTranslationService` + Thymeleaf 도우미 빈 `@tr`.
+   - `${@tr.t(값)}` : 현재 언어로 번역, `${@tr.prefetch(목록, '속성'...)}` / `prefetchAll(...)` : 목록·상세 화면에서 여러 글을 API 1회로 미리 번역, `${@tr.label('접두어', 값)}` : `답변대기` 같은 상태값은 정해진 번역 키를 쓰고 없으면 번역.
+   - **원문 언어는 자동 감지**(KO/EN/JA 어느 것이든). 이미 목표 언어인 글은 문자 종류로 판별해 API를 부르지 않음(한자만 있는 글은 일본어 화면에서만 그대로).
+   - 캐시(메모리 + `translation-cache.json` 파일)로 재시작 후에도 재번역하지 않음. 파일은 `.gitignore` 처리. **번역이 마음에 안 들면 이 파일을 지우면 다시 번역됨.**
+   - 모델이 번역하지 않고 원문을 그대로 돌려주는 경우가 실제로 있어(공지 제목 등) 그 경우 실패로 보고 다음 모델로 재시도.
+   - API 키 없음/호출 실패 시 원문을 그대로 표시(화면은 깨지지 않음).
+3. **서버 메시지**: 컨트롤러가 한글 문장 대신 메시지 키를 모델에 담고(`error.member.*`, `pay.error.*` 등) 템플릿이 `#{${error}}`로 번역. 결제 화면의 국가/도착시간 목록, "코스 포함·온천 이용" 문구도 키/`MessageSource` 기반으로 변경. JS `alert`/`confirm`은 `data-*` 속성 또는 `[[#{...}]]`로 번역.
+
+**적용 화면:** 메인, 객실/온천/식사/시설, 교통안내, 공지 상세, 로그인/회원가입/마이페이지(예약현황·탈퇴 확인창), 1:1 문의(목록/작성/상세), 플랜 선택, 객실·식사·온천 선택, 결제/완료/실패, **관리자 화면 전체**(로그인/비밀번호 변경/계정 신청·승인, 정보등록, 예약 현황, 객실 현황, 판매 관리, 문의 관리, 교통안내 수정).
+
+**관리자 화면:** 공용 셸(`admin_shell`)과 로그인/비밀번호 변경 화면에 KO/EN/JA 전환 버튼 추가(현재 주소의 다른 쿼리는 유지). 키는 `adm.*`. 고객이 쓴 문의·요청사항·신청 내용은 관리자의 언어로 번역해서 보여줌. **편집 폼의 입력값/`data-*`(수정 시 폼에 채워지는 원문)와 답변 입력창은 번역하지 않고 원문 그대로**라서 저장 시 번역문이 DB에 들어가지 않음. 관리자 계정 이름·예약자/신청자 이름 같은 데이터는 번역 대상이 아님.
+
+**Gemini 모델 관련 (중요):**
+- 기존 코드의 `gemini-2.0-flash`와 2.5 계열은 이미 신규 사용자에게 404(폐기). 목록 API로 확인 후 `gemini.models`(쉼표 구분, 앞에서부터 시도)를 `gemini-flash-lite-latest, gemini-3.1-flash-lite, gemini-flash-latest`로 설정. `gemini-flash-latest`만 쓰면 응답이 13초 걸리고 과부하(503)가 나서 lite를 앞에 둠. `GEMINI_MODELS` 환경변수로 덮어쓸 수 있음.
+- **현재 키는 무료 티어라 모델당 분당 15회 제한(429)이 있음.** 콘텐츠가 처음 보일 때만 호출하고 이후엔 캐시라 평소엔 문제없지만, 새 콘텐츠를 한꺼번에 많이 등록하거나 새 서버(EC2)에서 캐시가 빈 채로 시작하면 처음 몇 분은 일부가 원문으로 보일 수 있음(재시도하면 채워짐). 유료 전환하면 해소.
+- 키는 `GEMINI_API_KEY` 환경변수(로컬 사용자 환경변수로 설정됨). EC2에는 서비스 환경변수로 넣고, **캐시 파일을 쓸 수 있는 작업 디렉터리**에서 실행해야 함(`gemini.cache-file`로 경로 변경 가능).
+
+**검증:** `mvnw clean compile` 성공, 단위 테스트(`GeminiTranslationServiceTest`, 언어 판별·키 없을 때 원문 반환) 통과. 메시지 키는 세 언어 모두 510개로 동일, 템플릿/Java가 참조하는 키 누락 없음. 관리자 화면은 로그인 없이 세션에 관리자 객체를 넣은 임시 MockMvc 테스트(커밋 안 함)로 실제 DB 데이터를 렌더링해 EN/JA/KO 8개 화면 모두 200, UI 문구 한글 0건 확인. 로컬 서버에서 실제 Gemini로 EN/JA/KO 각각 공개 화면 10개 + 로그인 상태의 마이페이지/문의/예약/결제 화면을 요청해 **화면에 남은 한글 0건** 확인. 일본어로 쓴 문의가 KO/EN/JA 모두에서 각 언어로 표시됨. 테스트 계정은 회원탈퇴로 삭제.
+
+**알려진 한계:**
+- **토스페이먼츠 결제 위젯(결제수단 선택/약관 UI)의 언어는 토스 쪽 화면이라 미적용.**
+- 이메일 본문(관리자 승인 메일 등), 정책 페이지(`/policy/*` 링크만 있고 화면 없음)는 미적용.
+- 관리자 화면의 정적 시연용 값(예약 현황의 "오늘 체크인 4" 같은 고정 숫자, 온천 일일 판매 한도 카드)은 원래 화면에 하드코딩된 시연 데이터라 문구만 번역함.
+- 플랜 카드 이미지: DB의 `planImage`에 `["/uploads/..."]` 형태 JSON 문자열이 저장된 플랜이 있어 이미지 요청이 400/404가 남(번역과 무관한 기존 데이터 이슈).
+- `.claude/launch.json`의 `sh` 실행 설정을 Windows에서 동작하도록 `cmd /c mvnw.cmd`로 변경.
+
+---
+
+## 팀원 3개 브랜치 재통합 (june47087-byte / eartth21 / yeseong) (2026-09-19)
+
+**작업 방식:** `Choiyeongsu13`에서 갈라진 로컬 브랜치 `integrate-0919`에서 하나씩 병합. 원격에는 아직 push하지 않음.
+
+**june47087-byte (+4커밋):**
+- june가 `dto` 패키지를 `domain`으로 개명했으나 master/eartth21/기존 통합이 모두 `dto` 기준이라 병합 후 `domain → dto`로 되돌림 (85개 파일 import 정리). **june에게 dto 유지 공지 필요** (안 하면 다음 병합에서 또 충돌).
+- `application.properties`에 june가 **Gmail 계정과 앱 비밀번호를 평문으로 커밋**해둠 → 환경변수(`MAIL_USERNAME`/`MAIL_PASSWORD`) 방식 유지, `admin.notify.email`만 반영. **이미 원격 브랜치 히스토리에 노출됐으므로 해당 앱 비밀번호는 폐기/재발급 권장.**
+- Access/Notice/ReservationController는 june 쪽이 개명만 바꾼 것이라 우리 쪽(i18n·번역 포함) 채택.
+
+**eartth21 (+4커밋):**
+- 미사용 정리로 `PaymentMapper`(.java/.xml)를 삭제했으나 `PaymentReservationService`가 실제 사용 중이라 유지. (`CourseDto`, `DayStatusDto`, `PlanDto` 등 진짜 미사용 DTO 삭제는 그대로 반영)
+- `index.html`: eartth21의 동적 료칸명 + 이미지 캐러셀에 우리 i18n 문구 결합. 관리자 페이지는 공용 `admin_shell` 구조 채택, `room_status.html`에서 빠진 `i-pencil`/`i-upload` 아이콘 정의 복구.
+- 새 페이지 `/rooms`, `/onsen`, `/dining`, `/facility` 추가됨.
+
+**yeseong (+3커밋):** 신규 커밋(자체 `ReservationService`, `domain/*DTO`, `mappers/` 패키지, 예약 화면)은 우리 쪽에 이미 공용 dto/mapper 구조로 통합돼 있고 로그인/결제 연동까지 되어 있음(화면·CSS·extraCharge·DB 호스트 모두 반영 확인). 그대로 병합하면 동명 매퍼 빈 중복으로 앱 기동 실패 위험이라 `-s ours`로 **병합 이력만 기록**하고 내용은 가져오지 않음. yeseong은 앞으로 공용 `dto`/`mapper` 클래스 위에서 작업하도록 안내 필요.
+
+**검증:** `mvnw clean compile` 성공, 서버 기동 후 `/`, `/reservation/plan`, `/access`, 로그인/회원가입, 공지, `/rooms`·`/onsen`·`/dining`·`/facility`, 관리자 로그인 200 확인, 로그인 필요 페이지 302 리다이렉트 확인, 서버 로그 에러 0건. (관리자 로그인 후 화면과 실제 결제 흐름은 미검증)
+
+---
+
+## 회원가입/로그인/문의 기능 구현 + 4개 팀 브랜치 로컬 통합 (2026-09-18)
+
+**배경:** 이 세션은 빌드가 깨진 상태(컴파일 에러)에서 시작. 패키지명 표기(대문자 vs 소문자)부터 팀원 4명(Choiyeongsu13/eartth21/june47087-byte/yeseong) 브랜치 통합, 당일 목표 기능(회원가입·로그인·문의작성, 비밀번호 해시) 구현까지 진행.
+
+**초기 빌드 에러 수정:**
+- `Inquiryservice.java` 파일명/클래스명 불일치, `com.mnu.Ryokanmaker.service` 패키지 오타, `mybatis.mapper-locations`가 존재하지 않는 `mappers/` 폴더를 가리키던 것을 `mapper/`로 수정.
+
+**작업 중 대형 사고 및 복구:** 추적되지 않은 파일에 대한 `git mv`가 실패하면서 작업 트리 전체가 디스크에서 삭제되는 사고 발생. `git restore --source=HEAD -- .`으로 추적 파일은 복구하고, 미추적 파일(공지/문의 사용자 화면 등)은 대화 맥락과 다운로드 폴더에서 발견한 백업 zip으로 수동 재구성함. 이후로는 위험한 git 작업 전에 항상 `git add -A`로 먼저 스테이징해두는 방식으로 안전장치를 마련.
+
+**패키지명 표기 정리:** 처음엔 `com.mnu.RyokanMaker`(대문자)로 통일하려 했으나, 팀원들이 이미 `com.mnu.ryokanmaker`(소문자)로 작업 중인 것을 확인하고 소문자로 재통일. Windows NTFS가 대소문자를 구분하지 않아 `git status`에 같은 경로가 다른 대소문자로 중복 추적되는 문제가 발생 → `git rm -r --cached .` 후 `git add -A`로 캐시를 초기화하고, 디렉터리명 변경은 전부 임시 이름을 거치는 2단계 rename(`mv X X_tmp && mv X_tmp Y`)으로 처리해 충돌을 피함.
+
+**4개 팀 브랜치(마스터 제외) 로컬 통합:** 원격 저장소를 조사해 팀원별 구현 페이지/테이블을 파악하고, 사용자 지시대로 **원격에는 반영하지 않고 로컬 작업 트리에만** 각 브랜치의 내용을 순차적으로 반영. 통합 후 `mvnw clean compile` 성공 확인, Claude Browser로 홈/로그인/회원가입 등 주요 화면 직접 열람 테스트.
+
+**DB 스키마 실측:** 기존 ERDCloud SQL 덤프가 실제 운영 DB와 다른 부분이 있어(예: `AdminDto`에 실존하지 않는 `ryokanFacility` 필드가 있던 것 등), SQL Developer Data Modeler로 실제 라이브 Oracle DB에서 DDL을 역공학(export)해 `sql/ryokan_schema_current.sql`로 저장하고 이를 기준 진실로 채택. 이 과정에서 DB 접속 호스트가 `54.180.103.132`(타임아웃)가 아니라 `3.36.211.118`로 바뀐 것도 팀원 커밋 메시지를 통해 발견해 반영.
+
+**회원가입/로그인/문의 핵심 기능:**
+- 비밀번호는 `PasswordUtil.sha256()`(레거시 `UserSHA256`과 동일한 해시 방식)로 해시 저장.
+- 영문 이름은 알파벳만, 일본어 이름은 히라가나·가타카나만(한자 불가) 허용하도록 `NameValidationUtil`을 새로 만들어 서버 측 검증에 사용하고, `signup.html`/`mypage.html`의 이름 입력란에도 `pattern`/`title` 속성으로 동일한 제약을 추가(이중 방어).
+- 회원가입 완료 후 **자동 로그인을 제거**하고 `/member/login?signup=success`로 리다이렉트, 로그인 화면에 가입완료 안내 배너 추가. 로그인은 반드시 회원이 직접 하도록 함.
+- 마이페이지에 예약 현황(객실/온천/식당 예약 내역) 섹션 추가 — `ReservationMapper`(+xml)를 신규 작성해 `MemberService.getReservationHistory()`에서 사용.
+- 1:1 문의 작성 폼의 내용 입력란을 라벨을 박스 위로 옮기고, 글씨를 더 크게, 박스도 직사각형으로 더 크게 조정(`common.css`의 `.form-row textarea`).
+- 1:1 문의 관리자 화면(`/Admin/admin_inquiry`)에 관리자 로그인 여부 가드를 추가해 관리자만 열람 가능하도록 제한.
+- 목록/상세 화면에서 제목·상태·등록일이 너무 붙어 보이던 문제를 `.content-actions`에 `gap` 추가 등으로 개선.
+- 팀 공용 `common.css` 교체 과정에서 유실됐던 `.form-row`, `.field-label`, `.qna-table`, `.content-card` 등 클래스들을 다시 채워 넣어 폼/표 스타일 깨짐을 복구.
+
+**회원탈퇴 + 문의 삭제 기능 신규 구현:** SQL Developer에서 테스트 계정을 지우려다 `ORA-02292`(FK 제약 위반, `FK_MEMBER_TO_ROOM_RESERVATION`/`FK_MEMBER_TO_INQUIRY`)가 발생한 것을 계기로, 자식 레코드부터 지우는 회원탈퇴 기능이 필요하다고 판단해 구현.
+- `MemberController.withdraw()` (POST `/member/withdraw`) → `MemberService.withdraw()`가 `@Transactional`로 ROOM/ONSEN/RESTAURANT_RESERVATION → RESERVATION → INQUIRY → MEMBER 순서로 cascade 삭제 후 세션 무효화.
+- `InquiryController`/`InquiryService`에 본인 소유 확인 후 개별 문의를 삭제하는 `delete()` 추가, `inquiry/view.html`에 확인창(`confirm()`)이 있는 삭제 버튼 추가.
+- 마이페이지에 확인창이 있는 회원탈퇴 버튼 추가.
+
+**Eclipse Lombok 미동작 문제 해결:** `mvn compile`은 성공하는데 Eclipse에서는 롬복 생성자가 인식 안 되는 문제 → 원인은 재설치 누락이 아니라 `SpringToolsForEclipse.ini`에 `-javaagent` 줄이 잘못 병합되어 있던 것(앞의 `-javaagent:...lombok.jar`와 뒤의 `-javaagent:...lombok.jar`가 한 줄에 붙어 있고 앞쪽엔 `-`가 빠져 있었음). 올바른 한 줄로 교체해 해결.
+
+**git push 실패("↑8 ↓20") 해결:** 원인은 실제 커밋 충돌이 아니라, 앞서 "전체 삭제 후 새 파일 복사"로 통합하는 과정에서 로컬 브랜치의 커밋 그래프가 원격과 구조적으로 단절된 것이었음. `origin/Choiyeongsu13`을 기준으로 새 브랜치를 만들고, `git checkout <기존 커밋> -- <17개 파일>`로 이 세션에서 만든 고유 변경분만 다시 적용해 커밋 → `git rev-list --left-right --count`로 순수 fast-forward임을 확인 후 강제 push 없이 정상 push (`b05db9d..0feb1fe`) 완료.
+
+**결과:** `mvnw clean compile` BUILD SUCCESS. Claude Browser로 회원가입(`finalcheck@example.com` 등 테스트 계정) → 가입완료 배너 → 로그인 → 마이페이지 예약현황/탈퇴 버튼 → 문의 작성/삭제까지 전체 플로우 직접 테스트 완료. 이후 다른 세션에서 push한 23개 커밋(다국어 지원, 교통안내 페이지, 결제/예약 전체 플로우, 방/플랜/온천/식당코스/시설 관리자 CRUD)을 fast-forward로 병합해 최신 상태 확인, 기존에 구현한 회원가입 기능이 병합 후에도 정상 동작함을 재확인.
+
+---
+
+## june47087-byte 브랜치 병합 + 교통안내(access) 페이지 개선 (2026-09-18)
+
+**목표:** `origin/june47087-byte`(방/플랜/온천/시설/공지/문의답변 CRUD, 이미지 업로드, 실제 DB 연동 예약 화면이 대폭 구현된 브랜치)를 `Choiyeongsu13`으로 가져와서 로컬에서 통합 테스트.
+
+**충돌 15개 파일 처리:**
+- **세션 속성 키 재통일**: `Choiyeongsu13`은 `"loginAdmin"`, june 쪽은 `"admin"`을 쓰고 있었음. june 쪽이 방/플랜/온천/시설/공지/문의답변 등 훨씬 많은 화면이 `"admin"`에 의존하고 있어 `"admin"`으로 통일 (`AdminController`, `GlobalModelAdvice`, 관련 템플릿).
+- **PW_RESET_YN 의미가 또 반전되어 있던 것 발견**: `Choiyeongsu13` 쪽 최신 코드는 `'Y'=초기 비밀번호(변경 필요)`로 되어 있었는데, june 쪽 최신 구현과 템플릿(`admin_pwreset.html`)은 `'Y'=비밀번호 변경 완료`로 정반대. june 쪽 의미로 통일 (`AdminService.authenticate/changePassword`, `AdminRequestService.approve`, `AdminMapper.xml`의 `updatePassword`).
+- `WebConfig`(i18n LocaleResolver + 업로드 리소스 핸들러), `header.html`(i18n 유지), `InquiryMapper`/`InquiryService`(관리자 문의 답변 기능 추가) 등은 서로 다른 기능을 더한 것이라 양쪽 다 유지.
+- 제가 만든 `/access`, `/Admin/access_edit`(교통안내 단독 수정 화면)은 june 쪽의 `admin_info_register` 내 "section-route"와 기능이 겹치지만 컬럼이 같아 충돌 없이 둘 다 남겨둠 (중복이지만 무해함).
+- `mvnw compile` BUILD SUCCESS 확인. 로컬 구동 후 메인/plan/access/admin_login/admin_inquiry 리다이렉트까지 브라우저로 확인, 서버 로그에 에러 없음.
+
+**교통안내(`access.html`) 개선:**
+- 버스 노선 예시(오타루역앞 3번 승강장 → 순환버스 → '후루카와' 정류장, 약 10분·210엔), 택시 예상 요금(1,500~1,800엔), 도보 소요시간(약 15분)을 3칸 카드로 추가.
+- 지도 SVG의 오타루역/清流庵 지점을 원형 마커 대신 지도 핀(물방울) 모양으로, 순환버스 정류장은 버스 아이콘으로 교체.
+- 사용자 피드백으로 지도 그림 크기를 max-width 640px → 420px로 축소.
+- 로컬 개발 편의를 위해 `spring.thymeleaf.cache=false` 추가 (서버 재시작 없이 html 수정 바로 반영).
+
+**push 완료:** 병합 커밋 + 위 access 개선 커밋을 `origin/Choiyeongsu13`, `origin/Test` 양쪽에 fast-forward로 push 완료 (강제 push 없음).
+
+**참고 — 히스토리 정리 관련:** june47087-byte 브랜치가 과거(제가 커밋 attribution을 정리하기 전)에 `Choiyeongsu13`을 한 번 병합해둔 적이 있어서, 이번 병합으로 attribution이 붙은 예전 커밋 6개가 `Test`/`Choiyeongsu13`에 다시 딸려 들어옴. 사용자 확인 결과 지금은 그대로 두기로 함 (필요시 나중에 정리 대상).
 
 ---
 

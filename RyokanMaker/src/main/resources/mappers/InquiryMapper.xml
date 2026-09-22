@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.InquiryMapper">
 
-    <resultMap id="inquiryResultMap" type="com.mnu.ryokanmaker.domain.InquiryDto">
+    <resultMap id="inquiryResultMap" type="com.mnu.ryokanmaker.dto.InquiryDto">
         <id     column="INQUIRY_IDX"            property="inquiryIdx"/>
         <result column="ADMIN_IDX"              property="adminIdx"/>
         <result column="USER_MAIL"              property="userMail"/>
@@ -23,7 +23,7 @@
         SELECT * FROM INQUIRY WHERE INQUIRY_IDX = #{inquiryIdx}
     </select>
 
-    <insert id="insert" parameterType="com.mnu.ryokanmaker.domain.InquiryDto"
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.InquiryDto"
             useGeneratedKeys="true" keyProperty="inquiryIdx" keyColumn="INQUIRY_IDX">
         INSERT INTO INQUIRY (ADMIN_IDX, USER_MAIL, INQUIRY_TITLE, INQUIRY_CONTENT, INQUIRY_STATUS, INQUIRY_CREATED_AT)
         VALUES (#{adminIdx}, #{userMail}, #{inquiryTitle}, #{inquiryContent}, '답변대기', SYSTIMESTAMP)
@@ -63,7 +63,7 @@
     </select>
 
     <!-- 답변 등록/수정. 등록과 동시에 상태를 '답변완료'로 갱신 -->
-    <update id="answerInquiry" parameterType="com.mnu.ryokanmaker.domain.InquiryDto">
+    <update id="answerInquiry" parameterType="com.mnu.ryokanmaker.dto.InquiryDto">
         UPDATE INQUIRY
         SET INQUIRY_ANSWER_CONTENT = #{inquiryAnswerContent},
             INQUIRY_STATUS = '답변완료'

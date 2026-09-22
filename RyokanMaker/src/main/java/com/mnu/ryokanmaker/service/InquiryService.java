@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.mnu.ryokanmaker.domain.InquiryDto;
+import com.mnu.ryokanmaker.dto.InquiryDto;
 import com.mnu.ryokanmaker.mapper.InquiryMapper;
 
 @Service

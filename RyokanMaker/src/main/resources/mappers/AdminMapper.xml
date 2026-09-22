@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.AdminMapper">
 
-    <resultMap id="adminResultMap" type="com.mnu.ryokanmaker.domain.AdminDto">
+    <resultMap id="adminResultMap" type="com.mnu.ryokanmaker.dto.AdminDto">
         <id     column="ADMIN_IDX"      property="adminIdx"/>
         <result column="ADMIN_ID"       property="adminId"/>
         <result column="ADMIN_PASSWORD" property="adminPassword"/>
@@ -25,7 +25,7 @@
         SELECT * FROM ADMIN WHERE ADMIN_IDX = #{adminIdx}
     </select>
 
-    <insert id="insert" parameterType="com.mnu.ryokanmaker.domain.AdminDto"
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminDto"
             useGeneratedKeys="true" keyProperty="adminIdx" keyColumn="ADMIN_IDX">
         INSERT INTO ADMIN (ADMIN_ID, ADMIN_PASSWORD, ADMIN_NAME, ADMIN_MAIL, RYOKAN_NAME, PW_RESET_YN)
         VALUES (#{adminId}, #{adminPassword}, #{adminName}, #{adminMail}, #{ryokanName}, #{pwResetYn})
@@ -35,7 +35,7 @@
         여관 기본정보 수정 (1 관리자 = 1 여관이라 등록/삭제 없이 수정만 있음).
         ryokanLogo / ryokanImage는 새 이미지를 올렸을 때만 값이 채워짐(null이면 기존 이미지 유지).
     -->
-    <update id="updateRyokanInfo" parameterType="com.mnu.ryokanmaker.domain.AdminDto">
+    <update id="updateRyokanInfo" parameterType="com.mnu.ryokanmaker.dto.AdminDto">
         UPDATE ADMIN
         <set>
             RYOKAN_NAME = #{ryokanName},
@@ -49,10 +49,18 @@
     </update>
 
     <!-- 교통안내(RYOKAN_ACCESS) 단독 수정용. 인덱스 화면 본체와 별도 폼이라 전용 update로 분리 -->
-    <update id="updateRyokanAccess" parameterType="com.mnu.ryokanmaker.domain.AdminDto">
+    <update id="updateRyokanAccess" parameterType="com.mnu.ryokanmaker.dto.AdminDto">
         UPDATE ADMIN
         SET RYOKAN_ACCESS = #{ryokanAccess}
         WHERE ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <select id="selectMailPassword" resultType="string">
+        SELECT MAIL_APP_PASSWORD FROM ADMIN WHERE ADMIN_IDX = #{adminIdx}
+    </select>
+
+    <update id="updateMailPassword">
+        UPDATE ADMIN SET MAIL_APP_PASSWORD = #{value, jdbcType=VARCHAR} WHERE ADMIN_IDX = #{adminIdx}
     </update>
 
     <!-- 비밀번호 변경 시 PW_RESET_YN을 'Y'로 갱신 (이후 로그인은 해시 비교) -->

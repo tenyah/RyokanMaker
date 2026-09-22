@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.domain.NoticeDto;
+import com.mnu.ryokanmaker.dto.NoticeDto;
 import com.mnu.ryokanmaker.service.NoticeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,6 +23,11 @@ public class NoticeController {
     @GetMapping("/notice/view")
     public String view(@RequestParam int idx, Model model) {
         NoticeDto notice = noticeService.select(idx);
+        if (notice == null) {
+            return "redirect:/";
+        }
+
+        // 제목/내용은 템플릿에서 @tr.t(...)로 현재 언어에 맞춰 번역해서 보여줌
         model.addAttribute("notice", notice);
         return "notice/view";
     }

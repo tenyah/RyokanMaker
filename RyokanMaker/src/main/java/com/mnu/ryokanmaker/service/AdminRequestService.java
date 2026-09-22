@@ -1,7 +1,7 @@
 package com.mnu.ryokanmaker.service;
 
-import com.mnu.ryokanmaker.domain.AdminDto;
-import com.mnu.ryokanmaker.domain.AdminRequestDto;
+import com.mnu.ryokanmaker.dto.AdminDto;
+import com.mnu.ryokanmaker.dto.AdminRequestDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
 import com.mnu.ryokanmaker.mapper.AdminRequestMapper;
 import com.mnu.ryokanmaker.util.PasswordUtil;

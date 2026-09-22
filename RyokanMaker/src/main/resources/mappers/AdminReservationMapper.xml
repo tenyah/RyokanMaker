@@ -8,7 +8,7 @@
         (한 예약에 객실이 여러 개면 상세 패널에서 전부 확인 가능).
         컬럼명은 실제 Oracle DB 스키마(user_tab_columns 조회 결과) 기준 SCREAMING_SNAKE_CASE.
     -->
-    <select id="selectReservationList" resultType="com.mnu.ryokanmaker.domain.AdminReservationListItemDto">
+    <select id="selectReservationList" resultType="com.mnu.ryokanmaker.dto.AdminReservationListItemDto">
         SELECT
             r.RESV_NUM          AS resvNum,
             m.USER_NICKNAME     AS userNickname,
@@ -38,7 +38,7 @@
         ORDER BY r.RESV_NUM DESC
     </select>
 
-    <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.domain.ReservationDto">
+    <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.dto.ReservationDto">
         SELECT
             RESV_NUM         AS resvNum,
             ADMIN_IDX        AS adminIdx,
@@ -55,7 +55,7 @@
         WHERE RESV_NUM = #{resvNum}
     </select>
 
-    <select id="selectMember" resultType="com.mnu.ryokanmaker.domain.MemberDto">
+    <select id="selectMember" resultType="com.mnu.ryokanmaker.dto.MemberDto">
         SELECT
             USER_MAIL      AS userMail,
             USER_PASSWORD  AS userPassword,
@@ -67,7 +67,7 @@
         WHERE USER_MAIL = #{userMail}
     </select>
 
-    <select id="selectRoomItems" resultType="com.mnu.ryokanmaker.domain.AdminReservationRoomItemDto">
+    <select id="selectRoomItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRoomItemDto">
         SELECT
             rm.ROOM_NAME       AS roomName,
             p.PLAN_NAME        AS planName,
@@ -82,7 +82,7 @@
         ORDER BY rr.ROOM_RESV_NUM
     </select>
 
-    <select id="selectRestaurantItems" resultType="com.mnu.ryokanmaker.domain.AdminReservationRestaurantItemDto">
+    <select id="selectRestaurantItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRestaurantItemDto">
         SELECT
             c.RESTAURANT_COURSE_NAME   AS courseName,
             rr.RESTAURANT_USE_DATE     AS restaurantUseDate,
@@ -95,7 +95,7 @@
         ORDER BY rr.RESTAURANT_FACILITY_IDX
     </select>
 
-    <select id="selectOnsenItems" resultType="com.mnu.ryokanmaker.domain.AdminReservationOnsenItemDto">
+    <select id="selectOnsenItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationOnsenItemDto">
         SELECT
             o.ONSEN_NAME        AS onsenName,
             orr.ONSEN_USE_DATE  AS onsenUseDate,

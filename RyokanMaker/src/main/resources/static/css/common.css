@@ -4,7 +4,7 @@
    <link rel="stylesheet" th:href="@{/css/common.css}">
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&family=Ma+Shan+Zheng&display=swap');
 
 * { box-sizing: border-box; }
 
@@ -23,6 +23,7 @@
   --warn-bg: #FBEDE6;
   --serif: 'Noto Serif KR', 'Nanum Myeongjo', serif;
   --sans: 'Noto Sans KR', -apple-system, sans-serif;
+  --brush: 'Ma Shan Zheng', var(--serif);
   --max-width: 1440px;
 }
 
@@ -77,6 +78,7 @@ img { max-width: 100%; display: block; }
 .site-header .logo { display: flex; flex-direction: column; line-height: 1.35; }
 .site-header .logo .kanji { font-family: var(--serif); font-size: 22px; letter-spacing: 0.1em; color: var(--ink); font-weight: 400; }
 .site-header .logo .romaji { font-size: 10px; letter-spacing: 0.18em; color: var(--gold-deep); }
+.site-header .logo img { height: 64px; width: auto; max-width: 240px; object-fit: contain; display: block; }
 .site-header nav { display: flex; align-items: center; gap: 44px; }
 
 .navlink { color: var(--ink-soft); font-size: 14px; letter-spacing: 0.05em; font-weight: 300; text-decoration: none; }
@@ -91,6 +93,7 @@ img { max-width: 100%; display: block; }
 .site-footer .footer-top { display: flex; justify-content: space-between; align-items: flex-start; }
 .site-footer .brand { display: flex; flex-direction: column; gap: 12px; }
 .site-footer .brand .kanji { font-family: var(--serif); font-weight: 400; font-size: 24px; letter-spacing: 0.1em; }
+.site-footer .brand img { height: 64px; width: auto; max-width: 240px; object-fit: contain; display: block; }
 .site-footer .brand .addr { font-size: 13px; font-weight: 300; color: var(--ink-soft); line-height: 1.8; }
 .site-footer nav { display: flex; gap: 32px; }
 .site-footer nav a { color: var(--ink-soft); font-size: 13px; }
@@ -122,7 +125,6 @@ img { max-width: 100%; display: block; }
 .search-field:last-of-type { border-right: none; }
 .field-label { font-size: 11px; letter-spacing: 0.1em; color: var(--ink-faint); }
 .field-value { font-size: 15px; color: var(--ink); font-family: var(--serif); font-weight: 400; }
-.field-icon { flex: none; }
 
 /* ---------------- 섹션 구분 태그 (① 객실 선택 등) ---------------- */
 .section-tag { display: flex; align-items: center; gap: 16px; padding: 0 56px; margin: 48px 0 32px; }
@@ -161,7 +163,6 @@ img { max-width: 100%; display: block; }
 .cal-cell .status { font-size: 14px; }
 .cal-cell .price { font-size: 11px; color: var(--ink-faint); display: block; margin-top: 2px; }
 .status-ok { color: var(--ink); font-weight: 500; }
-.status-ask { color: var(--gold-deep); font-weight: 500; }
 .status-no { color: var(--ink-faint); }
 .cal-legend { display: flex; gap: 24px; margin-top: 16px; font-size: 12px; color: var(--ink-soft); }
 
@@ -304,12 +305,59 @@ img { max-width: 100%; display: block; }
   flex: 0 0 calc(50% - 20px);
   scroll-snap-align: start;
 }
-.course-card .thumb { width: 100%; height: 260px; overflow: hidden; }
+.course-card .thumb { width: 100%; height: 260px; overflow: hidden; position: relative; }
 .course-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .course-card .body { padding: 22px; display: flex; flex-direction: column; gap: 10px; }
 .course-card h4 { font-family: var(--serif); font-weight: 400; font-size: 18px; color: var(--ink); margin: 0; }
 .course-card p { font-size: 13px; font-weight: 300; color: var(--ink-soft); line-height: 1.7; margin: 0; }
 .course-card p.tbd { color: var(--ink-faint); font-style: italic; }
+
+/* ---------------- 소개 카드 공통 (실제 사진이 없을 때의 샘플 이미지) ---------------- */
+.sample-badge {
+  position: absolute; top: 12px; left: 12px; z-index: 1;
+  font-size: 10.5px; font-weight: 400; letter-spacing: 0.04em; color: var(--gold-deep);
+  border: 1px solid var(--gold-pale); background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 20px;
+}
+
+/* ---------------- 소개 상세 리스트 공통 (rooms / onsen / dining / facility) ----------------
+   사진을 가운데 캐러셀로, 그 아래 텍스트 정보를 배치하는 세로 목록 레이아웃.
+   화살표/점(dot)으로만 넘기며 자동으로 움직이지 않는다. */
+.detail-list { padding: 0 56px 72px; display: flex; flex-direction: column; }
+.detail-item { padding: 56px 0; display: flex; flex-direction: column; align-items: center; gap: 26px; border-bottom: 1px solid var(--line); text-align: center; }
+.detail-item:first-child { padding-top: 0; }
+.detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+.detail-thumb { position: relative; width: 100%; max-width: 1024px; height: 580px; overflow: hidden; background: var(--bg-soft); }
+.detail-thumb .slide { position: absolute; inset: 0; display: flex; transition: transform 0.35s ease; }
+.detail-thumb .slide img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; }
+.detail-thumb .sample-img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; }
+.detail-thumb .nav-btn {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(38,35,31,0.4); color: #fff; font-size: 15px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.detail-thumb .nav-btn:hover { background: rgba(38,35,31,0.6); }
+.detail-thumb .nav-prev { left: 14px; }
+.detail-thumb .nav-next { right: 14px; }
+.detail-thumb .dots { position: absolute; bottom: 14px; left: 0; right: 0; z-index: 2; display: flex; justify-content: center; gap: 6px; }
+.detail-thumb .dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+.detail-thumb .dots span.active { background: #fff; }
+
+.detail-body { max-width: 620px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.detail-body h2 { font-family: var(--serif); font-weight: 400; font-size: 25px; color: var(--ink); margin: 0; }
+.detail-body .type-tag { font-size: 11.5px; letter-spacing: 0.05em; color: var(--gold-deep); border: 1px solid var(--gold-pale); background: var(--gold-pale); padding: 4px 12px; border-radius: 20px; }
+.detail-body .desc { font-size: 14px; font-weight: 300; color: var(--ink-soft); line-height: 1.9; margin: 0; }
+.detail-body .meta-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink-faint); }
+.detail-body .meta-row .sep { color: var(--line); }
+.detail-body .memo { font-size: 12.5px; color: var(--ink-faint); line-height: 1.8; border-top: 1px solid var(--line); padding-top: 16px; margin-top: 6px; width: 100%; }
+.detail-body .price-row { display: flex; align-items: center; gap: 20px; margin-top: 8px; }
+.detail-body .price-row .from { font-size: 11px; color: var(--ink-faint); display: block; }
+.detail-body .price-row .amount { font-family: var(--serif); font-size: 21px; color: var(--ink); }
+.detail-body .price-row .amount .unit { font-size: 12px; font-family: var(--sans); color: var(--ink-faint); }
+
+/* ---------------- 소개 페이지 빈 목록 안내 ---------------- */
+.intro-empty { padding: 64px 56px; text-align: center; color: var(--ink-faint); font-size: 14px; }
 
 /* ============================================================
    관리자(Admin) 페이지 전용 스타일
@@ -572,6 +620,7 @@ img { max-width: 100%; display: block; }
 .auth-logo { text-align: center; margin-bottom: 26px; }
 .auth-logo .kanji { font-family: var(--serif); font-size: 34px; color: var(--gold-deep); font-weight: 500; letter-spacing: .04em; }
 .auth-logo .romaji { font-size: 10.5px; letter-spacing: .18em; color: var(--ink-faint); margin-top: 6px; }
+.auth-logo img { height: 48px; width: auto; max-width: 220px; object-fit: contain; margin: 0 auto; display: block; }
 .auth-title { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--ink); text-align: center; margin: 0 0 6px; }
 .auth-sub { font-size: 12.5px; color: var(--ink-soft); text-align: center; margin: 0 0 30px; line-height: 1.7; }
 .auth-form { display: flex; flex-direction: column; gap: 18px; }
@@ -579,7 +628,6 @@ img { max-width: 100%; display: block; }
 .auth-footnote { margin-top: 26px; text-align: center; font-size: 11.5px; color: var(--ink-faint); line-height: 1.8; }
 .auth-footnote a { color: var(--gold-deep); text-decoration: none; }
 .auth-error { display: flex; align-items: center; gap: 8px; background: var(--warn-bg); color: var(--warn); font-size: 12px; padding: 11px 14px; margin-bottom: 20px; }
-.auth-rule { width: 30px; height: 1px; background: var(--gold); margin: 0 auto 26px; }
 
 /* ---------------- 계정 메뉴 (헤더 우측 아바타 드롭다운) ---------------- */
 .account-menu { position: relative; }
@@ -686,6 +734,9 @@ img { max-width: 100%; display: block; }
 }
 .form-actions { display: flex; gap: 12px; justify-content: center; padding-top: 8px; }
 .account-dropdown-item.danger:hover svg { color: var(--warn); }
+.field-label .req { color: #D64545; margin-left: 4px; font-size: 12px; }
+.req-note { font-size: 12px; color: var(--ink-faint); margin: 0 4px 4px; }
+.req-note .req { color: #D64545; }
 
 /* ---------------- 페이지 넘김 (PageIndex.pageList 출력) ---------------- */
 .page-skip { padding: 14px 16px; text-align: center; font-size: 12.5px; color: var(--ink-faint); border-top: 1px solid var(--line); }

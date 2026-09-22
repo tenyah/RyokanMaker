@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="#{facility.title} + ' | ' + (${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵')">시설 안내 | 清流庵 오타루 후루카와</title>
+  <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- 공통 헤더 include (현재 메뉴 = facility) -->
+  <div th:replace="~{include/header :: header(activePage='facility')}"></div>
+
+  <!-- 타이틀 -->
+  <section class="page-title">
+    <div class="crumb">Facility &nbsp;/&nbsp; 施設</div>
+    <h1 th:text="${@pt.t('FACILITY_TITLE')}">시설 안내</h1>
+    <div class="rule"></div>
+    <p class="desc" th:if="${!#strings.isEmpty(@pt.t('FACILITY_DESC'))}" th:text="${@pt.t('FACILITY_DESC')}" style="white-space:pre-line;"></p>
+  </section>
+
+  <!--
+    facilities는 DB의 FACILITY 테이블에서 조회한 FacilityDto 리스트입니다 (노출여부 컬럼이 없어 전체 노출).
+    필드 : facilityName, facilityInfo, facilityMemo, imageUrls(전체 이미지 경로 목록)
+    사진은 가운데 캐러셀로, 그 아래 텍스트(시설명 → 소개 → 비고)를 배치한다.
+  -->
+  <section class="detail-list" th:with="_p=${@tr.prefetch(facilities, 'facilityName', 'facilityInfo', 'facilityMemo')}">
+    <div class="detail-item" th:each="facility : ${facilities}">
+      <div class="detail-thumb" data-carousel>
+        <button type="button" class="nav-btn nav-prev" onclick="carouselMove(this, -1)" th:if="${#lists.size(facility.imageUrls) > 1}">&#10094;</button>
+        <div class="slide" th:if="${!#lists.isEmpty(facility.imageUrls)}">
+          <img th:each="url : ${facility.imageUrls}" th:src="@{${url}}" alt="">
+        </div>
+        <th:block th:if="${#lists.isEmpty(facility.imageUrls)}">
+          <img th:src="@{/images/sample/facility.svg}" alt="" class="sample-img">
+          <span class="sample-badge" th:text="#{common.sample_image}">샘플 이미지</span>
+        </th:block>
+        <button type="button" class="nav-btn nav-next" onclick="carouselMove(this, 1)" th:if="${#lists.size(facility.imageUrls) > 1}">&#10095;</button>
+        <div class="dots" th:if="${#lists.size(facility.imageUrls) > 1}">
+          <span th:each="url, iter : ${facility.imageUrls}" th:classappend="${iter.index == 0} ? 'active' : ''"></span>
+        </div>
+      </div>
+      <div class="detail-body">
+        <h2 th:text="${@tr.t(facility.facilityName)}">清流庵 専用茶室「清心亭」</h2>
+        <p class="desc" th:text="${@tr.t(facility.facilityInfo)}">전통 다도 시연 (마스터 진행)</p>
+        <p class="memo" th:if="${facility.facilityMemo != null and !facility.facilityMemo.isEmpty()}" th:text="${@tr.t(facility.facilityMemo)}">비고</p>
+      </div>
+    </div>
+    <div class="intro-empty" th:if="${#lists.isEmpty(facilities)}" th:text="#{facility.empty}">등록된 시설 정보가 없습니다.</div>
+  </section>
+
+  <!-- 공통 푸터 include -->
+  <div th:replace="~{include/footer :: footer}"></div>
+
+</div>
+
+<script th:src="@{/js/carousel.js}"></script>
+
+</body>
+</html>

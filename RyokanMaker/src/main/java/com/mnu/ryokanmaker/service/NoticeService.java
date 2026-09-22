@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.mnu.ryokanmaker.domain.NoticeDto;
+import com.mnu.ryokanmaker.dto.NoticeDto;
 import com.mnu.ryokanmaker.mapper.NoticeMapper;
 
 @Service

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">
+  <rect width="480" height="360" fill="#F7F5F0"/>
+  <circle cx="240" cy="180" r="118" fill="#F1E7D3" opacity="0.55"/>
+  <circle cx="240" cy="180" r="118" fill="none" stroke="#B79966" stroke-width="1"/>
+
+  <!-- 노천탕 물결 -->
+  <g stroke="#8F7748" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <ellipse cx="240" cy="230" rx="92" ry="34"/>
+    <path d="M 178 220 q 15 -10 31 0 q 15 10 31 0 q 15 -10 31 0"/>
+    <path d="M 178 236 q 15 -10 31 0 q 15 10 31 0 q 15 -10 31 0"/>
+  </g>
+
+  <!-- 김(증기) -->
+  <g stroke="#B79966" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M 205 175 q -10 -18 0 -32 q 10 -14 0 -30"/>
+    <path d="M 240 168 q -10 -18 0 -32 q 10 -14 0 -30"/>
+    <path d="M 275 175 q -10 -18 0 -32 q 10 -14 0 -30"/>
+  </g>
+</svg>

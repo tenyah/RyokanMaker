@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.MemberMapper">
 
-    <resultMap id="memberResultMap" type="com.mnu.ryokanmaker.domain.MemberDto">
+    <resultMap id="memberResultMap" type="com.mnu.ryokanmaker.dto.MemberDto">
         <id     column="USER_MAIL"          property="userMail"/>
         <result column="USER_PASSWORD"      property="userPassword"/>
         <result column="USER_NICKNAME"      property="userNickname"/>
@@ -19,14 +19,14 @@
         SELECT * FROM MEMBER WHERE USER_MAIL = #{userMail}
     </select>
 
-    <insert id="insert" parameterType="com.mnu.ryokanmaker.domain.MemberDto">
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.MemberDto">
         INSERT INTO MEMBER (USER_MAIL, USER_PASSWORD, USER_NICKNAME, USER_ADDRESS, USER_COUNTRY, USER_TEL,
                              USER_LAST_NAME_EN, USER_FIRST_NAME_EN, USER_LAST_NAME_JP, USER_FIRST_NAME_JP)
         VALUES (#{userMail}, #{userPassword}, #{userNickname}, #{userAddress}, #{userCountry}, #{userTel},
                 #{userLastNameEn}, #{userFirstNameEn}, #{userLastNameJp}, #{userFirstNameJp})
     </insert>
 
-    <update id="update" parameterType="com.mnu.ryokanmaker.domain.MemberDto">
+    <update id="update" parameterType="com.mnu.ryokanmaker.dto.MemberDto">
         UPDATE MEMBER
         SET USER_PASSWORD = #{userPassword},
             USER_NICKNAME = #{userNickname},
@@ -38,6 +38,10 @@
             USER_LAST_NAME_JP = #{userLastNameJp},
             USER_FIRST_NAME_JP = #{userFirstNameJp}
         WHERE USER_MAIL = #{userMail}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE MEMBER SET USER_PASSWORD = #{userPassword} WHERE USER_MAIL = #{userMail}
     </update>
 
     <delete id="deleteByUserMail" parameterType="string">

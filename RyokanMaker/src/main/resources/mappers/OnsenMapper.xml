@@ -3,7 +3,7 @@
 <mapper namespace="com.mnu.ryokanmaker.mapper.OnsenMapper">
 
 	<!-- ONSEN_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
-	<insert id="insertOnsen" parameterType="com.mnu.ryokanmaker.domain.OnsenDto">
+	<insert id="insertOnsen" parameterType="com.mnu.ryokanmaker.dto.OnsenDto">
 		INSERT INTO ONSEN (
 			ONSEN_NAME,
 			ONSEN_IMAGE,
@@ -23,7 +23,7 @@
 		)
 	</insert>
 
-	<select id="selectOnsensByAdmin" resultType="com.mnu.ryokanmaker.domain.OnsenDto">
+	<select id="selectOnsensByAdmin" resultType="com.mnu.ryokanmaker.dto.OnsenDto">
 		SELECT *
 		FROM ONSEN
 		WHERE ADMIN_IDX = #{adminIdx}
@@ -31,7 +31,7 @@
 	</select>
 
 	<!-- onsenImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
-	<update id="updateOnsen" parameterType="com.mnu.ryokanmaker.domain.OnsenDto">
+	<update id="updateOnsen" parameterType="com.mnu.ryokanmaker.dto.OnsenDto">
 		UPDATE ONSEN
 		<set>
 			ONSEN_NAME = #{onsenName},
@@ -52,7 +52,7 @@
 	</delete>
 
 	<!-- 사용자 예약 화면(온천 선택)에 노출할 판매중 온천 전체 조회 -->
-	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.OnsenDto">
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.OnsenDto">
 		SELECT *
 		FROM ONSEN
 		WHERE ONSEN_SALE_YN = 'Y'

@@ -13,10 +13,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.mnu.ryokanmaker.domain.AdminPlanDto;
-import com.mnu.ryokanmaker.domain.SearchConditionDto;
+import com.mnu.ryokanmaker.dto.AdminPlanDto;
+import com.mnu.ryokanmaker.dto.SearchConditionDto;
+import com.mnu.ryokanmaker.service.AdminService;
 import com.mnu.ryokanmaker.service.NoticeService;
+import com.mnu.ryokanmaker.service.OnsenService;
 import com.mnu.ryokanmaker.service.ReservationService;
+import com.mnu.ryokanmaker.service.RestaurantCourseService;
+import com.mnu.ryokanmaker.service.RoomService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -25,17 +29,32 @@ public class ReservationController {
 
     private static final Logger log = LoggerFactory.getLogger(ReservationController.class);
 
+    // 사이트가 단일 료칸(清流庵) 기준이라 메인 화면 캐러셀은 이 관리자 소유 데이터로 고정 조회
+    private static final int MAIN_ADMIN_IDX = 1;
+
     @Autowired
     private NoticeService noticeService;
 
     @Autowired
     private ReservationService reservationService;
 
+    @Autowired
+    private RoomService roomService;
+
+    @Autowired
+    private OnsenService onsenService;
+
+    @Autowired
+    private RestaurantCourseService restaurantCourseService;
+
+    @Autowired
+    private AdminService adminService;
+
     @GetMapping("/")
     public String mainIndex(Model model) {
-        List<com.mnu.ryokanmaker.domain.NoticeDto> notices;
+        List<com.mnu.ryokanmaker.dto.NoticeDto> notices;
         try {
-            List<com.mnu.ryokanmaker.domain.NoticeDto> all = noticeService.list();
+            List<com.mnu.ryokanmaker.dto.NoticeDto> all = noticeService.list();
             notices = all.size() > 3 ? all.subList(0, 3) : all;
         } catch (Exception e) {
             // 공지사항 미리보기는 부가 기능이라, DB 연결 문제로 메인 화면 전체가 죽지 않도록 방어
@@ -43,7 +62,42 @@ public class ReservationController {
             notices = Collections.emptyList();
         }
         model.addAttribute("notices", notices);
+
+        // 히어로 배경 캐러셀 : 관리자가 등록한 메인화면 슬라이드 이미지(RYOKAN_IMAGE). 없으면 빈 목록 -> CSS 그라데이션으로 대체 표시
+        List<String> heroImages;
+        try {
+            com.mnu.ryokanmaker.dto.AdminDto ryokanInfo = adminService.getRyokanInfo(MAIN_ADMIN_IDX);
+            heroImages = ryokanInfo != null ? ryokanInfo.getRyokanImageUrls() : Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("메인 화면 히어로 캐러셀용 여관 정보 조회 실패 - 빈 목록으로 표시합니다.", e);
+            heroImages = Collections.emptyList();
+        }
+        model.addAttribute("heroImages", heroImages);
+
+        // 객실/온천/식사 캐러셀 : 각 카테고리에 등록된 모든 항목의 이미지를 하나의 목록으로 합쳐서 전달
+        model.addAttribute("roomImages", collectImages(safeList(() -> roomService.getRoomList(MAIN_ADMIN_IDX)),
+                com.mnu.ryokanmaker.dto.RoomDto::getImageUrls));
+        model.addAttribute("onsenImages", collectImages(safeList(() -> onsenService.getOnsenList(MAIN_ADMIN_IDX)),
+                com.mnu.ryokanmaker.dto.OnsenDto::getImageUrls));
+        model.addAttribute("courseImages", collectImages(safeList(() -> restaurantCourseService.getCourseList(MAIN_ADMIN_IDX)),
+                com.mnu.ryokanmaker.dto.RestaurantCourseDto::getImageUrls));
+
         return "index";
+    }
+
+    private <T> List<T> safeList(java.util.function.Supplier<List<T>> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            log.warn("메인 화면 캐러셀용 목록 조회 실패 - 빈 목록으로 표시합니다.", e);
+            return Collections.emptyList();
+        }
+    }
+
+    private <T> List<String> collectImages(List<T> items, java.util.function.Function<T, List<String>> imageUrlsGetter) {
+        return items.stream()
+                .flatMap(item -> imageUrlsGetter.apply(item).stream())
+                .toList();
     }
 
     /** 플랜 선택 화면 : templates/reservation/planSelect.html (비회원도 열람 가능) */

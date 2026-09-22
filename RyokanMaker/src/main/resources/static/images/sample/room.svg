@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">
+  <rect width="480" height="360" fill="#F7F5F0"/>
+  <circle cx="240" cy="180" r="118" fill="#F1E7D3" opacity="0.55"/>
+  <circle cx="240" cy="180" r="118" fill="none" stroke="#B79966" stroke-width="1"/>
+
+  <!-- 장지문(쇼지) 격자 -->
+  <g stroke="#8F7748" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="150" y="100" width="180" height="160" rx="2"/>
+    <line x1="150" y1="153.3" x2="330" y2="153.3"/>
+    <line x1="150" y1="206.6" x2="330" y2="206.6"/>
+    <line x1="210" y1="100" x2="210" y2="260"/>
+    <line x1="270" y1="100" x2="270" y2="260"/>
+  </g>
+
+  <!-- 낮은 다실 테이블 -->
+  <g stroke="#8F7748" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="240" cy="272" rx="46" ry="9"/>
+    <line x1="203" y1="276" x2="199" y2="296"/>
+    <line x1="277" y1="276" x2="281" y2="296"/>
+  </g>
+</svg>

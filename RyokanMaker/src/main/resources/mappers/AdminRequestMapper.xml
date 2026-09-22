@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.AdminRequestMapper">
 
-    <resultMap id="adminRequestResultMap" type="com.mnu.ryokanmaker.domain.AdminRequestDto">
+    <resultMap id="adminRequestResultMap" type="com.mnu.ryokanmaker.dto.AdminRequestDto">
         <id     column="REQUEST_IDX"       property="requestIdx"/>
         <result column="RYOKAN_NAME"       property="ryokanName"/>
         <result column="APPLICANT_NAME"    property="applicantName"/>
@@ -15,7 +15,7 @@
         <result column="ADMIN_IDX"         property="resultAdminIdx"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.mnu.ryokanmaker.domain.AdminRequestDto"
+    <insert id="insert" parameterType="com.mnu.ryokanmaker.dto.AdminRequestDto"
             useGeneratedKeys="true" keyProperty="requestIdx" keyColumn="REQUEST_IDX">
         INSERT INTO ADMIN_REQUEST (RYOKAN_NAME, APPLICANT_NAME, APPLICANT_EMAIL, APPLICANT_TEL,
                                     REQUEST_MESSAGE, REQUEST_STATUS, REQUEST_AT)

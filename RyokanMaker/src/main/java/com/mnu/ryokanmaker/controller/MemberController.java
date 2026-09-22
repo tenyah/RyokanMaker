@@ -1,9 +1,11 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.domain.MemberDto;
+import com.mnu.ryokanmaker.dto.MemberDto;
 import com.mnu.ryokanmaker.service.MemberService;
 import com.mnu.ryokanmaker.util.NameValidationUtil;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class MemberController {
+
+    private static final Logger log = LoggerFactory.getLogger(MemberController.class);
 
     @Autowired
     private MemberService memberService;
@@ -33,7 +37,7 @@ public class MemberController {
                           Model model) {
 
         if (memberService.existsByUserMail(memberDto.getUserMail())) {
-            model.addAttribute("error", "이미 가입된 이메일입니다.");
+            model.addAttribute("error", "error.member.duplicate_email");
             model.addAttribute("member", memberDto);
             model.addAttribute("countries", memberService.listCountries());
             return "member/signup";
@@ -69,12 +73,41 @@ public class MemberController {
                          Model model) {
         MemberDto member = memberService.authenticate(userMail, userPassword);
         if (member == null) {
-            model.addAttribute("error", "이메일 또는 비밀번호가 올바르지 않습니다.");
+            model.addAttribute("error", "error.member.login_failed");
             return "member/login";
         }
         member.setUserPassword(null);
         session.setAttribute("loginMember", member);
         return "redirect:/";
+    }
+
+    @GetMapping("/member/forgot")
+    public String forgotForm() {
+        return "member/forgot";
+    }
+
+    /**
+     * 비밀번호 찾기 : 가입된 이메일이면 임시 비밀번호를 메일로 보낸다.
+     * 가입 여부와 관계없이 같은 안내를 보여줘서 이메일이 가입돼 있는지 밖에서 알 수 없게 한다.
+     */
+    @PostMapping("/member/forgot")
+    public String forgot(@RequestParam String userMail, Model model) {
+        if (userMail == null || userMail.isBlank()) {
+            model.addAttribute("error", "error.member.forgot_empty");
+            return "member/forgot";
+        }
+        if (!memberService.isMailAvailable()) {
+            model.addAttribute("error", "error.member.forgot_mail_unavailable");
+            return "member/forgot";
+        }
+        try {
+            memberService.sendTempPassword(userMail);
+        } catch (Exception e) {
+            // 메일 서버 오류 등: 비밀번호는 바뀌지 않았고, 이메일 가입 여부가 드러나지 않도록 같은 안내를 보여준다
+            log.warn("임시 비밀번호 메일 발송 실패", e);
+        }
+        model.addAttribute("sent", true);
+        return "member/forgot";
     }
 
     @GetMapping("/member/logout")
@@ -135,7 +168,7 @@ public class MemberController {
         model.addAttribute("member", updated);
         model.addAttribute("countries", memberService.listCountries());
         model.addAttribute("reservations", memberService.getReservationHistory(updated.getUserMail()));
-        model.addAttribute("message", "정보가 수정되었습니다.");
+        model.addAttribute("message", "member.updated");
         return "member/mypage";
     }
 
@@ -143,11 +176,11 @@ public class MemberController {
     private String validateNames(MemberDto memberDto) {
         if (!NameValidationUtil.isValidEnglishName(memberDto.getUserLastNameEn())
                 || !NameValidationUtil.isValidEnglishName(memberDto.getUserFirstNameEn())) {
-            return "영문 이름은 알파벳으로만 입력해주세요.";
+            return "error.member.name_en";
         }
         if (!NameValidationUtil.isValidJapaneseNameOrBlank(memberDto.getUserLastNameJp())
                 || !NameValidationUtil.isValidJapaneseNameOrBlank(memberDto.getUserFirstNameJp())) {
-            return "일본어 이름은 히라가나/가타카나로만 입력해주세요 (한자 불가).";
+            return "error.member.name_jp";
         }
         return null;
     }
