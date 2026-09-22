@@ -78,9 +78,9 @@
 							<td class="roomname" th:text="${@tr.t(room.roomName)}">사쿠라</td>
 							<td class="cal-cell" th:text="#{resv.people_count(${room.roomPeople})}">7명</td>
 							<td class="cal-cell">
-								<span th:text="'₩' + ${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">₩300,000</span>
+								<span th:text="${@price.format(room.roomPrice)}">₩300,000</span>
 								<span class="price" th:if="${room.extraCharge > 0}"
-									th:text="#{resv.extra_charge(${#numbers.formatInteger(room.extraCharge, 0, 'COMMA')})}">(+₩200,000 추가)</span>
+									th:text="#{resv.extra_charge(${@price.format(room.extraCharge)})}">(+₩200,000 추가)</span>
 								<span class="price" th:unless="${room.extraCharge > 0}" th:text="#{resv.base_room}">(기준 객실)</span>
 							</td>
 							<td class="cal-cell"><span class="status"
@@ -129,9 +129,9 @@
 							<p class="tbd"
 								th:unless="${course.restaurantSaleYn == 'Y'}" th:text="#{resv.course_tbd}">[코스 상세 설명 준비 중입니다]</p>
 							<p style="margin-top: 6px; font-size: 13px;">
-								<span th:text="'₩' + ${#numbers.formatInteger(course.restaurantCoursePrice == null ? 0 : course.restaurantCoursePrice, 0, 'COMMA')}">₩30,000</span>
+								<span th:text="${@price.format(course.restaurantCoursePrice)}">₩30,000</span>
 								<span class="price" th:if="${course.extraCharge > 0}"
-									th:text="#{resv.extra_charge(${#numbers.formatInteger(course.extraCharge, 0, 'COMMA')})}">(+₩10,000 추가)</span>
+									th:text="#{resv.extra_charge(${@price.format(course.extraCharge)})}">(+₩10,000 추가)</span>
 								<span class="price" th:unless="${course.extraCharge > 0}" th:text="#{resv.base_item}">(기준)</span>
 							</p>
 							<input type="radio" name="courseIdx" style="display:none;"
@@ -185,7 +185,7 @@
 											<td class="roomname">
 												<span th:text="${@tr.t(bath.bathName)}">노천탕 (露天湯)</span>
 												<span class="price" style="display:block;" th:if="${bath.extraCharge > 0}"
-													th:text="#{resv.extra_charge(${#numbers.formatInteger(bath.extraCharge, 0, 'COMMA')})}">(+₩10,000 추가)</span>
+													th:text="#{resv.extra_charge(${@price.format(bath.extraCharge)})}">(+₩10,000 추가)</span>
 												<span class="price" style="display:block;" th:unless="${bath.extraCharge > 0}"
 													th:text="#{resv.base_item}">(기준)</span>
 											</td>

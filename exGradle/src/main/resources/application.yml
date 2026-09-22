@@ -1,0 +1,11 @@
+spring:
+    application:
+        name: exGradle
+    mvc:
+        view:
+            prefix: /WEB-INF/views/
+            suffix: .jsp
+
+server:
+    port: 8090
+

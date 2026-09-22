@@ -28,7 +28,7 @@
 
     <div class="plan-card" th:each="plan : ${plans}">
       <div class="thumb">
-        <img th:src="@{${plan.planImage}}" alt="">
+        <img th:if="${plan.thumbnailUrl != null}" th:src="@{${plan.thumbnailUrl}}" alt="">
       </div>
       <div class="body">
        <!-- 식사/온천만 포함된 경우에만 표시 -->
@@ -42,7 +42,7 @@
           <div>
             <span class="from" th:text="#{plans.per_night_2}">1박 2인 기준</span>
             <span class="amount">
-              <span th:text="${'₩' + #numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩0</span>
+              <span th:text="${@price.format(plan.planPrice)}">₩0</span>
               <span class="unit" th:text="#{rooms.from}">부터</span>
             </span>
           </div>

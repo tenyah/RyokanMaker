@@ -13,6 +13,7 @@ import com.mnu.ryokanmaker.mapper.PlanMapper;
 import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;
 import com.mnu.ryokanmaker.mapper.RoomMapper;
 import com.mnu.ryokanmaker.service.GeminiTranslationService;
+import com.mnu.ryokanmaker.service.ExchangeRateService;
 import com.mnu.ryokanmaker.service.PaymentReservationService;
 import com.mnu.ryokanmaker.service.ReservationService;
 import com.mnu.ryokanmaker.service.TossPaymentService;
@@ -75,6 +76,9 @@ public class PaymentController {
     private ReservationService reservationService;
 
     @Autowired
+    private ExchangeRateService exchangeRateService;
+
+    @Autowired
     private MessageSource messageSource;
 
     @Autowired
@@ -121,10 +125,18 @@ public class PaymentController {
         // onsen : 날짜별 온천 선택. 각 값은 "날짜|온천idx|시간" 형식 (예: 2026-09-19|1|15:00)
         List<OnsenPickDto> onsenPicks = reservationService.parseOnsenPicks(onsen, checkIn, checkOut);
         int nights = (int) ChronoUnit.DAYS.between(checkIn, checkOut);
-        PriceBreakdownDto price = reservationService.calculatePriceBreakdown(
+        PriceBreakdownDto priceJpy = reservationService.calculatePriceBreakdown(
                 Integer.valueOf(planCode), roomIdx.intValue(),
                 courseIdx != null ? courseIdx.intValue() : null,
                 onsenPicks, nights);
+
+        // DB 가격은 전부 엔화(JPY) 기준이지만, 실제 결제(TossPayments)는 원화로만 되기 때문에
+        // 결제 화면/실제 청구 금액은 여기서 원화로 한 번에 환산해서 확정한다.
+        PriceBreakdownDto price = new PriceBreakdownDto(
+                (int) exchangeRateService.toKrw(priceJpy.getPlanFee()),
+                (int) exchangeRateService.toKrw(priceJpy.getRoomExtra()),
+                priceJpy.getCourseExtra() != null ? (int) exchangeRateService.toKrw(priceJpy.getCourseExtra()) : null,
+                priceJpy.getOnsenExtra() != null ? (int) exchangeRateService.toKrw(priceJpy.getOnsenExtra()) : null);
         int finalAmount = price.getTotal();
 
 

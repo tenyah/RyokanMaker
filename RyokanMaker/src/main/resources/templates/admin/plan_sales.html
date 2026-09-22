@@ -88,7 +88,7 @@
           <h3 th:text="${@tr.t(plan.planName)}">객실 플랜</h3>
           <p th:text="${plan.planInfo != null and !plan.planInfo.isEmpty()} ? ${@tr.t(plan.planInfo)} : (${plan.planSaleYn == 'Y'} ? '' : #{adm.ps_stopped_now})">숙박만 필요한 고객을 위한 기본 구성</p>
           <div class="price-row">
-            <div><span class="from" th:text="#{adm.ps_from}">1박 2인 부터</span><span class="amount" th:text="'₩' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
+            <div><span class="from" th:text="#{adm.ps_from}">1박 2인 부터</span><span class="amount" th:text="'¥' + ${#numbers.formatInteger(plan.planPrice, 0, 'COMMA')}">₩780,000</span></div>
             <button type="button" class="icon-btn" onclick="editPlan(this)"><svg width="13" height="13"><use href="#i-pencil"/></svg></button>
           </div>
         </div>
