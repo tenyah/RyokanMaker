@@ -33,6 +33,10 @@ public class RestaurantCourseService {
 			courseDto.setRestaurantSaleYn("N");
 		}
 
+		if (courseDto.getRestaurantCoursePrice() == null || courseDto.getRestaurantCoursePrice() < 0) {
+			courseDto.setRestaurantCoursePrice(0);
+		}
+
 		String imageJson = ImageJsonUtil.toJson(courseImageFiles, MAX_IMAGES, "course");
 		if (imageJson != null) {
 			courseDto.setRestaurantCourseImage(imageJson);

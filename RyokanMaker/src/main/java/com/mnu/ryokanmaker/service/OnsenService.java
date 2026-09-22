@@ -36,6 +36,10 @@ public class OnsenService {
 			onsenDto.setOnsenSaleYn("N");
 		}
 
+		if (onsenDto.getOnsenPrice() == null || onsenDto.getOnsenPrice() < 0) {
+			onsenDto.setOnsenPrice(0);
+		}
+
 		boolean isUpdate = onsenDto.getOnsenIdx() != null && onsenDto.getOnsenIdx() > 0;
 
 		// 시간을 둘 다 입력 안 했고 수정 모드라면 기존 시간을 건드리지 않도록 null로 둠 (매퍼가 컬럼을 세팅하긴 하지만,
