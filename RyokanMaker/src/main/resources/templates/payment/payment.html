@@ -90,10 +90,11 @@
             <div class="payfield-row">
               <div class="payfield">
                 <label for="country"><span th:text="#{pay.country}">국가 / 지역</span><span class="required">*</span></label>
-                <select id="country" th:field="*{country}" required>
-                  <option th:each="entry : ${countryOptions}"
-                          th:value="${entry.key}"
-                          th:text="#{${entry.value}}"></option>
+                <!-- 값은 COUNTRY_CODE.COUNTRY_NAME (RESERVATION.RESV_COUNTRY가 이 컬럼을 참조하는 FK) -->
+                <select id="country" th:field="*{country}" required th:with="_pc=${@tr.prefetch(countries, 'countryName')}">
+                  <option value="" th:text="#{member.country_select}">국가를 선택해주세요</option>
+                  <option th:each="c : ${countries}" th:value="${c.countryName}"
+                          th:text="${@tr.t(c.countryName) + ' (' + c.dialCode + ')'}"></option>
                 </select>
                 <span class="payfield-error" th:if="${#fields.hasErrors('country')}" th:errors="*{country}"></span>
               </div>

@@ -1,5 +1,42 @@
 # 작업 기록
 
+## 결제 시 "예약 저장에 실패했습니다" — RESV_COUNTRY 외래키 위반 수정 (2026-09-22, 미커밋)
+
+**증상:** 결제 버튼 → "예약 저장에 실패했습니다". 콘솔 `ORA-02291: 무결성 제약조건(RYOKAN.FK_COUNTRY_TO_RESERVATION)이 위배 - 부모 키가 없습니다` (`PaymentMapper.insertReservation`).
+
+**원인:** 사용자가 추가한 `RESERVATION.RESV_COUNTRY`는 **`COUNTRY_CODE.COUNTRY_NAME`을 참조하는 FK**(익스포트 `Ryokan4.sql` 381·1307행). 그런데 결제 화면 국가 선택이 자체 코드 6개(`KR/JP/US/CN/TW/ETC`, `buildCountryOptions`)였고 그 코드를 그대로 저장 → 부모 키 없음. **컬럼 추가 반영 때 NOT NULL만 보고 FK를 확인하지 않은 내 실수.**
+
+**수정:**
+- `PaymentController`: `CountryCodeMapper` 주입. 결제 화면 국가 목록을 **`COUNTRY_CODE` 전체(`selectAll`)**로(회원가입·마이페이지와 동일), 회원 국가(이미 국가명)를 변환 없이 그대로 기본값으로. `prepare()`에서 `selectDialCode(국가명) == null`이면 400 `invalid guest info`(FK 위반 전에 차단). 자체 코드 변환 `countryCodeOf()`·`buildCountryOptions()` 삭제.
+- `payment.html` 국가 select: `value=국가명`, 표시 `번역된 국가명 (국가번호)`, "국가를 선택해주세요" 빈 옵션 추가.
+- 관리자 상세 국적: `@tr.label('country', 코드)` → `@tr.t(국가명)`(Gemini 번역).
+- 안 쓰게 된 메시지 `country.KR/JP/US/CN/TW/ETC` 3개 언어에서 삭제(672키).
+- **익스포트로 RESERVATION 제약 전체 재확인:** NOT NULL 11개 + FK 3개(MEMBER.USER_MAIL, ADMIN.ADMIN_IDX, COUNTRY_CODE.COUNTRY_NAME) — 모두 충족. CHECK 제약 없음.
+
+**검증:** compile BUILD SUCCESS. **실제 결제로 재확인은 미확인.** 실패했던 시도는 RESERVATION INSERT에서 바로 실패해 트랜잭션이 롤백되므로 남은 행 없음.
+
+---
+
+## 예약 화면 온천 시간대 선택표를 실제 예약과 연동 (2026-09-22, 미커밋)
+
+**증상:** `reservation/reservation.html` 온천 선택표에서 예약을 모두 지웠는데도 일부 칸이 "마감"으로 나옴.
+
+**원인:** 템플릿은 데이터대로 그리고 있었고, `ReservationService.buildBaths()`가 예약 여부를 DB가 아니라 **`(온천 순번 + 시간 순번 + 날짜%3) % 3 != 0` 계산식(목업)**으로 만들고 있었음 → 세 칸 중 한 칸은 항상 마감. 주석에도 "현재는 목업" TODO가 남아 있었음(yeseong 작업분).
+
+**구현:**
+- `OnsenMapper.findReservedSlots(rangeStart, rangeEnd)` 신규 — `ONSEN_RESERVATION`에서 기간 내 (날짜, 온천, 시간대)를 DISTINCT로 조회, **`ONSEN_STATUS='예약취소'` 제외**. 결과 타입은 기존 `OnsenPickDto` 재사용(`TRUNC(ONSEN_USE_DATE) AS "date"` — DATE가 예약어라 따옴표 별칭).
+- `getOnsenDays()`가 한 번 조회해 `"날짜|온천idx|HH:mm"` 키 집합으로 만들고, `buildBaths()`는 **이 온천의 이용시간 안 + 키가 없음**이면 예약 가능. 전세탕이라 한 시간대 한 팀 기준. 저장 시 시간대 형식(`OnsenPickDto.timeSlot`, 예 `15:00`)과 표의 `HH:mm`이 같아야 매칭됨.
+- 결제대기(결제창 띄웠다 취소) 예약도 칸을 차지함 — 객실(`findOverlapping`)과 같은 기준.
+
+**검증:** compile BUILD SUCCESS, 같은 SQL을 라이브 DB에 읽기 전용 실행해 정상 동작 확인(현재 `ONSEN_RESERVATION` 0행 → 전부 예약 가능), 18080 기동으로 매퍼 파싱 확인 후 종료. **로그인 후 예약 화면 육안 확인은 미확인.**
+
+**(후속) 노천탕·실내탕만 전 시간 마감이던 문제:** 목업 제거 후 노천탕(idx 1)·실내탕(idx 2)이 모든 칸 마감. DB의 `ONSEN_HOUR`가 **`15:00~22:00`(물결표 `~`)**이었고, 관리자 화면으로 등록한 雪流の湯(100)·紅葉の湯(120)은 **`17:00–22:00`(엔대시)**. `OnsenDto.getOnsenStartTime/EndTime()`이 엔대시로만 나눠서 1·2번은 이용시간 0개 → 전부 마감(목업 계산식이 이 문제를 가리고 있었음). DB는 고치지 않고 **읽을 때 `–` `~` `〜` `～` `-`를 모두 구분자로 허용**하도록 수정(`HOUR_SPLIT`, 앞뒤 공백 제거). 저장(`setOnsenHourFromRange`)은 계속 엔대시. 실제 값 4종 + 공백·하이픈 변형으로 컴파일된 클래스 테스트 통과. 부수 효과로 관리자 정보등록의 온천 수정 폼에도 1·2번 시간이 채워짐.
+- 참고: 선택표 헤더는 모든 온천 시간의 합집합이라, 17시부터인 100·120번은 15:00·16:00 칸이 "마감"으로 보이는 게 정상.
+
+**남은 점:** 예약 저장(`saveAsWaiting`) 시점에 그 칸이 이미 찼는지 다시 확인하지 않음 — 두 사람이 같은 화면을 보고 동시에 같은 칸을 고르면 둘 다 저장될 수 있음. 객실도 같은 상태.
+
+---
+
 ## 메일 계정을 application.properties에 평문으로 복원 (2026-09-22, 미커밋)
 
 **증상:** 회원가입 시 `MailAuthenticationException: failed to connect, no password specified?` — 가입은 정상, 가입 완료 메일만 실패. 원인은 Choiyeongsu13이 바꿔둔 `spring.mail.username/password=${MAIL_USERNAME:}/${MAIL_PASSWORD:}`인데 이 PC엔 환경변수가 없어 둘 다 빈 값. `EmailService.send()`는 계정이 비었는지 확인하지 않고 Gmail 접속을 시도하므로 **"조용히 건너뜀"이 아니라 매번 WARN + 긴 스택을 남긴다**(앞 항목의 "조용히 건너뜀" 서술은 틀림).
@@ -44,7 +81,7 @@
 **검증:** `mvnw compile` BUILD SUCCESS, RESERVATION INSERT는 `PaymentMapper` 한 곳뿐임을 확인. **실제 예약→관리자 상세 표시는 미확인.**
 
 **(후속) 전화·국가 컬럼 추가 + 예약 완료 메일 수신자 변경:** 사용자가 `RESV_COUNTRY` VARCHAR2(50) **NOT NULL**, `RESV_TEL` VARCHAR2(20) **NOT NULL** 추가(익스포트 `C:/Users/june3/Ryokan4.sql` 369-370행, 라이브 DB에서도 확인). 이번에도 NOT NULL이라 **코드 반영 전까지 새 예약 저장이 실패하던 상태였음.**
-- 저장: `RESV_COUNTRY`는 결제 화면 **국가 코드(KR/JP/US/CN/TW/ETC)** 그대로, `RESV_TEL`은 입력값(공백 제거).
+- 저장: ~~`RESV_COUNTRY`는 결제 화면 국가 코드(KR/JP/...) 그대로~~ **→ FK 위반으로 국가명 저장으로 변경(맨 위 항목)**, `RESV_TEL`은 입력값(공백 제거).
 - `prepare` 검증 확장: 국가·전화 필수 추가 + **Oracle 바이트 길이 초과 검사**(영문 이름 50, 일본어 이름 50, 메일 100, 국가 50, 전화 20 — UTF-8 바이트 기준). 응답 코드를 `invalid guest info`로 통일, 안내 문구(`pay.alert_guest_required`)도 필수·길이 설명으로 갱신. 입력창에 `maxlength`(영문 50, **일본어 16 = 50바이트/가나 3바이트**, 메일 100, 전화 20).
 - 관리자 상세: 연락처 `RESV_TEL`, 국적 `RESV_COUNTRY`를 `@tr.label('country', 코드)`로 표시(기존 `country.KR` 등 메시지 사용, 코드가 아니면 번역 fallback). **`AdminReservationDetailDto.userTel/userCountry`와 MEMBER에서 채우던 코드는 제거**(닉네임만 MEMBER에서).
 - **예약 완료 메일 → `RESV_MAIL`**: `sendReservationMail`이 주문번호로 DB의 예약자 정보(`PaymentMapper.selectGuestByOrderId`)를 읽어 발송. 호칭은 `RESV_MAIL`이 로그인 회원 메일과 같으면 닉네임, 다르면 입력한 영문 이름. 로그인 세션이 없어도 발송 가능(예약 컨텍스트만 있으면).

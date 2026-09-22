@@ -12,6 +12,7 @@ import com.mnu.ryokanmaker.domain.ReservationSummary;
 import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
 import com.mnu.ryokanmaker.domain.RoomDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
+import com.mnu.ryokanmaker.mapper.CountryCodeMapper;
 import com.mnu.ryokanmaker.mapper.PlanMapper;
 import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;
 import com.mnu.ryokanmaker.mapper.RoomMapper;
@@ -79,6 +80,9 @@ public class PaymentController {
 
     @Autowired
     private AdminMapper adminMapper;
+
+    @Autowired
+    private CountryCodeMapper countryCodeMapper;
 
     @Autowired
     private EmailService emailService;
@@ -174,7 +178,7 @@ public class PaymentController {
         guestInfoForm.setFirstNameEn(member.getUserFirstNameEn());
         guestInfoForm.setEmail(member.getUserMail());
         guestInfoForm.setPhone(member.getUserTel());
-        guestInfoForm.setCountry(countryCodeOf(member.getUserCountry()));
+        guestInfoForm.setCountry(member.getUserCountry());
 
         // 결제창을 띄우기 직전(/payment/prepare)에 이 선택값으로 예약을 저장한다.
         session.setAttribute(SESSION_RESERVATION_CONTEXT + guestInfoForm.getOrderId(),
@@ -198,7 +202,7 @@ public class PaymentController {
                 price.getPlanFee(), price.getRoomExtra(), price.getCourseExtra(), price.getOnsenExtra(), finalAmount,
                 3
         ));
-        model.addAttribute("countryOptions", buildCountryOptions());
+        model.addAttribute("countries", countryCodeMapper.selectAll());
         model.addAttribute("arrivalTimeOptions", buildArrivalTimeOptions());
         model.addAttribute("tossClientKey", tossClientKey);
 
@@ -230,6 +234,10 @@ public class PaymentController {
                 || tooLong(guestInfoForm.getLastNameJp(), 50) || tooLong(guestInfoForm.getFirstNameJp(), 50)
                 || tooLong(guestInfoForm.getEmail(), 100) || tooLong(guestInfoForm.getCountry(), 50)
                 || tooLong(guestInfoForm.getPhone(), 20)) {
+            return ResponseEntity.badRequest().body("invalid guest info");
+        }
+        // RESV_COUNTRY는 COUNTRY_CODE.COUNTRY_NAME을 참조하는 FK라 목록에 없는 값이면 저장 전에 막는다
+        if (countryCodeMapper.selectDialCode(guestInfoForm.getCountry().strip()) == null) {
             return ResponseEntity.badRequest().body("invalid guest info");
         }
         if (!isKanaOrBlank(guestInfoForm.getLastNameJp()) || !isKanaOrBlank(guestInfoForm.getFirstNameJp())) {
@@ -345,31 +353,7 @@ public class PaymentController {
         return name == null || name.isBlank() || KANA_NAME.matcher(name).matches();
     }
 
-    /** 회원 국가(COUNTRY_CODE 테이블의 국가명)를 결제 화면 선택지 코드로 바꾼다. */
-    private static String countryCodeOf(String countryName) {
-        if (countryName == null || countryName.isBlank()) {
-            return null;
-        }
-        return switch (countryName.strip()) {
-            case "대한민국" -> "KR";
-            case "일본" -> "JP";
-            case "미국" -> "US";
-            case "중국" -> "CN";
-            case "대만" -> "TW";
-            default -> "ETC";
-        };
-    }
 
-    private Map<String, String> buildCountryOptions() {
-        Map<String, String> countries = new LinkedHashMap<>();
-        countries.put("KR", "country.KR");
-        countries.put("JP", "country.JP");
-        countries.put("US", "country.US");
-        countries.put("CN", "country.CN");
-        countries.put("TW", "country.TW");
-        countries.put("ETC", "country.ETC");
-        return countries;
-    }
 
     private Map<String, String> buildArrivalTimeOptions() {
         Map<String, String> times = new LinkedHashMap<>();

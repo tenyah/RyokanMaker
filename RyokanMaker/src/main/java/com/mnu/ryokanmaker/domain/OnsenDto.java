@@ -47,15 +47,24 @@ public class OnsenDto {
         this.onsenHour = (hasStart ? startTime : "") + HOUR_DELIMITER + (hasEnd ? endTime : "");
     }
 
+    // 저장은 항상 엔대시(–)로 하지만, DB에 직접 넣은 데이터는 ~ 나 - 로 되어 있을 수 있어 읽을 때는 모두 허용
+    private static final java.util.regex.Pattern HOUR_SPLIT = java.util.regex.Pattern.compile("[–~〜～-]");
+
+    /** ONSEN_HOUR를 [시작, 종료]로 분리. 구분자가 없으면 null. */
+    private String[] splitHour() {
+        if (onsenHour == null) return null;
+        String[] parts = HOUR_SPLIT.split(onsenHour, 2);
+        return parts.length == 2 ? parts : null;
+    }
+
     /** 화면(수정 모드)에서 시간 input에 다시 채워 넣기 위해 ONSEN_HOUR를 시작/종료로 분리 */
     public String getOnsenStartTime() {
-        if (onsenHour == null || !onsenHour.contains(HOUR_DELIMITER)) return "";
-        return onsenHour.split(HOUR_DELIMITER, 2)[0];
+        String[] parts = splitHour();
+        return parts == null ? "" : parts[0].strip();
     }
 
     public String getOnsenEndTime() {
-        if (onsenHour == null || !onsenHour.contains(HOUR_DELIMITER)) return "";
-        String[] parts = onsenHour.split(HOUR_DELIMITER, 2);
-        return parts.length > 1 ? parts[1] : "";
+        String[] parts = splitHour();
+        return parts == null ? "" : parts[1].strip();
     }
 }

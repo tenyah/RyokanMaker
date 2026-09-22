@@ -142,7 +142,7 @@
         <div class="field-row">
           <div class="field"><label th:text="#{member.email}">이메일</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvMail ?: '-'}">tanaka.yuki@example.jp</div></div>
           <div class="field"><label th:text="#{member.tel}">연락처</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvTel ?: '-'}">+81 90-1234-5678</div></div>
-          <div class="field"><label th:text="#{adm.rv_nationality}">국적</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvCountry != null} ? ${@tr.label('country', detail.resvCountry)} : '-'">일본</div></div>
+          <div class="field"><label th:text="#{adm.rv_nationality}">국적</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvCountry != null} ? ${@tr.t(detail.resvCountry)} : '-'">일본</div></div>
           <div class="field"><label th:text="#{pay.arrival}">도착 예정 시간</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvArrivalTime}">15:30</div></div>
         </div>
 

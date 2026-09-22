@@ -28,7 +28,7 @@ public class AdminReservationDetailDto {
     private String resvLastNameJp;
     private String resvFirstNameJp;
     private String resvMail;
-    private String resvCountry;  // 결제 화면 국가 코드(KR/JP/...)
+    private String resvCountry;  // COUNTRY_CODE.COUNTRY_NAME (FK)
     private String resvTel;
 
     // 예약 정보 (RESERVATION)
