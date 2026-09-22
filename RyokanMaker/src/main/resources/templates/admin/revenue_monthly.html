@@ -1,0 +1,161 @@
+<!doctype html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="(${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵') + ' ' + #{adm.title_revenue_monthly}">清流庵 관리자 - 월매출조회</title>
+<link rel="stylesheet" th:href="@{/css/common.css}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
+<div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='revenue_monthly')}"></div>
+
+<div class="admin-shell">
+
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='revenue_monthly', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=true)}"></div>
+
+  <main class="admin-main">
+
+    <div class="admin-head">
+      <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue}">매출현황</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue_monthly}">월매출조회</span></div>
+      <h1 th:text="#{adm.revenue_monthly}">월매출조회</h1>
+      <div class="rule"></div>
+      <p th:text="#{adm.rvm_desc}">월 단위로 매출 추이와 구성을 확인합니다.</p>
+    </div>
+
+    <div class="stat-grid cols-4">
+      <div class="stat-tile accent-gold">
+        <div class="label" th:text="#{adm.rvm_month_total(${#temporals.format(summary.yearMonth, 'yyyy.MM')})}">이번 달 총매출</div>
+        <div class="value" th:text="'₩' + ${#numbers.formatInteger(summary.totalRevenue, 0, 'COMMA')}">₩0</div>
+        <div class="sub" th:if="${momChangePercent != null}"
+             th:text="(${momChangePercent >= 0} ? '▲ ' : '▼ ') + ${momChangePercent} + '%'"
+             th:style="'color:' + (${momChangePercent >= 0} ? 'var(--gold-deep)' : 'var(--warn)') + ';'">▲ 0%</div>
+      </div>
+      <div class="stat-tile accent-muted">
+        <div class="label" th:text="#{adm.rvm_month_total(${#temporals.format(prevSummary.yearMonth, 'yyyy.MM')})}">지난 달 총매출</div>
+        <div class="value" th:text="'₩' + ${#numbers.formatInteger(prevSummary.totalRevenue, 0, 'COMMA')}">₩0</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label" th:text="#{adm.rvm_occ(${#temporals.format(summary.yearMonth, 'yyyy.MM')})}">이번 달 객실 가동률 (OCC)</div>
+        <div class="value" th:text="${summary.occupancyRate} + '%'">0%</div>
+      </div>
+      <div class="stat-tile">
+        <div class="label" th:text="#{adm.rvm_adr}">평균 객실 단가 (ADR)</div>
+        <div class="value" th:text="'₩' + ${#numbers.formatInteger(summary.adr, 0, 'COMMA')}">₩0</div>
+      </div>
+    </div>
+
+    <!-- 월별 매출 추이 -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 th:text="#{adm.rvm_trend}">월별 매출 추이</h2>
+        <span class="hint" th:text="#{adm.rvm_trend_hint}">올해(실선) vs 전년(점선)</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box tall"><canvas id="chartMonthly"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 요일별 매출 분포 -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 th:text="#{adm.rvm_dow}">요일별 매출 분포</h2>
+        <span class="hint" th:text="${#temporals.format(summary.yearMonth, 'yyyy.MM')} + ' · ' + #{adm.rvm_dow_hint}">2026.09 · 주말(금·토) 진한 색</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-box short"><canvas id="chartDow"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 일별 매출 조회 (캘린더) -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2 th:text="#{adm.rvm_cal}">일별 매출 조회</h2>
+        <div class="month-nav">
+          <a th:href="@{/Admin/revenue_monthly(ym=${prevYm})}"><button type="button">‹</button></a>
+          <span class="label" th:text="${#temporals.format(summary.yearMonth, 'yyyy.MM')}">2026.09</span>
+          <a th:if="${hasNext}" th:href="@{/Admin/revenue_monthly(ym=${nextYm})}"><button type="button">›</button></a>
+          <button th:unless="${hasNext}" type="button" disabled>›</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="hint" style="margin:0 0 14px;" th:text="#{adm.rvm_cal_hint}">주말(금·토) 음영 표시</p>
+        <div class="rev-cal">
+          <div class="dow" th:each="d : ${dowLabels}" th:text="${d}">일</div>
+          <div class="day empty" th:each="i : ${#numbers.sequence(1, summary.startPad)}" th:if="${summary.startPad > 0}"></div>
+          <div class="day" th:each="day, stat : ${summary.days}"
+               th:classappend="${(summary.startPad + stat.index) % 7 == 5 or (summary.startPad + stat.index) % 7 == 6} ? 'weekend'"
+               th:with="isFuture=${day.future}">
+            <div class="d" th:text="${day.date.dayOfMonth}">1</div>
+            <div class="amt" th:text="${isFuture} ? '-' : ('₩' + ${#numbers.formatInteger(day.amount, 0, 'COMMA')})">₩0</div>
+          </div>
+        </div>
+        <div class="legend2">
+          <span><span class="sw" style="background:var(--gold-pale);"></span><span th:text="#{adm.rvm_weekend}">주말(금·토)</span></span>
+          <span><span class="sw" style="background:var(--bg-soft);border:1px solid var(--line);"></span><span th:text="#{adm.rvm_future}">미도래(데이터 없음)</span></span>
+        </div>
+        <div class="total-banner">
+          <span class="label" th:text="#{adm.rvm_total}">총매출</span>
+          <span class="value" th:text="'₩' + ${#numbers.formatInteger(summary.totalRevenue, 0, 'COMMA')}">₩0</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:56px;"></div>
+  </main>
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+const GOLD = '#B79966', GOLD_DEEP = '#8F7748', INK_SOFT = '#6E675C', LINE = '#EDE6D8';
+
+const locale = /*[[${#locale.language}]]*/ 'ko';
+const axisDivisor = locale === 'en' ? 1000 : 10000;
+const axisSuffix = locale === 'en' ? 'K' : (locale === 'ja' ? '万' : '만');
+const axisFormat = v => Math.round(v / axisDivisor) + axisSuffix;
+const monthLabelFn = m => locale === 'en' ? ('M' + m) : (m + (locale === 'ja' ? '月' : '월'));
+const thisYearLabel = /*[[#{adm.chart_this_year}]]*/ '올해';
+const lastYearLabel = /*[[#{adm.chart_last_year}]]*/ '전년';
+
+const trend = /*[[${monthlyTrend}]]*/ [];
+new Chart(document.getElementById('chartMonthly'), {
+  type: 'bar',
+  data: {
+    labels: trend.map(p => monthLabelFn(p.month)),
+    datasets: [
+      { label: thisYearLabel, type: 'bar', data: trend.map(p => p.currentYearAmount), backgroundColor: GOLD, borderRadius: 3, order: 2 },
+      { label: lastYearLabel, type: 'line', data: trend.map(p => p.prevYearAmount), borderColor: INK_SOFT, backgroundColor: 'transparent', borderDash: [5,4], tension: 0.3, order: 1, pointRadius: 3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      y: { ticks: { callback: axisFormat }, grid: { color: LINE } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+const dowTotals = /*[[${summary.dowTotals}]]*/ [0,0,0,0,0,0,0];
+const dowChartLabels = /*[[${dowLabels}]]*/ ['일','월','화','수','목','금','토'];
+const dowColors = dowTotals.map((_, idx) => (idx === 5 || idx === 6) ? GOLD_DEEP : GOLD);
+new Chart(document.getElementById('chartDow'), {
+  type: 'bar',
+  data: { labels: dowChartLabels, datasets: [{ data: dowTotals, backgroundColor: dowColors, borderRadius: 3, barThickness: 34 }] },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { ticks: { callback: axisFormat }, grid: { color: LINE } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+/*]]>*/
+</script>
+
+</body>
+</html>

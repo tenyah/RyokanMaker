@@ -10,14 +10,16 @@
 			RESTAURANT_COURSE_INFO,
 			ADMIN_IDX,
 			RESTAURANT_SALE_YN,
-			RESTAURANT_COURSE_MEMO
+			RESTAURANT_COURSE_MEMO,
+			RESTAURANT_COURSE_PRICE
 		) VALUES (
 			#{restaurantCourseName},
 			#{restaurantCourseImage},
 			#{restaurantCourseInfo},
 			#{adminIdx},
 			#{restaurantSaleYn},
-			#{restaurantCourseMemo}
+			#{restaurantCourseMemo},
+			#{restaurantCoursePrice}
 		)
 	</insert>
 
@@ -36,6 +38,7 @@
 			RESTAURANT_COURSE_INFO = #{restaurantCourseInfo},
 			RESTAURANT_SALE_YN = #{restaurantSaleYn},
 			RESTAURANT_COURSE_MEMO = #{restaurantCourseMemo},
+			RESTAURANT_COURSE_PRICE = #{restaurantCoursePrice},
 			<if test="restaurantCourseImage != null">RESTAURANT_COURSE_IMAGE = #{restaurantCourseImage},</if>
 		</set>
 		WHERE RESTAURANT_COURSE_IDX = #{restaurantCourseIdx}

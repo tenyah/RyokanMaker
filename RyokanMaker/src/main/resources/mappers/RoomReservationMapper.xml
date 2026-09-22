@@ -34,4 +34,13 @@
 		  AND RESV_CHECK_OUT &gt; #{date}
 	</update>
 
+	<!-- 매출 집계용 : 체크인 날짜가 범위 안이고, 해당 관리자 소유인 객실 예약만 -->
+	<select id="findByAdminAndCheckInRange" resultType="com.mnu.ryokanmaker.domain.RoomReservationDto">
+		SELECT *
+		FROM ROOM_RESERVATION
+		WHERE ADMIN_IDX = #{adminIdx}
+		  AND RESV_CHECK_IN &gt;= #{rangeStart}
+		  AND RESV_CHECK_IN &lt; #{rangeEnd}
+	</select>
+
 </mapper>

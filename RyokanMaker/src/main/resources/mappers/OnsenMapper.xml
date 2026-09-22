@@ -11,7 +11,8 @@
 			ADMIN_IDX,
 			ONSEN_SALE_YN,
 			ONSEN_MEMO,
-			ONSEN_HOUR
+			ONSEN_HOUR,
+			ONSEN_PRICE
 		) VALUES (
 			#{onsenName},
 			#{onsenImage},
@@ -19,7 +20,8 @@
 			#{adminIdx},
 			#{onsenSaleYn},
 			#{onsenMemo},
-			#{onsenHour}
+			#{onsenHour},
+			#{onsenPrice}
 		)
 	</insert>
 
@@ -39,6 +41,7 @@
 			ONSEN_SALE_YN = #{onsenSaleYn},
 			ONSEN_MEMO = #{onsenMemo},
 			ONSEN_HOUR = #{onsenHour},
+			ONSEN_PRICE = #{onsenPrice},
 			<if test="onsenImage != null">ONSEN_IMAGE = #{onsenImage},</if>
 		</set>
 		WHERE ONSEN_IDX = #{onsenIdx}

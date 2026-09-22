@@ -24,6 +24,7 @@ public class OnsenDto {
     private String onsenSaleYn;  // ONSEN_SALE_YN, 기본값 'Y'
     private String onsenMemo;
     private String onsenHour;    // 예: "15:00–21:00"
+    private Integer onsenPrice;  // ONSEN_PRICE, 관리자가 입력하는 온천 가격
 
     /** 목록 화면 썸네일용. onsenImage(경로 JSON 배열)에서 첫 번째 이미지 경로만 뽑는다. */
     public String getThumbnailUrl() {

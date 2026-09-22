@@ -22,4 +22,8 @@ public interface RoomReservationMapper {
 	/** 해당 객실에 date 날짜에 걸친 객실예약(ROOM_RESERVATION)의 상태를 fromStatus일 때만 toStatus로 변경 */
 	int updateRoomResvStatusByRoomAndDate(@Param("adminIdx") Integer adminIdx, @Param("roomIdx") Integer roomIdx,
 			@Param("date") LocalDate date, @Param("fromStatus") String fromStatus, @Param("toStatus") String toStatus);
+
+	/** 특정 관리자의, 체크인 날짜가 [rangeStart, rangeEnd)에 속하는 객실 예약 목록 (매출 집계용). */
+	List<RoomReservationDto> findByAdminAndCheckInRange(@Param("adminIdx") Integer adminIdx,
+			@Param("rangeStart") LocalDate rangeStart, @Param("rangeEnd") LocalDate rangeEnd);
 }

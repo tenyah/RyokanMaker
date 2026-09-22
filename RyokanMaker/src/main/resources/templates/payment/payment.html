@@ -197,12 +197,20 @@
 
             <div class="price-list">
               <div class="summary-row">
-                <span class="k" th:text="#{pay.room_fee(${reservation.nights}, ${reservation.roomCount})}">객실 요금 (1박 × 1실)</span>
-                <span class="v" th:text="'₩' + ${#numbers.formatInteger(reservation.roomFee, 0, 'COMMA')}">₩780,000</span>
+                <span class="k" th:text="#{pay.plan_fee}">플랜 기본 요금</span>
+                <span class="v" th:text="'₩' + ${#numbers.formatInteger(reservation.planFee, 0, 'COMMA')}">₩700,000</span>
               </div>
               <div class="summary-row">
-                <span class="k" th:text="#{pay.meal_fee}">식사 플랜 추가 요금</span>
-                <span class="v" th:text="'₩' + ${#numbers.formatInteger(reservation.mealFee, 0, 'COMMA')}">₩68,508</span>
+                <span class="k" th:text="#{pay.room_extra}">객실 추가 요금</span>
+                <span class="v" th:text="'₩' + ${#numbers.formatInteger(reservation.roomExtra, 0, 'COMMA')}">₩200,000</span>
+              </div>
+              <div class="summary-row" th:if="${reservation.courseExtra != null}">
+                <span class="k" th:text="#{pay.course_extra} + ' ' + #{pay.nights(${reservation.nights})}">식사 코스 추가 요금 (1박)</span>
+                <span class="v" th:text="'₩' + ${#numbers.formatInteger(reservation.courseExtra, 0, 'COMMA')}">₩10,000</span>
+              </div>
+              <div class="summary-row" th:if="${reservation.onsenExtra != null}">
+                <span class="k" th:text="#{pay.onsen_extra}">온천 추가 요금</span>
+                <span class="v" th:text="'₩' + ${#numbers.formatInteger(reservation.onsenExtra, 0, 'COMMA')}">₩30,000</span>
               </div>
               <div class="summary-row">
                 <span class="k" th:text="#{pay.tax}">소비세 · 서비스료</span>

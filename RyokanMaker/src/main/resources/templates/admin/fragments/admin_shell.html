@@ -14,22 +14,28 @@
     <div th:replace="~{admin/fragments/admin_shell :: admin_icons}"></div>
     <div th:replace="~{admin/fragments/admin_shell :: admin_topbar(activePage='info')}"></div>
     <div class="admin-shell">
-      <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false)}"></div>
+      <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
       <main class="admin-main"> ... 페이지 본문 ... </main>
     </div>
 
-  activePage 값       : info(정보등록) / reservation(예약현황) / room(객실현황) / plan(판매관리) /
+  activePage 값       : dashboard(대시보드) / revenue_monthly(월매출조회) / revenue_daily(일자별 매출조회) /
+                         info(정보등록) / reservation(예약현황) / room(객실현황) / plan(판매관리) /
                          inquiry(문의관리) / requests(계정신청)
   showInfoSubmenu     : admin_info_register.html에서만 true — 사이드바 "정보등록" 항목 아래
                          인페이지 섹션 서브메뉴(인덱스 화면/객실 정보/...)를 표시
   showRequestsLink    : admin_requests.html에서만 true — 상단/사이드바에 "계정 신청" 항목을 추가로 노출
                          (다른 5개 페이지는 원래 이 링크가 없었으므로 기본 false로 기존 동작 그대로 유지)
+  showRevenueSubmenu  : revenue_monthly.html/revenue_daily.html에서만 true — 사이드바 "매출현황" 항목 아래
+                         월매출조회/일자별 매출조회 서브메뉴를 표시
 -->
 
 <svg width="0" height="0" style="position:absolute" th:fragment="admin_icons">
   <defs>
     <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 12.5h6M9 16h6"/>
+    </symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20V10M11 20V4M18 20v-7"/><path d="M3 20h18"/>
     </symbol>
     <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3.5" y="5" width="17" height="15.5"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>
@@ -73,7 +79,8 @@
     <span class="romaji">ADMIN</span>
   </div>
   <nav style="gap:44px;">
-    <a class="navlink" href="#" th:text="#{adm.dashboard}">대시보드</a>
+    <a class="navlink" th:classappend="${activePage == 'dashboard'} ? 'active'" th:href="@{/Admin/dashboard}" th:text="#{adm.dashboard}">대시보드</a>
+    <a class="navlink" th:classappend="${activePage == 'revenue_monthly' or activePage == 'revenue_daily'} ? 'active'" th:href="@{/Admin/revenue_monthly}" th:text="#{adm.revenue}">매출현황</a>
     <a class="navlink" th:classappend="${activePage == 'info'} ? 'active'" th:href="@{/Admin/admin_info_register}" th:text="#{adm.info}">정보등록</a>
     <a class="navlink" th:classappend="${activePage == 'reservation'} ? 'active'" th:href="@{/Admin/reservation_status}" th:text="#{adm.reservation}">예약 현황</a>
     <a class="navlink" th:classappend="${activePage == 'room'} ? 'active'" th:href="@{/Admin/room_status}" th:text="#{adm.room}">객실 현황</a>
@@ -105,7 +112,7 @@
 </div>
 
 <!-- 사이드바 -->
-<aside class="admin-sidebar" th:fragment="admin_sidebar(activePage, showInfoSubmenu, showRequestsLink)">
+<aside class="admin-sidebar" th:fragment="admin_sidebar(activePage, showInfoSubmenu, showRequestsLink, showRevenueSubmenu)">
   <div class="menu-label" th:text="#{adm.menu}">관리자 메뉴</div>
 
   <div class="tenant-card">
@@ -118,6 +125,22 @@
   </div>
 
   <nav class="admin-nav">
+    <a class="admin-nav-item" th:classappend="${activePage == 'dashboard'} ? 'active'" th:href="@{/Admin/dashboard}">
+      <svg width="17" height="17"><use href="#i-chart"/></svg>
+      <span th:text="#{adm.dashboard}">대시보드</span>
+    </a>
+
+    <a class="admin-nav-item" th:classappend="${activePage == 'revenue_monthly' or activePage == 'revenue_daily'} ? 'active'" th:href="@{/Admin/revenue_monthly}">
+      <svg width="17" height="17"><use href="#i-cal"/></svg>
+      <span th:text="#{adm.revenue}">매출현황</span>
+      <svg th:if="${showRevenueSubmenu}" class="chev" width="13" height="13"><use href="#i-chevron"/></svg>
+    </a>
+
+    <div class="admin-submenu" th:if="${showRevenueSubmenu}">
+      <a th:href="@{/Admin/revenue_monthly}" class="admin-submenu-item" th:classappend="${activePage == 'revenue_monthly'} ? 'active'">— <span th:text="#{adm.revenue_monthly}">월매출조회</span></a>
+      <a th:href="@{/Admin/revenue_daily}" class="admin-submenu-item" th:classappend="${activePage == 'revenue_daily'} ? 'active'">— <span th:text="#{adm.revenue_daily}">일자별 매출조회</span></a>
+    </div>
+
     <a class="admin-nav-item" th:classappend="${activePage == 'info'} ? 'active'" th:href="@{/Admin/admin_info_register}">
       <svg width="17" height="17"><use href="#i-doc"/></svg>
       <span th:text="#{adm.info}">정보등록</span>
