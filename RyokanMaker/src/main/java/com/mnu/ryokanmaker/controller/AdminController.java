@@ -1,6 +1,8 @@
 package com.mnu.ryokanmaker.controller;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -39,6 +41,7 @@ import com.mnu.ryokanmaker.service.PlanService;
 import com.mnu.ryokanmaker.service.RestaurantCourseService;
 import com.mnu.ryokanmaker.service.RoomService;
 import com.mnu.ryokanmaker.service.RoomStatusService;
+import com.mnu.ryokanmaker.util.PageIndex;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -161,6 +164,7 @@ public class AdminController {
 		List<RoomStatusRowDto> statusGrid = roomStatusService.getStatusGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
 		model.addAttribute("roomList", roomService.getRoomList(loginAdmin.getAdminIdx()));
 		model.addAttribute("statusGrid", statusGrid);
+		model.addAttribute("todayResvMap", roomStatusService.getTodayReservations(LocalDate.now()));
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
 		return "Admin/room_status";
@@ -168,6 +172,7 @@ public class AdminController {
 	@GetMapping("admin_inquiry")
 	public String adminInquiry(@RequestParam(value = "idx", required = false) Integer idx,
 			@RequestParam(value = "status", required = false) String status,
+			@RequestParam(defaultValue = "1") int page,
 			HttpSession session, Model model) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
@@ -180,9 +185,26 @@ public class AdminController {
 		}
 
 		Integer adminIdx = loginAdmin.getAdminIdx();
-		List<InquiryDto> inquiryList = inquiryService.getInquiryList(adminIdx, status);
+		List<InquiryDto> allList = inquiryService.getInquiryList(adminIdx, status);
+
+		int maxlist = 10;
+		int totcount = allList.size();
+		int totpage = (totcount == 0) ? 1 : (totcount + maxlist - 1) / maxlist;
+		int nowpage = Math.min(Math.max(page, 1), totpage);
+		int offset = (nowpage - 1) * maxlist;
+		List<InquiryDto> inquiryList = allList.subList(offset, Math.min(offset + maxlist, totcount));
+
+		// 상태 필터는 페이지를 넘겨도 유지돼야 하므로 링크에 같이 싣는다
+		String extraQuery = (status == null) ? ""
+				: "&status=" + URLEncoder.encode(status, StandardCharsets.UTF_8);
+
 		model.addAttribute("inquiryList", inquiryList);
 		model.addAttribute("statusFilter", status);
+		model.addAttribute("page", nowpage);
+		model.addAttribute("totpage", totpage);
+		model.addAttribute("totcount", totcount);
+		model.addAttribute("pageSkip",
+				PageIndex.pageList(nowpage, totpage, "/Admin/admin_inquiry", maxlist, extraQuery));
 		model.addAttribute("totalCount", inquiryService.countTotal(adminIdx));
 		model.addAttribute("pendingCount", inquiryService.countByStatus(adminIdx, "답변대기"));
 		model.addAttribute("answeredCount", inquiryService.countByStatus(adminIdx, "답변완료"));
@@ -201,6 +223,7 @@ public class AdminController {
 	@PostMapping("inquiry_answer")
 	public String inquiryAnswer(@RequestParam("inquiryIdx") Integer inquiryIdx,
 			@RequestParam("inquiryAnswerContent") String inquiryAnswerContent,
+			@RequestParam(defaultValue = "1") int page,
 			HttpSession session) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
@@ -209,24 +232,45 @@ public class AdminController {
 
 		inquiryService.answerInquiry(inquiryIdx, loginAdmin.getAdminIdx(), inquiryAnswerContent);
 
-		return "redirect:/Admin/admin_inquiry?idx=" + inquiryIdx;
+		return "redirect:/Admin/admin_inquiry?idx=" + inquiryIdx + "&page=" + page;
 	}
 
-	/** 예약 현황 화면: 왼쪽 예약 목록 + 첫 번째 예약의 상세 패널을 함께 조회. */
+	/** 예약 현황 화면: 왼쪽 예약 목록 + 선택한(idx) 예약의 상세 패널을 함께 조회. idx가 없으면 첫 번째 예약. */
 	@GetMapping("reservation_status")
-	public String reservationStatus(HttpSession session, Model model) {
+	public String reservationStatus(@RequestParam(value = "idx", required = false) Integer idx,
+			@RequestParam(defaultValue = "1") int page,
+			HttpSession session, Model model) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
 
-		List<AdminReservationListItemDto> reservationList =
+		List<AdminReservationListItemDto> allList =
 				adminReservationService.getReservationList(loginAdmin.getAdminIdx());
-		model.addAttribute("reservationList", reservationList);
 
-		if (!reservationList.isEmpty()) {
-			Integer firstResvNum = reservationList.get(0).getResvNum();
-			AdminReservationDetailDto detail = adminReservationService.getReservationDetail(firstResvNum);
+		int maxlist = 10;
+		int totcount = allList.size();
+		int totpage = (totcount == 0) ? 1 : (totcount + maxlist - 1) / maxlist;
+		int nowpage = Math.min(Math.max(page, 1), totpage);
+		int offset = (nowpage - 1) * maxlist;
+		List<AdminReservationListItemDto> reservationList =
+				allList.subList(offset, Math.min(offset + maxlist, totcount));
+
+		model.addAttribute("reservationList", reservationList);
+		model.addAttribute("page", nowpage);
+		model.addAttribute("totpage", totpage);
+		model.addAttribute("totcount", totcount);
+		model.addAttribute("pageSkip",
+				PageIndex.pageList(nowpage, totpage, "/Admin/reservation_status", maxlist));
+
+		if (!allList.isEmpty()) {
+			// 내 예약 목록 안에서만 고른다 (다른 관리자의 예약번호를 idx로 넣어도 조회되지 않게)
+			Integer selectedResvNum = allList.stream()
+					.map(AdminReservationListItemDto::getResvNum)
+					.filter(n -> n.equals(idx))
+					.findFirst()
+					.orElse(reservationList.get(0).getResvNum());
+			AdminReservationDetailDto detail = adminReservationService.getReservationDetail(selectedResvNum);
 			model.addAttribute("detail", detail);
 		}
 
@@ -401,6 +445,19 @@ public class AdminController {
 		}
 		roomService.toggleSale(roomIdx, loginAdmin.getAdminIdx(), "Y".equals(roomSaleYn));
 		return roomRedirect(redirectTo);
+	}
+
+	/** 당일 객실 관리 - 오늘 그 객실 예약을 체크인 표시(Y) / 취소(N) */
+	@PostMapping("room_checkin")
+	public String roomCheckin(@RequestParam("roomIdx") Integer roomIdx,
+			@RequestParam("checkedIn") String checkedIn,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		roomStatusService.setCheckedIn(loginAdmin.getAdminIdx(), roomIdx, LocalDate.now(), "Y".equals(checkedIn));
+		return "redirect:/Admin/room_status";
 	}
 
 	/**

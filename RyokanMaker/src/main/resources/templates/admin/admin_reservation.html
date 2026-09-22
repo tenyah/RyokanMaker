@@ -164,7 +164,7 @@
 
     <!-- 통계 타일 -->
     <div class="stat-grid cols-3" style="margin:0 56px 20px;">
-      <div class="stat-tile"><div class="label">전체 예약</div><div class="value" th:text="${#lists.size(reservationList)}">34</div></div>
+      <div class="stat-tile"><div class="label">전체 예약</div><div class="value" th:text="${totcount}">34</div></div>
       <div class="stat-tile accent-gold"><div class="label">오늘 체크인</div><div class="value">4</div></div>
       <div class="stat-tile"><div class="label">오늘 체크아웃</div><div class="value">3</div></div>
     </div>
@@ -191,13 +191,15 @@
       <div class="form-card" style="padding:0;">
         <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
           <span class="sub-label" style="margin:0;">예약 목록</span>
-          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="${#lists.size(reservationList)} + '건'">34건</span>
+          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="${totcount} + '건 · ' + ${page} + '/' + ${totpage}">34건 · 1/1</span>
         </div>
 
-        <div th:each="item, iter : ${reservationList}"
-             style="padding:14px 16px;border-bottom:1px solid var(--line);"
-             th:style="${!iter.last} ? 'padding:14px 16px;border-bottom:1px solid var(--line);' : 'padding:14px 16px;'"
-             th:classappend="${detail != null and item.resvNum == detail.resvNum} ? 'reservation-row-active'">
+        <a th:each="item, iter : ${reservationList}"
+           th:href="@{/Admin/reservation_status(idx=${item.resvNum}, page=${page})}"
+           style="text-decoration:none;color:inherit;display:block;"
+           th:classappend="${detail != null and item.resvNum == detail.resvNum} ? 'reservation-row-active'">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--line);"
+             th:style="${!iter.last} ? 'padding:14px 16px;border-bottom:1px solid var(--line);' : 'padding:14px 16px;'">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">
               <span style="font-size:17px;color:var(--ink-faint);font-family:var(--sans);" th:text="'#' + ${item.resvNum}">#R20260914-03</span>
@@ -213,6 +215,10 @@
             <span style="font-size:11.5px;color:var(--ink-faint);" th:text="'₩' + ${#numbers.formatInteger(item.resvPrice, 0, 'COMMA')}">₩248,000</span>
           </div>
         </div>
+        </a>
+
+        <!-- 페이지 넘김 -->
+        <div class="page-skip" th:if="${totcount > 0}" th:utext="${pageSkip}"></div>
       </div>
 
       <!-- 상세 -->

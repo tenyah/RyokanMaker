@@ -150,7 +150,7 @@
       <div class="crumb">관리자 &nbsp;/&nbsp; 객실 현황</div>
       <h1>객실 현황</h1>
       <div class="rule"></div>
-      <p>날짜별로 각 객실이 지금 예약 가능한 상태인지 확인합니다. 객실 등록 · 수정과 판매 여부는 아래에서 관리합니다.</p>
+      <p>날짜별로 각 객실이 지금 예약 가능한 상태인지 확인합니다. 오늘 객실의 판매 가능 · 고장 · 체크인 여부는 아래에서 관리하며, 위쪽 캘린더에 바로 반영됩니다.</p>
     </div>
 
     <!-- 통계 타일 -->
@@ -158,7 +158,7 @@
       <div class="stat-tile"><div class="label">전체 객실</div><div class="value" th:text="${#lists.size(roomList)}">0</div></div>
       <div class="stat-tile accent-gold"><div class="label">판매중</div>
         <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn == 'Y'])}">0</div></div>
-      <div class="stat-tile accent-muted"><div class="label">판매중지</div>
+      <div class="stat-tile accent-muted"><div class="label">고장(예약 불가)</div>
         <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn != 'Y'])}">0</div></div>
     </div>
 
@@ -180,7 +180,8 @@
     <div class="legend">
       <div class="legend-item"><span class="legend-swatch" style="background:#fff;"></span>판매가능</div>
       <div class="legend-item"><span class="legend-swatch" style="background:var(--gold-pale);border-color:var(--gold);"></span>예약완료</div>
-      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span>판매중지</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--gold-deep);"></span>체크인</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span>고장(예약 불가)</div>
     </div>
 
     <!-- 캘린더 표 -->
@@ -198,34 +199,36 @@
             <td class="cell"
                 th:each="d : ${row.days}"
                 th:if="${row.room.roomSaleYn == 'Y'}"
-                th:classappend="${d.booked} ? 'cell-booked' : 'cell-available'">
-              <span class="status-label" th:text="${d.booked} ? '예약완료' : '판매가능'">판매가능</span>
+                th:classappend="${d.checkedIn} ? 'cell-checkedin' : (${d.booked} ? 'cell-booked' : 'cell-available')">
+              <span class="status-label" th:text="${d.checkedIn} ? '체크인' : (${d.booked} ? '예약완료' : '판매가능')">판매가능</span>
             </td>
             <td class="cell cell-closed" th:if="${row.room.roomSaleYn != 'Y'}" th:each="d : ${row.days}">
-              <span class="status-label">판매중지</span>
+              <span class="status-label">고장</span>
             </td>
           </tr>
         </tbody>
       </table>
-      <p th:if="${#lists.isEmpty(statusGrid)}" style="color:var(--ink-faint);font-size:13px;padding:24px 0;">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</p>
+      <p th:if="${#lists.isEmpty(statusGrid)}" style="color:var(--ink-faint);font-size:13px;padding:24px 0;">등록된 객실이 없습니다. 정보 등록 화면에서 객실을 추가해 주세요.</p>
     </div>
 
-    <!-- 등록된 객실 / 등록·수정 폼 -->
+    <!-- 당일 객실 관리 -->
     <div class="section-tag" style="margin-top:40px;">
       <div class="num">1</div>
-      <div class="label">객실 등록 · 관리</div>
+      <div class="label">당일 객실 관리</div>
       <div class="line"></div>
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
         <div>
-          <div class="sub-label" style="margin-bottom:10px;" th:text="'등록된 객실 (' + ${#lists.size(roomList)} + ')'">등록된 객실 (0)</div>
+          <div class="sub-label" style="margin-bottom:10px;" th:text="'오늘 ' + ${#temporals.format(#temporals.createToday(), 'yyyy.MM.dd')} + ' · 객실 (' + ${#lists.size(roomList)} + ')'">오늘 객실 (0)</div>
 
-          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</div>
+          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}">등록된 객실이 없습니다. 정보 등록 화면에서 객실을 추가해 주세요.</div>
 
           <div class="list-item" th:each="room : ${roomList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo}">
+               th:with="todayResv=${todayResvMap[room.roomIdx]},
+                        broken=${room.roomSaleYn != 'Y'},
+                        checkedIn=${todayResvMap[room.roomIdx] != null and todayResvMap[room.roomIdx].resvStatus == '체크인'}">
             <div class="thumb">
               <img th:if="${room.thumbnailUrl != null}" th:src="@{${room.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${room.thumbnailUrl != null}" width="20" height="20"><use href="#i-bed"/></svg>
@@ -233,9 +236,8 @@
             <div class="info">
               <div class="name" th:text="${room.roomName}">스탠다드 객실</div>
               <div class="desc">
-                <span th:text="${room.roomLevel}">스탠다드</span> · 1박
-                <span th:text="${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">78,000</span>원 · 기준
-                <span th:text="${room.roomPeople}">2</span>인
+                <span th:text="${room.roomLevel}">스탠다드</span> · 오늘
+                <strong th:text="${broken} ? '고장(예약 불가)' : (${checkedIn} ? '체크인' : (${todayResv != null} ? '예약완료 · 체크인 전' : '판매가능'))">판매가능</strong>
                 <span th:if="${room.roomMemo != null and !room.roomMemo.isEmpty()}" th:text="' · 비고: ' + ${room.roomMemo}"></span>
               </div>
             </div>
@@ -243,24 +245,27 @@
               <form th:action="@{/Admin/room_toggle_sale}" method="post" style="display:inline;">
                 <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
                 <input type="hidden" name="redirectTo" value="room_status">
-                <input type="hidden" name="roomSaleYn" th:value="${room.roomSaleYn == 'Y'} ? 'N' : 'Y'">
-                <button type="submit" class="icon-btn" th:title="${room.roomSaleYn == 'Y'} ? '판매중지로 전환' : '판매중으로 전환'">
-                  <svg width="14" height="14"><use th:href="${room.roomSaleYn == 'Y'} ? '#i-x' : '#i-plus'"/></svg>
-                </button>
+                <input type="hidden" name="roomSaleYn" value="Y">
+                <button type="submit" class="small" th:classappend="${broken} ? 'btn-line' : 'btn-gold'" style="padding:9px 16px;font-size:12.5px;">판매가능</button>
               </form>
-              <button type="button" class="icon-btn" onclick="editRoom(this)"><svg width="14" height="14"><use href="#i-pencil"/></svg></button>
-              <form th:action="@{/Admin/room_delete}" method="post" style="display:inline;" onsubmit="return confirm('이 객실을 삭제하시겠습니까?');">
+              <form th:action="@{/Admin/room_checkin}" method="post" style="display:inline;">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <input type="hidden" name="checkedIn" th:value="${checkedIn} ? 'N' : 'Y'">
+                <button type="submit" class="small" th:classappend="${checkedIn} ? 'btn-gold' : 'btn-line'" style="padding:9px 16px;font-size:12.5px;"
+                        th:disabled="${broken or todayResv == null}"
+                        th:title="${todayResv == null} ? '오늘 이 객실의 예약이 없습니다' : (${checkedIn} ? '체크인 취소' : '오늘 체크인 표시')"
+                        th:text="${checkedIn} ? '체크인 취소' : '체크인 표시'">체크인 표시</button>
+              </form>
+              <form th:action="@{/Admin/room_toggle_sale}" method="post" style="display:inline;">
                 <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
                 <input type="hidden" name="redirectTo" value="room_status">
-                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-x"/></svg></button>
+                <input type="hidden" name="roomSaleYn" value="N">
+                <button type="submit" class="small" th:classappend="${broken} ? 'btn-gold' : 'btn-line'" style="padding:9px 16px;font-size:12.5px;">고장</button>
               </form>
             </div>
           </div>
         </div>
-
-        <div class="divider"></div>
-      </form>
-      
+      </div>
     </div>
   </main>
 </div>
@@ -271,79 +276,6 @@ document.addEventListener('click', function (e) {
     if (!menu.contains(e.target)) menu.classList.remove('open');
   });
 });
-
-/* ---------------- 이미지 업로드 미리보기 ---------------- */
-function updateImgGridCount(tile) {
-  var grid = tile.closest('.img-grid');
-  if (!grid) return;
-  var badge = grid.parentElement.querySelector('.count-badge');
-  if (!badge) return;
-  var filled = grid.querySelectorAll('.img-tile.filled').length;
-  var total = grid.querySelectorAll('.img-tile').length;
-  badge.textContent = filled + ' / ' + total;
-}
-
-function showTilePreview(tile, dataUrl) {
-  tile.classList.add('filled');
-  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = 'none'; });
-  tile.style.backgroundImage = 'url(' + dataUrl + ')';
-  tile.style.backgroundSize = 'cover';
-  tile.style.backgroundPosition = 'center';
-  if (!tile.querySelector('.remove')) {
-    var removeBtn = document.createElement('div');
-    removeBtn.className = 'remove';
-    removeBtn.innerHTML = '<svg width="10" height="10"><use href="#i-x"/></svg>';
-    tile.appendChild(removeBtn);
-  }
-}
-
-function clearTilePreview(tile) {
-  var input = tile.querySelector('input[type="file"]');
-  if (input) input.value = '';
-  tile.classList.remove('filled');
-  tile.style.backgroundImage = '';
-  var removeBtn = tile.querySelector('.remove');
-  if (removeBtn) removeBtn.remove();
-  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = ''; });
-}
-
-document.addEventListener('change', function (e) {
-  var input = e.target;
-  if (input.tagName !== 'INPUT' || input.type !== 'file') return;
-  var tile = input.closest('.img-tile');
-  if (!tile) return;
-
-  var file = input.files && input.files[0];
-  if (!file) return;
-
-  var reader = new FileReader();
-  reader.onload = function (ev) {
-    showTilePreview(tile, ev.target.result);
-    updateImgGridCount(tile);
-  };
-  reader.readAsDataURL(file);
-});
-
-document.addEventListener('click', function (e) {
-  var removeBtn = e.target.closest('.img-tile .remove');
-  if (!removeBtn) return;
-  e.preventDefault();
-  var tile = removeBtn.closest('.img-tile');
-  clearTilePreview(tile);
-  updateImgGridCount(tile);
-});
-
-function clearImageGrids(form) {
-  form.querySelectorAll('.img-tile').forEach(function (tile) {
-    clearTilePreview(tile);
-  });
-  form.querySelectorAll('.count-badge').forEach(function (badge) {
-    var total = badge.parentElement.parentElement.querySelectorAll('.img-tile').length;
-    badge.textContent = '0 / ' + total;
-  });
-}
-
-
 </script>
 </body>
 </html>

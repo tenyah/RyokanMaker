@@ -491,6 +491,7 @@ img { max-width: 100%; display: block; }
 .cell-booked { background: var(--gold-pale); color: var(--gold-deep); box-shadow: inset 0 0 0 2px var(--gold); }
 .cell-clean { background: var(--warn-bg); color: var(--warn); box-shadow: inset 0 0 0 1px #E3D6CC; }
 .cell-maintenance { background: #F3ECE3; color: var(--ink-faint); }
+.cell-checkedin { background: var(--gold-deep); color: #fff; }
 .cell-closed { background: var(--ink-faint); color: #fff; }
 .cell-phone { background: var(--bg-soft); color: var(--ink-faint); }
 .cell-limited { background: var(--warn-bg); color: var(--warn); box-shadow: inset 0 0 0 2px var(--warn); }
@@ -685,3 +686,10 @@ img { max-width: 100%; display: block; }
 }
 .form-actions { display: flex; gap: 12px; justify-content: center; padding-top: 8px; }
 .account-dropdown-item.danger:hover svg { color: var(--warn); }
+
+/* ---------------- 페이지 넘김 (PageIndex.pageList 출력) ---------------- */
+.page-skip { padding: 14px 16px; text-align: center; font-size: 12.5px; color: var(--ink-faint); border-top: 1px solid var(--line); }
+.page-skip a.list { color: var(--ink-soft); text-decoration: none; padding: 0 2px; }
+.page-skip a.list:hover { color: var(--gold-deep); }
+.page-skip .list-now { color: var(--gold-deep); font-weight: 600; }
+.page-skip .list-off { color: var(--line); }

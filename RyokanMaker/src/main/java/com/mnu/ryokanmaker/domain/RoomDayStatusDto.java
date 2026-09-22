@@ -14,4 +14,6 @@ public class RoomDayStatusDto {
 
     private LocalDate day;
     private boolean booked;
+    /** 예약이 있고 그 예약이 '체크인' 상태인지 (booked=true일 때만 의미 있음) */
+    private boolean checkedIn;
 }

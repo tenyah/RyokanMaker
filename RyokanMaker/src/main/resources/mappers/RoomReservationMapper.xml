@@ -10,4 +10,28 @@
 		  AND RESV_CHECK_OUT &gt; #{rangeStart}
 	</select>
 
+	<!-- 당일 객실 관리: 체크인 표시/취소. RESERVATION 과 ROOM_RESERVATION 상태를 같이 맞춘다 -->
+	<update id="updateResvStatusByRoomAndDate">
+		UPDATE RESERVATION
+		SET RESV_STATUS = #{toStatus}
+		WHERE RESV_STATUS = #{fromStatus}
+		  AND RESV_NUM IN (
+		      SELECT RESV_NUM FROM ROOM_RESERVATION
+		      WHERE ADMIN_IDX = #{adminIdx}
+		        AND ROOM_IDX = #{roomIdx}
+		        AND RESV_CHECK_IN &lt;= #{date}
+		        AND RESV_CHECK_OUT &gt; #{date}
+		  )
+	</update>
+
+	<update id="updateRoomResvStatusByRoomAndDate">
+		UPDATE ROOM_RESERVATION
+		SET RESV_STATUS = #{toStatus}
+		WHERE ADMIN_IDX = #{adminIdx}
+		  AND ROOM_IDX = #{roomIdx}
+		  AND RESV_STATUS = #{fromStatus}
+		  AND RESV_CHECK_IN &lt;= #{date}
+		  AND RESV_CHECK_OUT &gt; #{date}
+	</update>
+
 </mapper>

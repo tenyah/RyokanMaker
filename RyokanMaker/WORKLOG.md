@@ -1,5 +1,125 @@
 # 작업 기록
 
+## 관리자 문의 관리 / 예약 현황에 페이지 넘김 추가 (2026-09-22, 미커밋)
+
+**사용자 요구:** `admin_inquiry.html`·`admin_reservation.html`의 목록이 아래로 계속 길어지니 페이지 넘김을 넣을 것. **기존 `util/PageIndex.java`를 사용**하고, 방식은 `C:\Users\june3\git\SpringProject\exSample`(JSP 예제)의 `Board/board_list.jsp` 33~72행 + `BoardController.boardListPage()`를 참고.
+
+**참고한 JSP 패턴:** 컨트롤러에서 `totcount`→`totpage` 계산 후 `PageIndex.pageList(...)`가 만든 HTML 문자열을 `pageSkip`으로 모델에 담고, 화면에서는 `<div align="center">${pageSkip}</div>`로 그대로 출력. Thymeleaf에서는 `th:utext`로 대응.
+
+**구현:**
+- `util/PageIndex.java` — 이미 프로젝트에 있었지만 **아무 데서도 안 쓰이던 상태**였음. 기존 `pageList(page,totpage,url,maxlist)`는 4인자 그대로 두고 내부적으로 새 5인자 오버로드에 위임. 5번째 인자 `extraQuery`는 `"&status=답변대기"`처럼 **인코딩까지 끝낸** 추가 쿼리스트링(문의 화면의 상태 필터를 페이지 넘겨도 유지하려고 추가). `<<`/`>>`를 `&lt;&lt;`/`&gt;&gt;`로 이스케이프하고, 현재 페이지와 비활성 화살표를 `<span class='list-now'>`/`<span class='list-off'>`로 감싸 CSS로 강조 가능하게 함. (기존 `pageListHan`은 손대지 않음 — search/key 전용이라 이 화면들과 안 맞음.)
+- `AdminController.adminInquiry()` / `reservationStatus()` — `@RequestParam(defaultValue="1") int page` 추가, **페이지당 10건**(`maxlist`). 서비스/매퍼는 그대로 두고 **전체 목록을 받아 `subList`로 자르는 인메모리 페이징**. (DB offset/fetch 페이징이 아님 — 관리자별 목록이라 규모가 작고, 매퍼·쿼리 변경 없이 끝나서 이 방식 선택. 데이터가 커지면 DB 페이징으로 교체 필요.)
+- `page`는 `Math.min(Math.max(page,1), totpage)`로 클램프 — URL에 `page=999`나 `page=0`을 넣어도 깨지지 않음.
+- **예약 화면 권한 검사는 전체 목록(`allList`) 기준으로 유지** — 페이징된 목록으로 검사하면 다른 페이지의 예약을 클릭했을 때 조회가 안 되므로. 타 관리자 예약번호 차단 효과는 그대로.
+- `inquiryAnswer()` 리다이렉트에 `&page=` 추가, 답변 폼에 `<input type="hidden" name="page">` 추가 → 답변 등록 후에도 보던 페이지로 복귀.
+- 템플릿 2개: 목록 카드 링크에 `page=${page}` 추가(선택해도 페이지 유지), 목록 아래에 `<div class="page-skip" th:if="${totcount > 0}" th:utext="${pageSkip}">` 추가, 헤더 건수 표기를 `34건 · 1/4` 형태로 변경.
+- `admin_reservation.html`의 "전체 예약" 통계 타일이 `#lists.size(reservationList)`를 쓰고 있어 페이징 후엔 페이지 건수(최대 10)만 나오게 됨 → `${totcount}`로 교체.
+- `common.css`에 `.page-skip` / `a.list` / `.list-now` / `.list-off` 스타일 추가.
+
+**검증:** `mvnw clean compile` BUILD SUCCESS, `mvnw spring-boot:run` 기동 성공(8080). **화면 렌더링/페이지 이동 동작은 사용자가 직접 확인하기로 함 — 아직 미검증.** 특히 Thymeleaf 식(`th:utext`, `${totcount > 0}`)은 컴파일로 검증되지 않으므로 실제 렌더링 확인 필요. 확인 순서: 문의 11건 이상일 때 `[1] [2]` 노출 → 2페이지 이동 → 카드 클릭 시 2페이지 유지 → 답변 등록 후에도 2페이지 → 상태 필터(답변대기/답변완료) 건 채로 페이지 넘길 때 필터 유지.
+
+**주의:** 문의 화면 상단 필터 링크(전체/답변대기/답변완료)는 `page`를 안 실으므로 필터를 바꾸면 1페이지로 돌아감 — 의도된 동작.
+
+---
+
+## [보류/할 일] 관리자 예약현황: 통계 타일 + 필터 바 실제 동작 구현 (2026-09-22 요청, 아직 구현 안 함)
+
+**사용자 지시: "일단 기억만 해둬" — 지금은 구현하지 않고 기록만 함. 사용자가 착수하라고 하면 진행.**
+
+대상: `templates/admin/admin_reservation.html`
+- **통계 타일 (165행):** 지금은 "전체 예약"(`reservationList` 크기)만 실제 값. "오늘 체크인"(하드코딩 `4`), "오늘 체크아웃"(하드코딩 `3`)은 가짜 값 → 실제 값으로 교체해야 함. **"오늘"의 기준은 DB `SYSDATE`** (사용자 명시). 로그인한 관리자의 예약만 집계(ROOM_RESERVATION의 `RESV_CHECK_IN`/`RESV_CHECK_OUT` = 오늘, `ADMIN_IDX` 조건). 구현 시 자바 `LocalDate.now()`가 아니라 SQL의 `TRUNC(SYSDATE)`로 비교할 것. 또한 취소 예약을 제외할지(현재 취소 기능은 없음) 정해야 함.
+- **필터 바 (172행):** 체크인 기간 / 예약 상태 / 검색(예약자 이름·이메일) 세 칸이 텍스트만 있는 목업(날짜 `2026.09.13 — 2026.09.19`도 하드코딩). 실제 조회 조건으로 동작하게 해야 함. 목록·상세는 서버 렌더링(`?idx=`) 방식이므로 필터도 같은 방식(쿼리 파라미터 → `AdminReservationService.getReservationList`에 조건 추가)이 자연스러움. 필터 적용 중에도 카드 클릭(`idx`) 시 필터가 유지되도록 링크에 필터 파라미터를 같이 실어야 함(문의 관리의 `status=${statusFilter}` 방식 참고).
+
+**미결정(착수 전 확인할 것):** 예약 상태 필터에 쓸 값 목록(현재 DB에 확인된 값: `예약완료`, `체크인` + 결제상태 `결제대기`/`결제완료`), 체크인 기간 입력 UI(날짜 2개 입력? 기본값은?).
+
+---
+
+## 고객 대상 이메일 3종 추가: 회원가입 완료 / 문의 답변 완료 / 객실 예약 완료 (2026-09-22, 미커밋)
+
+**사용자 요구:** 객실 예약하면 이메일, 문의 답장 완료하면 이메일, 가입완료 이메일.
+
+**구현 (`EmailService`에 메서드 3개 추가, 기존 관리자용 3개는 그대로):**
+- `sendSignupComplete(toEmail, nickname)` — `MemberService.signup()`에서 `memberMapper.insert` 직후 호출.
+- `sendInquiryAnswered(toEmail, title, answer)` — `InquiryService.answerInquiry()`에서 답변 저장 성공 후 호출. 수신자는 문의 작성 회원(`INQUIRY.USER_MAIL`). **최초 답변 등록일 때만 발송**(답변 "수정"마다 메일이 가지 않게 저장 전 기존 답변이 비어있는지 먼저 조회).
+- `sendReservationConfirmed(...)` — `PaymentController.success()`에서 토스 승인 + `markAsPaid` 성공 후 호출(`sendReservationMail`). 숙소명/객실명/플랜명/체크인·아웃/인원/금액/주문번호 포함. 수신자는 로그인 회원 이메일. 예약 정보는 세션의 `ReservationContext`에서 가져오므로 **세션이 만료돼 있으면 메일을 건너뜀**(로그만 남김, 예약·결제 자체는 이미 저장됨). 예약번호로는 DB의 RESV_NUM 대신 주문번호(orderId)를 표기.
+- **실패 처리:** 세 메서드 모두 내부 `sendQuietly`로 예외를 삼키고 `log.warn`만 남김 → 메일 서버 문제가 회원가입/답변 저장/결제 완료 화면을 실패시키지 않음. (기존 관리자용 메일은 예외를 던지는 기존 동작 유지.)
+- 메일 본문은 텍스트(한국어). 제목 접두어는 기존과 동일하게 `[清流庵]` 계열.
+
+**검증:** `mvnw clean compile` BUILD SUCCESS. **실제 메일 발송/수신은 아직 확인 안 함** (회원가입 → 받은편지함, 문의 답변 등록, 결제까지 골든패스 필요).
+
+**주의/참고:**
+- 메일 발송은 요청 스레드에서 동기로 실행됨 → SMTP가 느리면 가입/답변/결제 성공 화면이 그만큼 지연됨. 체감되면 `@Async`로 전환 검토.
+- 메일 계정은 `application.properties`의 Gmail 설정을 사용. **앱 비밀번호가 평문으로 커밋돼 있음(위 보안 항목 참고)** — push 전 환경변수화/재발급 필요.
+- 이 개발 환경에서 수신 테스트는 실제 Gmail로 나가므로, 테스트 시 가입 이메일은 본인 수신 가능한 주소를 쓸 것.
+
+**남은 미구현(위 항목 그대로):** 관리자 예약취소, 판매관리 온천 날짜별 예약 현황(ONSEN_RESERVATION 저장 선행 필요).
+
+---
+
+## 관리자 예약현황: 예약 목록 카드 클릭 시 해당 예약 상세 표시 (2026-09-22, 미커밋)
+
+**사용자 요구:** `admin_reservation.html`의 "예약 목록" 카드를 클릭하면 그 예약의 상세가 오른쪽에 뜨게. **방식은 `admin_inquiry.html`과 동일하게.**
+
+**방식(문의 관리와 동일):** 카드를 `<a href="/Admin/reservation_status?idx=예약번호">` 링크로 감싸고, 컨트롤러가 `idx`로 고른 예약의 상세를 모델에 담아 같은 화면을 다시 렌더링(서버 렌더링, JS/AJAX 없음). 선택된 카드는 기존 `.reservation-row-active`(금색 배경)로 강조. `idx`가 없으면 첫 번째 예약(기존 동작 유지, 사이드바 링크는 그대로 idx 없이 진입).
+- `AdminController.reservationStatus()`: `@RequestParam idx` 추가. **내 예약 목록(`reservationList`) 안에서만 idx를 찾고** 없으면 첫 번째로 대체 — 다른 관리자의 예약번호를 URL에 넣어도 조회되지 않게 함(`getReservationDetail`은 관리자 검사가 없어서 목록 필터로 대신 보장).
+- `admin_reservation.html`: 카드 `<div th:each>`를 `<a th:each>`로 감싸는 구조로 변경.
+
+**검증:** `mvnw clean compile` BUILD SUCCESS. **서버 기동 후 카드 클릭 동작은 아직 확인 안 함.**
+
+**같은 날 확인한 미구현 목록 (다음 할 일):**
+- 관리자 예약취소: 상세의 "예약 취소" 버튼이 동작 없음(엔드포인트/서비스/매퍼 없음). "클릭하면 상세 구현"의 정확한 의미(확인창? 사유 입력? 토스 환불 포함 여부) 사용자 확인 필요.
+- 이메일 3종 미구현: 객실 예약 완료(결제 성공 시), 문의 답변 완료(`InquiryService.answerInquiry`), 회원가입 완료(`MemberService.signup`). `EmailService`엔 관리자 신청/승인/거절 3개 메서드만 있음.
+- 판매관리 "온천 관리": 카드+판매 토글만 완료. 플랜에 있는 "날짜별 예약 현황" 표는 없음 — `ONSEN_RESERVATION` 저장 자체가 미구현이라 먼저 필요.
+- **보안:** `application.properties`에 Gmail 앱 비밀번호가 평문으로 있고 이미 커밋(`3382654`)에 포함됨. push 전에 환경변수화 + 비밀번호 재발급 필요.
+
+---
+
+## 객실현황(room_status)을 "당일 객실 관리"로 전환 — 판매가능/체크인 표시/고장 버튼 (2026-09-21, 미커밋)
+
+**사용자 요구/결정:**
+- 기존 "객실 등록·관리"(판매토글·수정·삭제 버튼)를 **당일 객실 관리**로 변경. 버튼은 `판매가능` / `체크인 표시` / `고장` 3개.
+- **고장 = 판매중지(`ROOM_SALE_YN='N'`)와 동일 개념**으로 확정 (구분 불필요, DB 컬럼 추가 없음). 방이 사용불가면 계속 예약 불가하면 됨.
+- **체크인 버튼**은 "오늘 체크인됐는지 빠르게 판단"하는 용도이며 **위쪽 캘린더와 연동**. 같은 DB를 읽으므로 자동 연동.
+- 객실 수정(연필)/삭제 버튼은 이 화면에서 제거 (등록·수정·삭제는 `admin_info_register.html`에서). 연필은 `editRoom` JS가 이미 없어 눌러도 오류만 나던 상태였음.
+
+**구현:**
+- 체크인 상태 저장: 새 컬럼 없이 `ROOM_RESERVATION.RESV_STATUS` / `RESERVATION.RESV_STATUS`에 값 **`체크인`** 사용 (기존 `예약완료`와 전환). `RoomStatusService.STATUS_CHECKED_IN`/`STATUS_RESERVED`.
+- `RoomReservationMapper(.java/.xml)`: `updateResvStatusByRoomAndDate`(RESERVATION), `updateRoomResvStatusByRoomAndDate`(ROOM_RESERVATION) 추가. 조건: 관리자·객실 일치 + 체크인일 ≤ 오늘 < 체크아웃일 + **현재 상태가 from일 때만** 변경(예약완료↔체크인만 전환, 다른 상태는 안 건드림). RESERVATION과 ROOM_RESERVATION을 같이 갱신(관리자 예약현황 화면은 RESERVATION.RESV_STATUS를 표시하므로 일치시킴).
+- `RoomStatusService`: `setCheckedIn()`(@Transactional), `getTodayReservations()`(key=roomIdx), 캘린더 계산에서 체크인 여부 반영. `RoomDayStatusDto`에 `checkedIn` 필드 추가.
+- `AdminController`: `POST /Admin/room_checkin`(roomIdx, checkedIn=Y/N → `/Admin/room_status`로 redirect), `roomStatus()` 모델에 `todayResvMap` 추가. 판매가능/고장은 기존 `room_toggle_sale` 재사용(Y/N).
+- `room_status.html`: 캘린더 셀에 `체크인` 상태(`cell-checkedin`, `common.css`에 추가) 표시, 판매중지 문구를 `고장`으로, 범례/통계/안내문구 수정, 하단을 "당일 객실 관리" 목록으로 교체(객실별 오늘 상태 표시 + 현재 상태 버튼은 금색 강조). 체크인 버튼은 **오늘 그 객실 예약이 없거나 고장이면 비활성**, 이미 체크인이면 "체크인 취소"로 바뀜. 안 쓰는 이미지 업로드 미리보기 JS 삭제.
+
+**검증:** `mvnw clean compile` BUILD SUCCESS. **서버 기동/화면 렌더링/버튼 동작은 아직 확인 안 함** (Thymeleaf 식은 컴파일로 검증 안 됨 — 특히 `todayResvMap[room.roomIdx]`, `th:with` 부분). 확인 순서: 오늘 걸린 예약이 있는 객실에서 체크인 표시 → 캘린더 오늘 칸이 `체크인`으로 바뀌는지 → 관리자 예약현황 상세 상태도 `체크인`인지 → 취소 시 `예약완료`로 복귀 → 고장 누르면 캘린더가 `고장`으로 바뀌고 사용자 예약 화면에서 빠지는지.
+
+**참고/미결정:** 체크인 표시가 가능한 건 "체크인일 ≤ 오늘 < 체크아웃일"인 예약이라 2박째에도 눌러짐(문제는 없으나 필요하면 체크인일=오늘로 제한 가능). 예약 상태값 `체크인`이 사용자 마이페이지 등 다른 화면에서 어떻게 보일지는 확인 안 함(`RESV_STATUS`를 참조하는 곳: AdminReservationMapper, ReservationMapper).
+
+---
+
+## 관리자 화면 수정분 커밋 + 판매관리 "온천 판매 관리" 섹션 온천 데이터로 전환 (2026-09-21)
+
+**배경:** 사용자가 직접 고친 관리자 템플릿 3개가 미커밋 상태로 남아 있었고(WORKLOG 미해결 항목 9번), 그중 `plan_sales.html`은 등록 폼을 걷어내고 3번 섹션을 "온천 판매 관리"로 바꾸다 만 상태였음.
+
+**1) 사용자 수정분 커밋 (`dde2e51`):** 내가 만든 변경이 아니라 사용자가 직접 수정한 것을 그대로 커밋.
+- `admin_reservation.html`: 예약번호를 크게, 닉네임을 작게 바꾼 표기 수정.
+- `room_status.html`, `plan_sales.html`: 새 객실/플랜 등록·수정 폼 제거 (등록·수정은 `admin_info_register.html`에서만 하도록 일원화 — 화면 중복 때문).
+
+**2) 판매관리 3번 섹션을 온천 데이터로 전환 (`220819b`):**
+- 사용자 의도: 카드 UI는 플랜 카드 그대로 두고 **데이터만 플랜 → 온천(ONSEN)** 으로 교체. (사용자가 카드 형식만 복제해 둔 상태였음)
+- `plan_sales.html`: `editPlan` 연필 버튼 2곳, `editPlan`/`resetPlanForm` JS, 이제 파일 입력이 없어 쓰이지 않는 이미지 업로드 미리보기 JS 전부 삭제. 3번 섹션은 `onsenList` 기반 카드로 재작성(온천명/설명/판매 토글, 가격 자리에는 이용시간 `onsenHour`). 빈 목록 안내 문구는 "정보 등록 화면에서 추가" 로 수정.
+- **온천 판매 토글 신규 구현** (기존엔 없었음): `POST /Admin/onsen_toggle_sale` (`AdminController.onsenToggleSale`, 처리 후 `/Admin/plan_sales`로 redirect), `OnsenService.toggleSale`, `OnsenMapper.updateSaleYn` + `OnsenMapper.xml`의 `UPDATE ONSEN SET ONSEN_SALE_YN`. `ADMIN_IDX` 조건 포함(타 관리자 데이터 보호).
+- `AdminController.planSales()`가 모델에 `onsenList`도 추가.
+- **주의:** 이 토글은 `ONSEN_SALE_YN`을 바꾸므로 사용자 예약 화면의 온천 선택 노출(`OnsenMapper.findAllOnSale`)에도 그대로 반영됨.
+- `mvnw clean compile` BUILD SUCCESS. **서버 기동 후 화면/토글 동작은 아직 확인 안 함.**
+
+**참고:** 이전에 "온천 일일 판매 한도" 섹션은 목업으로 복원하기로 했었으나, 이번에 사용자가 그 자리를 "온천 판매 관리"로 직접 바꿨으므로 그 결정은 대체됨(한도 기능 자체는 여전히 미구현).
+
+**다음 할 일 (미해결 목록은 위 섹션들의 "다음 할 일"/"아직 확인 안 됨" 참고):**
+- plan_sales 온천 카드/토글 실제 동작 확인.
+- 아직 push 안 함 (`origin/june47087-byte`).
+- 결제 예약 저장(ORA-17004 수정 후) 골든패스 검증, 온천/식사 예약 테이블 저장 미구현 등은 그대로 남아 있음.
+
+---
+
 ## dto→domain 패키지 통합 + 관리자 객실현황/판매관리 화면 완성 (2026-09-18)
 
 **배경:** `AccessController.findByAdminIdx` 컴파일 에러 수정 후, `origin/yeseong` 브랜치를 로컬에 가져오려다 원격 브랜치 6개(Test/Choiyeongsu13/eartth21/master/yeseong) 상태를 점검. Test/Choiyeongsu13/eartth21은 이미 현재 브랜치(june47087-byte)의 조상이라 가져올 것이 없었고, master는 같은 커밋을 넣었다 revert해 실질 빈 커밋, yeseong만 "플랜선택 예약 구현" 등 고유 커밋 2개가 있었음.

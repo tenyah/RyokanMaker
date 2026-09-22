@@ -180,13 +180,13 @@
       <div class="form-card" style="padding:0;">
         <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
           <span class="sub-label" style="margin:0;">문의 목록</span>
-          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="${#lists.size(inquiryList)} + '건'">0건</span>
+          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="${totcount} + '건 · ' + ${page} + '/' + ${totpage}">0건 · 1/1</span>
         </div>
 
         <div class="img-hint" style="padding:16px 18px;" th:if="${#lists.isEmpty(inquiryList)}">접수된 문의가 없습니다.</div>
 
         <a th:each="inquiry : ${inquiryList}"
-           th:href="@{/Admin/admin_inquiry(idx=${inquiry.inquiryIdx}, status=${statusFilter})}"
+           th:href="@{/Admin/admin_inquiry(idx=${inquiry.inquiryIdx}, status=${statusFilter}, page=${page})}"
            style="text-decoration:none;color:inherit;display:block;"
            th:style="${selectedInquiry != null and selectedInquiry.inquiryIdx == inquiry.inquiryIdx} ? 'text-decoration:none;color:inherit;display:block;background:var(--gold-pale);' : 'text-decoration:none;color:inherit;display:block;'">
           <div style="padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;"
@@ -202,6 +202,9 @@
             </div>
           </div>
         </a>
+
+        <!-- 페이지 넘김 -->
+        <div class="page-skip" th:if="${totcount > 0}" th:utext="${pageSkip}"></div>
       </div>
 
       <!-- 상세 / 답변 -->
@@ -231,6 +234,7 @@
 
         <form th:action="@{/Admin/inquiry_answer}" method="post">
           <input type="hidden" name="inquiryIdx" th:value="${selectedInquiry.inquiryIdx}">
+          <input type="hidden" name="page" th:value="${page}">
           <div class="field" style="margin-top:20px;">
             <label th:text="${selectedInquiry.inquiryAnswerContent != null} ? '답변 수정' : '답변 작성'">답변 작성</label>
             <textarea name="inquiryAnswerContent" style="min-height:130px;" placeholder="답변 내용을 입력하세요..." required th:text="${selectedInquiry.inquiryAnswerContent}"></textarea>
