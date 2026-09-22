@@ -18,6 +18,9 @@ import java.util.List;
 public class MemberService {
 
     @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private MemberMapper memberMapper;
 
     @Autowired
@@ -50,6 +53,7 @@ public class MemberService {
     public void signup(MemberDto memberDto) {
         memberDto.setUserPassword(PasswordUtil.sha256(memberDto.getUserPassword()));
         memberMapper.insert(memberDto);
+        emailService.sendSignupComplete(memberDto.getUserMail(), memberDto.getUserNickname());
     }
 
     /** 로그인 : 이메일/비밀번호가 맞으면 회원 정보를, 아니면 null을 반환 */

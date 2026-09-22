@@ -1,5 +1,8 @@
 package com.mnu.ryokanmaker.controller;
 
+import com.mnu.ryokanmaker.domain.AdminDto;
+import com.mnu.ryokanmaker.mapper.AdminMapper;
+import com.mnu.ryokanmaker.service.EmailService;
 import com.mnu.ryokanmaker.domain.AdminPlanDto;
 import com.mnu.ryokanmaker.domain.GuestInfoForm;
 import com.mnu.ryokanmaker.domain.MemberDto;
@@ -62,6 +65,12 @@ public class PaymentController {
 
     @Autowired
     private PaymentReservationService paymentReservationService;
+
+    @Autowired
+    private AdminMapper adminMapper;
+
+    @Autowired
+    private EmailService emailService;
 
     @Value("${tosspayments.client-key}")
     private String tossClientKey;
@@ -197,6 +206,8 @@ public class PaymentController {
         Object method = result.get("method");
         paymentReservationService.markAsPaid(orderId, method != null ? method.toString() : null);
 
+        sendReservationMail(session, orderId);
+
         session.removeAttribute(SESSION_RESERVATION_CONTEXT + orderId);
 
         model.addAttribute("orderId", orderId);
@@ -212,6 +223,27 @@ public class PaymentController {
         model.addAttribute("code", code);
         model.addAttribute("message", message);
         return "payment/fail";
+    }
+
+    /** 결제 승인 후 예약 완료 메일 발송. 세션이 만료돼 예약 정보를 못 찾으면 건너뛴다(예약 자체는 이미 저장됨). */
+    private void sendReservationMail(HttpSession session, String orderId) {
+        MemberDto member = loginMember(session);
+        ReservationContext context = (ReservationContext) session.getAttribute(SESSION_RESERVATION_CONTEXT + orderId);
+        if (member == null || context == null) {
+            log.warn("예약 완료 메일 생략: 세션에 회원/예약 정보가 없음 (orderId={})", orderId);
+            return;
+        }
+        try {
+            RoomDto room = roomMapper.findById(context.getRoomIdx());
+            AdminPlanDto plan = planMapper.findById(context.getPlanIdx());
+            AdminDto admin = adminMapper.selectByAdminIdx(context.getAdminIdx());
+            emailService.sendReservationConfirmed(member.getUserMail(), member.getUserNickname(),
+                    admin != null ? admin.getRyokanName() : null, orderId,
+                    room != null ? room.getRoomName() : null, plan != null ? plan.getPlanName() : null,
+                    context.getCheckIn(), context.getCheckOut(), context.getPeople(), context.getTotalAmount());
+        } catch (RuntimeException e) {
+            log.warn("예약 완료 메일 준비 실패 (orderId={})", orderId, e);
+        }
     }
 
     private MemberDto loginMember(HttpSession session) {
