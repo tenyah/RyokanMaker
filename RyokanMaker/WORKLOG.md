@@ -1,5 +1,20 @@
 # 작업 기록
 
+## yeseong `d095712` 병합: 마이페이지 예약 취소 + 코스 사진 (2026-09-22)
+
+**배경:** 메인 화면(`index.html` feature-card) 사진이 깨짐 → DB 이미지 경로와 로컬 파일 대조(읽기 전용) 결과 **14개 중 9개가 이 PC에 없음**. 원인은 **공용 DB + 각자 PC에 파일 저장** 구조(`ImageJsonUtil`이 `src/main/resources/static/uploads`에 저장, DB엔 경로만). 다른 사람이 관리자 화면에서 올린 사진은 그 파일을 git으로 받기 전까지 경로만 있고 파일이 없다.
+- 코스 特選和牛膳(122)·特選懐石(123) 사진 2장 → yeseong `d095712`에 있어 이번 병합으로 해결.
+- **객실 月光(123) 4장, 온천 夕映の湯(121) 3장은 어느 브랜치에도 없음** → 등록한 팀원이 자기 `uploads` 폴더를 커밋해야 함(또는 관리자 화면에서 다시 업로드). **시연 PC에서 최종 pull 후 확인 필요.**
+
+**`d095712` "관리자 하드코딩 변환, 예약취소"(9/22 16:50):** 153파일 +5449지만, **우리 `dc571ee`를 통째로 복사한 뒤 작업을 얹은 커밋**(RyokanMaker/src 기준 가장 가까운 커밋이 dc571ee). 실제 변경은:
+- **마이페이지 예약 취소:** `POST /member/reservation_cancel` → `MemberService.cancelReservation`. 관리자 취소(`AdminReservationService.cancelReservation`)와 **같은 방식**(상태만 `예약취소`/`결제취소`, 온천 `ONSEN_STATUS`도, 같은 상수 사용) — 본인 확인만 `USER_MAIL` 기준. `ReservationMapper`에 `selectReservationHeader`·`cancelReservation`·`cancelRoomReservations`·`cancelOnsenReservations`. 취소건은 이미 객실·온천 가능 여부와 집계에서 빠지므로 그대로 맞물림.
+- 코스 사진 3장, 메시지(마이페이지 취소 문구 5개 + `adm.rs_line`/`adm.ir_plan_line` 원→¥), `mypage.html`.
+- **옛 `dto` 패키지 DTO 32개와 `admin/access_edit.html`(Choiyeongsu13이 988099b에서 삭제, 주소는 정보등록 교통안내 섹션으로 리다이렉트 중)이 사본에 섞여 있었으나, 공통 조상(dc035a5) 이후 yeseong 쪽 변경이 없고 우리 쪽이 삭제했으므로 git이 자동으로 제외** — 병합 후 두 경로 모두 없음을 확인.
+- 충돌 2개(`ReservationMapper.java`, `MemberService.java`)는 둘 다 yeseong이 추가한 `import ...domain.ReservationDto;` 한 줄 — 우리 쪽엔 없어 그대로 받음.
+- 검증: compile BUILD SUCCESS, 메시지 3개 언어 677키·중복 0. **마이페이지 취소 화면 동작은 미확인.**
+
+---
+
 ## 결제 시 "예약 저장에 실패했습니다" — RESV_COUNTRY 외래키 위반 수정 (2026-09-22, 미커밋)
 
 **증상:** 결제 버튼 → "예약 저장에 실패했습니다". 콘솔 `ORA-02291: 무결성 제약조건(RYOKAN.FK_COUNTRY_TO_RESERVATION)이 위배 - 부모 키가 없습니다` (`PaymentMapper.insertReservation`).

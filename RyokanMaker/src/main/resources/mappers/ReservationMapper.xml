@@ -33,6 +33,39 @@
         ORDER BY r.RESV_NUM DESC
     </select>
 
+    <!-- 마이페이지 예약 취소 시 소유자(userMail) 확인용 -->
+    <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.domain.ReservationDto">
+        SELECT
+            RESV_NUM        AS resvNum,
+            ADMIN_IDX       AS adminIdx,
+            USER_MAIL       AS userMail,
+            RESV_PRICE      AS resvPrice,
+            RESV_PEOPLE     AS resvPeople,
+            RESV_STATUS     AS resvStatus,
+            RESV_PAY_STATUS AS resvPayStatus
+        FROM RESERVATION
+        WHERE RESV_NUM = #{resvNum}
+    </select>
+
+    <update id="cancelReservation">
+        UPDATE RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND USER_MAIL = #{userMail}
+    </update>
+
+    <update id="cancelRoomReservations">
+        UPDATE ROOM_RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND USER_MAIL = #{userMail}
+    </update>
+
+    <!-- RESTAURANT_RESERVATION은 상태 컬럼이 없어 그대로 두고, 예약 본체 상태로 취소 여부를 판단한다 -->
+    <update id="cancelOnsenReservations">
+        UPDATE ONSEN_RESERVATION
+        SET ONSEN_STATUS = #{status}
+        WHERE RESV_NUM = #{resvNum} AND USER_MAIL = #{userMail}
+    </update>
+
     <delete id="deleteRoomReservationsByUserMail" parameterType="string">
         DELETE FROM ROOM_RESERVATION WHERE USER_MAIL = #{userMail}
     </delete>

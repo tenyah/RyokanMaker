@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class MemberController {
@@ -126,6 +127,23 @@ public class MemberController {
         memberService.withdraw(loginMember.getUserMail());
         session.invalidate();
         return "redirect:/?withdraw=success";
+    }
+
+    @PostMapping("/member/reservation_cancel")
+    public String reservationCancel(@RequestParam("resvNum") Integer resvNum,
+                                     HttpSession session, RedirectAttributes redirectAttributes) {
+        MemberDto loginMember = (MemberDto) session.getAttribute("loginMember");
+        if (loginMember == null) {
+            return "redirect:/member/login";
+        }
+        try {
+            memberService.cancelReservation(resvNum, loginMember.getUserMail());
+            redirectAttributes.addFlashAttribute("message", "mypage.resv_cancel_done");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.warn("마이페이지 예약 취소 실패 resvNum={}", resvNum, e);
+            redirectAttributes.addFlashAttribute("error", "mypage.resv_cancel_fail");
+        }
+        return "redirect:/member/mypage";
     }
 
     @GetMapping("/member/mypage")

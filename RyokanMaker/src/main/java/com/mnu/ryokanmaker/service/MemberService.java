@@ -3,6 +3,7 @@ package com.mnu.ryokanmaker.service;
 import com.mnu.ryokanmaker.domain.AdminReservationListItemDto;
 import com.mnu.ryokanmaker.domain.CountryCodeDto;
 import com.mnu.ryokanmaker.domain.MemberDto;
+import com.mnu.ryokanmaker.domain.ReservationDto;
 import com.mnu.ryokanmaker.mapper.CountryCodeMapper;
 import com.mnu.ryokanmaker.mapper.InquiryMapper;
 import com.mnu.ryokanmaker.mapper.MemberMapper;
@@ -72,6 +73,31 @@ public class MemberService {
     /** 마이페이지 - 내 예약 현황 */
     public List<AdminReservationListItemDto> getReservationHistory(String userMail) {
         return reservationMapper.selectReservationListByUserMail(userMail);
+    }
+
+    /**
+     * 마이페이지 - 본인 예약 취소. AdminReservationService.cancelReservation과 같은 흐름이지만
+     * 소유자 확인 기준이 adminIdx가 아니라 userMail(로그인한 회원 본인)이다.
+     */
+    @Transactional
+    public void cancelReservation(Integer resvNum, String userMail) {
+        ReservationDto header = reservationMapper.selectReservationHeader(resvNum);
+        if (header == null || !userMail.equals(header.getUserMail())) {
+            throw new IllegalArgumentException("예약을 찾을 수 없습니다: resvNum=" + resvNum);
+        }
+        if (PaymentReservationService.STATUS_CANCELLED.equals(header.getResvStatus())) {
+            throw new IllegalStateException("이미 취소된 예약입니다: resvNum=" + resvNum);
+        }
+
+        String payStatus = header.getResvPayStatus();
+        if (PaymentReservationService.PAY_STATUS_PAID.equals(payStatus)) {
+            payStatus = PaymentReservationService.PAY_STATUS_CANCELLED;
+        }
+
+        String cancelled = PaymentReservationService.STATUS_CANCELLED;
+        reservationMapper.cancelReservation(resvNum, userMail, cancelled, payStatus);
+        reservationMapper.cancelRoomReservations(resvNum, userMail, cancelled, payStatus);
+        reservationMapper.cancelOnsenReservations(resvNum, userMail, cancelled);
     }
 
     public boolean existsByUserMail(String userMail) {
