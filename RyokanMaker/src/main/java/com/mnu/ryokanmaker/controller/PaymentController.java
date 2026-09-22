@@ -1,13 +1,13 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.dto.AdminDto;
-import com.mnu.ryokanmaker.dto.AdminPlanDto;
-import com.mnu.ryokanmaker.dto.GuestInfoForm;
-import com.mnu.ryokanmaker.dto.MemberDto;
-import com.mnu.ryokanmaker.dto.ReservationContext;
-import com.mnu.ryokanmaker.dto.ReservationSummary;
-import com.mnu.ryokanmaker.dto.RestaurantCourseDto;
-import com.mnu.ryokanmaker.dto.RoomDto;
+import com.mnu.ryokanmaker.domain.AdminDto;
+import com.mnu.ryokanmaker.domain.AdminPlanDto;
+import com.mnu.ryokanmaker.domain.GuestInfoForm;
+import com.mnu.ryokanmaker.domain.MemberDto;
+import com.mnu.ryokanmaker.domain.ReservationContext;
+import com.mnu.ryokanmaker.domain.ReservationSummary;
+import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
+import com.mnu.ryokanmaker.domain.RoomDto;
 import com.mnu.ryokanmaker.mapper.AdminMapper;
 import com.mnu.ryokanmaker.mapper.PlanMapper;
 import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;

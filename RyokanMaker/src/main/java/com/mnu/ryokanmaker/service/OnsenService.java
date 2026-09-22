@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.mnu.ryokanmaker.dto.OnsenDto;
+import com.mnu.ryokanmaker.domain.OnsenDto;
 import com.mnu.ryokanmaker.mapper.OnsenMapper;
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
 

@@ -1,5 +1,37 @@
 # 작업 기록
 
+## Choiyeongsu13 병합 + dto→domain 재통일 + Lombok 전환 (2026-09-22)
+
+**⚠️ 먼저 알아둘 것: `remote.origin.fetch`가 `+refs/heads/june47087-byte:refs/remotes/origin/june47087-byte` 하나만 추적하도록 설정돼 있다.** 그래서 `git fetch origin`을 해도 다른 브랜치의 원격 추적 정보가 갱신되지 않는다. 이번 세션 초반에 이걸 모르고 "Choiyeongsu13/eartth21은 고유 커밋 0개"라고 잘못 판단했다. **팀원 브랜치를 볼 때는 반드시 `git ls-remote origin`으로 실제 상태를 확인하거나 `git fetch origin '+refs/heads/*:refs/remotes/origin/*'`로 받을 것.** (config는 사용자 확인 없이 안 고쳤음 — 고칠지 논의 필요.)
+
+**파악한 실제 구조:** Choiyeongsu13이 사실상 팀 통합 브랜치다. 9/19에 `integrate-0919`에서 june47087-byte·eartth21·yeseong을 전부 병합해뒀다(`fa9f711`/`891dc87`/`a4a4a4d`). 그래서 남은 차이는 우리 최신 4커밋뿐이었고, eartth21 고유는 `1032d84 대시보드 매출현` 1개, yeseong 고유는 `381d1d0 예약페이지 시간 추가` 1개. origin/master는 `0916 은예성`을 넣었다 Revert해 실질 변경 0.
+
+**병합 (`aa08be4`, 156파일 +5190/-2588):** 가져온 것 — 다국어 KO/EN/JA 전체 적용(고정 문구는 messages, DB 콘텐츠는 Gemini 자동 번역), PAGE_CONTENT(관리자가 손님 화면 문구 편집), 교통안내 `/access` 페이지, 회원 비밀번호 찾기, `admin_shell.html` 프래그먼트, rooms/onsen/dining/facility 페이지.
+
+**충돌 9개 해소 원칙 — 관리자 화면은 우리 레이아웃 + 저쪽 i18n 키:**
+- `room_status.html`(충돌 11곳), `plan_sales.html`(5곳), `admin_reservation.html`(3곳), `admin_inquiry.html`(1곳): 저쪽은 **옛 레이아웃에 다국어 키만 입힌 상태**였고 우리는 같은 기간에 그 화면들을 새로 짰다. 우리 구조(등록 폼 제거, 당일 객실 관리, 온천 판매 관리, 목록 페이지 넘김)를 살리고 메시지 키를 다시 입혔다.
+- **등록 폼이 화면에서 빠졌으므로** `adm.rs_empty`/`adm.ps_empty`의 "아래에서 새 ○○을 추가해 주세요"를 "정보 등록 화면에서"로 3개 언어 모두 수정. `adm.rs_desc`도 당일 관리 내용으로 교체.
+- 새 키 12개를 ko/en/ja에 추가: `adm.checked_in`, `adm.rs_broken`, `adm.rs_broken_short`, `adm.rs_today_manage`, `adm.rs_today_rooms`, `adm.rs_booked_before_in`, `adm.rs_no_today_resv`, `adm.rs_checkin_mark`, `adm.rs_checkin_mark_title`, `adm.rs_checkin_cancel`, `adm.ps_onsen_sale`, `adm.ps_onsen_empty`.
+- `PageIndex.java`: 저쪽이 `ad44d9d 미사용 DTO/유틸 클래스 정리`에서 지웠으나(당시엔 실제로 아무도 안 썼음) 지금은 페이지 넘김이 쓰므로 **우리 버전 복구**.
+- `common.css`/`EmailService`/`WORKLOG`: 양쪽 내용 모두 보존.
+- `PaymentController`: 양쪽 필드(AdminMapper·EmailService ↔ MessageSource·GeminiTranslationService) 전부 유지.
+
+**⚠️ 삽질 기록 — Lombok이 깨진 줄 알았던 건:** 병합 직후 컴파일하면 `cannot find symbol: getXxx()` 에러가 DTO 전반에 수백 개 쏟아져서 Lombok 애노테이션 처리가 안 되는 것처럼 보였다. **실제 원인은 `MemberService`에 `emailService` 필드가 양쪽에서 각각 추가돼 중복 선언(`variable emailService is already defined`)된 것 하나뿐이었다.** 애노테이션 처리 라운드에서 에러가 나면 Lombok 생성 메서드가 전부 없는 것처럼 보이는 전형적인 증상. **에러 목록은 정렬하지 말고 맨 앞부터 볼 것** — 첫 줄이 진짜 원인이었다. 중복 필드 제거 후 바로 BUILD SUCCESS.
+
+**dto→domain 재통일:** 우리가 9/18에 `dto`→`domain`으로 바꿨었는데(`9978e5e`), Choiyeongsu13이 9/19 병합에서 `dto`를 유지하는 쪽으로 해소해 사실상 되돌려놨다. 이번 병합으로 트리가 다시 `dto`가 됐고, 사용자 지시로 **`domain`으로 재통일**했다. `git mv`로 폴더를 옮기고 `sed`로 89개 파일(java+xml)의 `ryokanmaker.dto`→`ryokanmaker.domain` 일괄 치환. `application.properties`에 `type-aliases-package` 설정은 없어서 건드릴 것 없었음.
+- **주의:** 팀원 3명 브랜치는 전부 `dto`다. 다음 병합에서 같은 충돌이 또 난다 — 팀과 패키지명을 합의하는 게 근본 해결.
+
+**Lombok 점검:** DTO 30개 중 28개는 이미 `@Data` 계열이 붙어 있었고, `AdminRequestDto`(수동 getter/setter 20개)와 `CountryCodeDto`(4개)만 순수 POJO여서 Lombok으로 전환. `AdminRequestDto`는 무인자 생성자만 있었으므로 `@Data @NoArgsConstructor`, `CountryCodeDto`는 2인자 생성자도 쓰이므로 `@Data @NoArgsConstructor @AllArgsConstructor`. pom.xml에 lombok 의존성과 `annotationProcessorPaths` 설정은 이미 정상이었다.
+
+**검증:** `mvnw clean compile` + `test-compile` BUILD SUCCESS. **서버 기동/화면 확인은 아직 안 함.** 다국어 전환(KO/EN/JA)에서 방금 손댄 관리자 화면 4개가 제대로 나오는지, 특히 새로 추가한 키 12개와 페이지 넘김이 3개 언어에서 다 보이는지 확인 필요.
+
+**남은 통합 작업:**
+- `origin/eartth21`의 `1032d84`(대시보드 매출현) 반영
+- `origin/yeseong`의 `381d1d0`(예약페이지 시간 추가) 반영
+- 그 다음 push
+
+---
+
 ## 관리자 문의 관리 / 예약 현황에 페이지 넘김 추가 (2026-09-22, 미커밋)
 
 **사용자 요구:** `admin_inquiry.html`·`admin_reservation.html`의 목록이 아래로 계속 길어지니 페이지 넘김을 넣을 것. **기존 `util/PageIndex.java`를 사용**하고, 방식은 `C:\Users\june3\git\SpringProject\exSample`(JSP 예제)의 `Board/board_list.jsp` 33~72행 + `BoardController.boardListPage()`를 참고.

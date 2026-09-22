@@ -4,7 +4,7 @@
 
 	<!-- PLAN_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외. PLAN_SALE_YN은 화면 입력 항목이 아니라
 	     컬럼 목록에서 빼고 DB 기본값('Y')에 맡긴다. -->
-	<insert id="insertPlan" parameterType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+	<insert id="insertPlan" parameterType="com.mnu.ryokanmaker.domain.AdminPlanDto">
 		INSERT INTO PLAN (
 			ADMIN_IDX,
 			PLAN_NAME,
@@ -24,7 +24,7 @@
 		)
 	</insert>
 
-	<select id="selectPlansByAdmin" resultType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+	<select id="selectPlansByAdmin" resultType="com.mnu.ryokanmaker.domain.AdminPlanDto">
 		SELECT *
 		FROM PLAN
 		WHERE ADMIN_IDX = #{adminIdx}
@@ -32,7 +32,7 @@
 	</select>
 
 	<!-- planImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
-	<update id="updatePlan" parameterType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+	<update id="updatePlan" parameterType="com.mnu.ryokanmaker.domain.AdminPlanDto">
 		UPDATE PLAN
 		<set>
 			PLAN_NAME = #{planName},
@@ -53,14 +53,14 @@
 	</delete>
 
 	<!-- 사용자 예약 화면(플랜 선택)에 노출할 판매중 플랜 전체 조회 -->
-	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.AdminPlanDto">
 		SELECT *
 		FROM PLAN
 		WHERE PLAN_SALE_YN = 'Y'
 		ORDER BY PLAN_IDX
 	</select>
 
-	<select id="findById" resultType="com.mnu.ryokanmaker.dto.AdminPlanDto">
+	<select id="findById" resultType="com.mnu.ryokanmaker.domain.AdminPlanDto">
 		SELECT *
 		FROM PLAN
 		WHERE PLAN_IDX = #{planIdx}

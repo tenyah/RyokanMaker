@@ -38,7 +38,7 @@ public class SiteController {
     /** 객실 소개 : templates/rooms.html */
     @GetMapping("/rooms")
     public String rooms(Model model) {
-        List<com.mnu.ryokanmaker.dto.RoomDto> rooms = roomService.getRoomList(MAIN_ADMIN_IDX).stream()
+        List<com.mnu.ryokanmaker.domain.RoomDto> rooms = roomService.getRoomList(MAIN_ADMIN_IDX).stream()
                 .filter(room -> "Y".equals(room.getRoomSaleYn()))
                 .toList();
         model.addAttribute("rooms", rooms);
@@ -48,7 +48,7 @@ public class SiteController {
     /** 온천 소개 : templates/onsen.html */
     @GetMapping("/onsen")
     public String onsen(Model model) {
-        List<com.mnu.ryokanmaker.dto.OnsenDto> onsens = onsenService.getOnsenList(MAIN_ADMIN_IDX).stream()
+        List<com.mnu.ryokanmaker.domain.OnsenDto> onsens = onsenService.getOnsenList(MAIN_ADMIN_IDX).stream()
                 .filter(onsen -> "Y".equals(onsen.getOnsenSaleYn()))
                 .toList();
         model.addAttribute("onsens", onsens);
@@ -58,7 +58,7 @@ public class SiteController {
     /** 식사 소개 : templates/dining.html */
     @GetMapping("/dining")
     public String dining(Model model) {
-        List<com.mnu.ryokanmaker.dto.RestaurantCourseDto> courses = restaurantCourseService.getCourseList(MAIN_ADMIN_IDX).stream()
+        List<com.mnu.ryokanmaker.domain.RestaurantCourseDto> courses = restaurantCourseService.getCourseList(MAIN_ADMIN_IDX).stream()
                 .filter(course -> "Y".equals(course.getRestaurantSaleYn()))
                 .toList();
         model.addAttribute("courses", courses);

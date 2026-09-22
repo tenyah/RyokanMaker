@@ -1,9 +1,9 @@
 package com.mnu.ryokanmaker.service;
 
-import com.mnu.ryokanmaker.dto.AdminReservationDetailDto;
-import com.mnu.ryokanmaker.dto.AdminReservationListItemDto;
-import com.mnu.ryokanmaker.dto.MemberDto;
-import com.mnu.ryokanmaker.dto.ReservationDto;
+import com.mnu.ryokanmaker.domain.AdminReservationDetailDto;
+import com.mnu.ryokanmaker.domain.AdminReservationListItemDto;
+import com.mnu.ryokanmaker.domain.MemberDto;
+import com.mnu.ryokanmaker.domain.ReservationDto;
 import com.mnu.ryokanmaker.mapper.AdminReservationMapper;
 import org.springframework.stereotype.Service;
 

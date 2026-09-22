@@ -1,6 +1,6 @@
 package com.mnu.ryokanmaker.mapper;
 
-import com.mnu.ryokanmaker.dto.AdminDto;
+import com.mnu.ryokanmaker.domain.AdminDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

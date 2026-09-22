@@ -7,10 +7,10 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.mnu.ryokanmaker.dto.AdminPlanDto;
-import com.mnu.ryokanmaker.dto.PlanDayStatusDto;
-import com.mnu.ryokanmaker.dto.PlanSalesRowDto;
-import com.mnu.ryokanmaker.dto.RoomReservationDto;
+import com.mnu.ryokanmaker.domain.AdminPlanDto;
+import com.mnu.ryokanmaker.domain.PlanDayStatusDto;
+import com.mnu.ryokanmaker.domain.PlanSalesRowDto;
+import com.mnu.ryokanmaker.domain.RoomReservationDto;
 import com.mnu.ryokanmaker.mapper.PlanMapper;
 import com.mnu.ryokanmaker.mapper.RoomReservationMapper;
 

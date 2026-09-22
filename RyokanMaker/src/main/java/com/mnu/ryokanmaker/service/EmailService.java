@@ -14,7 +14,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import com.mnu.ryokanmaker.dto.AdminDto;
+import com.mnu.ryokanmaker.domain.AdminDto;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;

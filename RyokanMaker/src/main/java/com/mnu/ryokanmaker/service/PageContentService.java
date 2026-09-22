@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mnu.ryokanmaker.dto.PageContentDto;
+import com.mnu.ryokanmaker.domain.PageContentDto;
 import com.mnu.ryokanmaker.mapper.PageContentMapper;
 
 /**

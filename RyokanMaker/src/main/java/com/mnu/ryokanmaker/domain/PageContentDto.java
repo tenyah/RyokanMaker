@@ -1,4 +1,4 @@
-package com.mnu.ryokanmaker.dto;
+package com.mnu.ryokanmaker.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

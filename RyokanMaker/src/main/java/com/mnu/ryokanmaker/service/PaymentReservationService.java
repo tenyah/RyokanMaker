@@ -6,10 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mnu.ryokanmaker.dto.GuestInfoForm;
-import com.mnu.ryokanmaker.dto.ReservationContext;
-import com.mnu.ryokanmaker.dto.ReservationDto;
-import com.mnu.ryokanmaker.dto.RoomReservationDto;
+import com.mnu.ryokanmaker.domain.GuestInfoForm;
+import com.mnu.ryokanmaker.domain.ReservationContext;
+import com.mnu.ryokanmaker.domain.ReservationDto;
+import com.mnu.ryokanmaker.domain.RoomReservationDto;
 import com.mnu.ryokanmaker.mapper.PaymentMapper;
 
 /**

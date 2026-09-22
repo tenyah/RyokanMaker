@@ -10,10 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mnu.ryokanmaker.dto.RoomDayStatusDto;
-import com.mnu.ryokanmaker.dto.RoomDto;
-import com.mnu.ryokanmaker.dto.RoomReservationDto;
-import com.mnu.ryokanmaker.dto.RoomStatusRowDto;
+import com.mnu.ryokanmaker.domain.RoomDayStatusDto;
+import com.mnu.ryokanmaker.domain.RoomDto;
+import com.mnu.ryokanmaker.domain.RoomReservationDto;
+import com.mnu.ryokanmaker.domain.RoomStatusRowDto;
 import com.mnu.ryokanmaker.mapper.RoomMapper;
 import com.mnu.ryokanmaker.mapper.RoomReservationMapper;
 

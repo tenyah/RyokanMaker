@@ -1,4 +1,4 @@
-package com.mnu.ryokanmaker.dto;
+package com.mnu.ryokanmaker.domain;
 
 import java.time.LocalDate;
 

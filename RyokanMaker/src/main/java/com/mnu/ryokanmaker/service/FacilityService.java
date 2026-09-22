@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.mnu.ryokanmaker.dto.FacilityDto;
+import com.mnu.ryokanmaker.domain.FacilityDto;
 import com.mnu.ryokanmaker.mapper.FacilityMapper;
 import com.mnu.ryokanmaker.util.ImageJsonUtil;
 
