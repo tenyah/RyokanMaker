@@ -34,8 +34,45 @@
             <if test="adminIdx != null">
                 r.ADMIN_IDX = #{adminIdx}
             </if>
+            <if test="checkInDate != null">
+                AND EXISTS (
+                    SELECT 1 FROM ROOM_RESERVATION rr3
+                    WHERE rr3.RESV_NUM = r.RESV_NUM
+                      AND TRUNC(rr3.RESV_CHECK_IN) = #{checkInDate}
+                )
+            </if>
+            <if test="keyword != null">
+                <bind name="kw" value="'%' + keyword.toUpperCase() + '%'"/>
+                AND (
+                    UPPER(m.USER_NICKNAME) LIKE #{kw}
+                    OR UPPER(r.USER_MAIL) LIKE #{kw}
+                    OR UPPER(m.USER_FIRST_NAME_EN || ' ' || m.USER_LAST_NAME_EN) LIKE #{kw}
+                    OR UPPER(m.USER_LAST_NAME_EN || ' ' || m.USER_FIRST_NAME_EN) LIKE #{kw}
+                    OR (m.USER_LAST_NAME_JP || m.USER_FIRST_NAME_JP) LIKE #{kw}
+                    OR UPPER(r.RESV_MAIL) LIKE #{kw}
+                    OR UPPER(r.RESV_FIRST_NAME_EN || ' ' || r.RESV_LAST_NAME_EN) LIKE #{kw}
+                    OR UPPER(r.RESV_LAST_NAME_EN || ' ' || r.RESV_FIRST_NAME_EN) LIKE #{kw}
+                    OR (r.RESV_LAST_NAME_JP || r.RESV_FIRST_NAME_JP) LIKE #{kw}
+                )
+            </if>
         </where>
         ORDER BY r.RESV_NUM DESC
+    </select>
+
+    <select id="countTodayCheckIns" resultType="int">
+        SELECT COUNT(*)
+        FROM ROOM_RESERVATION
+        WHERE ADMIN_IDX = #{adminIdx}
+          AND TRUNC(RESV_CHECK_IN) = TRUNC(SYSDATE)
+          AND RESV_STATUS != '예약취소'
+    </select>
+
+    <select id="countTodayCheckOuts" resultType="int">
+        SELECT COUNT(*)
+        FROM ROOM_RESERVATION
+        WHERE ADMIN_IDX = #{adminIdx}
+          AND TRUNC(RESV_CHECK_OUT) = TRUNC(SYSDATE)
+          AND RESV_STATUS != '예약취소'
     </select>
 
     <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.domain.ReservationDto">
@@ -50,10 +87,38 @@
             RESV_PAY_METHOD  AS resvPayMethod,
             RESV_ARRIVAL_TIME AS resvArrivalTime,
             RESV_REQUEST     AS resvRequest,
-            RESV_DAY         AS resvDay
+            RESV_DAY         AS resvDay,
+            RESV_ORDER_ID    AS resvOrderId,
+            RESV_LAST_NAME_EN  AS resvLastNameEn,
+            RESV_FIRST_NAME_EN AS resvFirstNameEn,
+            RESV_LAST_NAME_JP  AS resvLastNameJp,
+            RESV_FIRST_NAME_JP AS resvFirstNameJp,
+            RESV_MAIL          AS resvMail,
+            RESV_COUNTRY       AS resvCountry,
+            RESV_TEL           AS resvTel
         FROM RESERVATION
         WHERE RESV_NUM = #{resvNum}
     </select>
+
+    <!-- 예약 취소: 기록은 남기고 상태만 바꾼다. ADMIN_IDX 조건으로 다른 관리자의 예약은 건드리지 않는다 -->
+    <update id="cancelReservation">
+        UPDATE RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <update id="cancelRoomReservations">
+        UPDATE ROOM_RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <!-- RESTAURANT_RESERVATION은 상태 컬럼이 없어 그대로 두고, 예약 본체 상태로 취소 여부를 판단한다 -->
+    <update id="cancelOnsenReservations">
+        UPDATE ONSEN_RESERVATION
+        SET ONSEN_STATUS = #{status}
+        WHERE RESV_NUM = #{resvNum} AND ADMIN_IDX = #{adminIdx}
+    </update>
 
     <select id="selectMember" resultType="com.mnu.ryokanmaker.domain.MemberDto">
         SELECT

@@ -1,5 +1,109 @@
 # 작업 기록
 
+## 예약자 정보를 RESERVATION에 저장 + 관리자 상세에 이름·메일 표시 (2026-09-22, 미커밋)
+
+**배경:** 사용자가 DB의 RESERVATION에 예약자 컬럼 5개를 직접 추가(익스포트 `C:/Users/june3/Ryokan3.sql` 351행). 라이브 DB(`user_tab_columns`, 읽기 전용)에서도 동일 확인:
+- `RESV_FIRST_NAME_EN` VARCHAR2(50) **NOT NULL**, `RESV_LAST_NAME_EN` VARCHAR2(50) **NOT NULL**, `RESV_LAST_NAME_JP` VARCHAR2(50) NULL, `RESV_FIRST_NAME_JP` VARCHAR2(50) NULL, `RESV_MAIL` VARCHAR2(100) **NOT NULL**.
+- 전화번호·국가 컬럼은 추가하지 않음 → 결제 화면의 전화/국가 입력은 여전히 저장되지 않고, 관리자 상세의 연락처·국적은 **예약한 회원(MEMBER)** 값.
+- ⚠️ NOT NULL 3개를 기존 INSERT가 채우지 않아 **컬럼 추가 직후부터 코드 수정 전까지 새 예약 저장이 전부 실패(ORA-01400)하는 상태였음.**
+
+**구현:**
+- `ReservationDto`에 `resvLastNameEn/resvFirstNameEn/resvLastNameJp/resvFirstNameJp/resvMail`.
+- `PaymentMapper.insertReservation`에 5개 컬럼 추가(일본어 이름은 `jdbcType=VARCHAR`).
+- `PaymentReservationService.saveAsWaiting`: 결제 화면 폼(`GuestInfoForm`)의 영문/일본어 성·이름, 이메일을 앞뒤 공백 제거 후 저장(빈 값은 null). **예약한 회원 계정은 기존처럼 `USER_MAIL`(MEMBER FK)에 따로 남음.**
+- `PaymentController.prepare`: 영문 성·이름·이메일이 비면 DB 오류 대신 400 `missing guest info` → 화면에 `pay.alert_guest_required` 안내(브라우저 `required`가 먼저 막지만 서버에서 한 번 더).
+- 관리자 상세: `selectReservationHeader`에 5개 컬럼, `AdminReservationDetailDto`·서비스에 반영. `admin_reservation.html` 예약자 정보에 **영문 이름 / 일본어 이름** 행 추가(없으면 `-`), **이메일은 `RESV_MAIL`**(사용자 요청). 헤더의 닉네임은 예약한 회원 것 그대로.
+- 목록 검색: 회원 이름·메일에 더해 **`RESV_MAIL`·예약자 영문/일본어 이름**도 검색되도록 확장(다른 분 이름으로 한 예약도 찾히게).
+- 메시지 ko/en/ja: `adm.rv_name_en`, `adm.rv_name_jp`, `pay.alert_guest_required`. 678키, 중복 0.
+
+**검증:** `mvnw compile` BUILD SUCCESS, RESERVATION INSERT는 `PaymentMapper` 한 곳뿐임을 확인. **실제 예약→관리자 상세 표시는 미확인.**
+
+**(후속) 전화·국가 컬럼 추가 + 예약 완료 메일 수신자 변경:** 사용자가 `RESV_COUNTRY` VARCHAR2(50) **NOT NULL**, `RESV_TEL` VARCHAR2(20) **NOT NULL** 추가(익스포트 `C:/Users/june3/Ryokan4.sql` 369-370행, 라이브 DB에서도 확인). 이번에도 NOT NULL이라 **코드 반영 전까지 새 예약 저장이 실패하던 상태였음.**
+- 저장: `RESV_COUNTRY`는 결제 화면 **국가 코드(KR/JP/US/CN/TW/ETC)** 그대로, `RESV_TEL`은 입력값(공백 제거).
+- `prepare` 검증 확장: 국가·전화 필수 추가 + **Oracle 바이트 길이 초과 검사**(영문 이름 50, 일본어 이름 50, 메일 100, 국가 50, 전화 20 — UTF-8 바이트 기준). 응답 코드를 `invalid guest info`로 통일, 안내 문구(`pay.alert_guest_required`)도 필수·길이 설명으로 갱신. 입력창에 `maxlength`(영문 50, **일본어 16 = 50바이트/가나 3바이트**, 메일 100, 전화 20).
+- 관리자 상세: 연락처 `RESV_TEL`, 국적 `RESV_COUNTRY`를 `@tr.label('country', 코드)`로 표시(기존 `country.KR` 등 메시지 사용, 코드가 아니면 번역 fallback). **`AdminReservationDetailDto.userTel/userCountry`와 MEMBER에서 채우던 코드는 제거**(닉네임만 MEMBER에서).
+- **예약 완료 메일 → `RESV_MAIL`**: `sendReservationMail`이 주문번호로 DB의 예약자 정보(`PaymentMapper.selectGuestByOrderId`)를 읽어 발송. 호칭은 `RESV_MAIL`이 로그인 회원 메일과 같으면 닉네임, 다르면 입력한 영문 이름. 로그인 세션이 없어도 발송 가능(예약 컨텍스트만 있으면).
+- compile BUILD SUCCESS. **실제 예약·메일 수신은 미확인**(이 PC엔 MAIL_USERNAME/MAIL_PASSWORD 환경변수가 없어 메일은 조용히 건너뜀 — 앞 항목 참고).
+
+---
+
+## 결제 화면 예약자 정보: 회원 정보 자동 입력 · 일본어 이름 선택+가나 전용 · 다른 분 입력 버튼 (2026-09-22, 미커밋)
+
+**사용자 요구:** ① 일본어 이름 필수 아님 ② 일본어 성/이름은 히라가나·가타카나만 ③ 기본값은 로그인 회원 정보 ④ 버튼을 누르면 채워진 정보를 지우고 다른 사람 정보를 직접 입력.
+
+**구현:**
+- `PaymentController.payment()`: 세션 `loginMember`(로그인 시 `SELECT *`라 전 컬럼 있음)로 `GuestInfoForm`을 채움 — 일본어/영문 성·이름, 이메일·이메일 확인, 전화번호, 국가. **회원 국가는 COUNTRY_CODE의 국가명(`대한민국` 등)인데 결제 화면 선택지는 코드(`KR`/`JP`/`US`/`CN`/`TW`/`ETC`)라 `countryCodeOf()`로 변환**(목록 밖 국가는 `ETC`).
+- 일본어 이름 검증: 브라우저는 입력창 `pattern`, 서버는 `prepare()`에서 `KANA_NAME` 정규식으로 한 번 더(비어 있으면 통과). 범위는 양쪽 동일 — 히라가나 U+3040–309F, 가타카나 U+30A0–30FF(장음 ー 포함), 반각 가타카나 U+FF65–FF9F, 전각·반각 공백. 위반 시 400 `invalid jp name` → 화면에서 가나 안내 alert. Java·브라우저(`v` 플래그)로 たなか/タナカ/ｶﾀｶﾅ/サトー는 통과, 田中/Tanaka/たなか1/한글은 거부 확인.
+- `payment.html`: 일본어 두 칸의 `*` 제거, placeholder를 `例) たなか`/`例) たろう`로. 상단에 안내 문구 + **"다른 분 정보로 직접 입력" 버튼** — 텍스트 칸 7개(일본어·영문 성/이름, 이메일 2개, 전화번호)를 비우고 일본어 성에 포커스. 국가 선택(select)은 텍스트 칸이 아니라 그대로 둠.
+- **`*` 표시만 있고 실제 검사가 없던 항목에 `required` 추가**(영문 성/이름, 이메일 2개, 국가, 전화번호) — 지금까지는 빈 값으로도 결제가 진행됐고, 지우기 버튼을 넣으면 빈 칸 결제가 더 쉬워지므로.
+- 메시지 ko/en/ja: `pay.guest_prefilled`, `pay.guest_other`, `pay.kana_only`. 676키, 중복 0.
+- ⚠️ Edit 도구가 `pattern`의 `\u3040` 이스케이프를 실제 유니코드 문자(보이지 않는 전각 공백 포함)로 바꿔 써서, 파이썬으로 이스케이프 표기로 되돌림. 이 파일의 `pattern`을 고칠 땐 바이트(`od -c`)로 확인할 것.
+
+**검증:** `mvnw compile` BUILD SUCCESS(Eclipse 서버가 쓰는 target을 지우지 않도록 clean 없이). **화면 동작은 미확인.**
+
+**(후속) "이메일 주소 확인" 칸 삭제:** 이메일과 일치하는지 비교하는 코드도, 저장하는 곳도 없어서 사용자 요청으로 제거. `payment.html`의 칸, "다른 분 입력" 버튼의 비우기 목록, `PaymentController`의 자동 입력 줄, `GuestInfoForm.emailConfirm` 필드, 메시지 `pay.email_confirm`(ko/en/ja)까지 정리. compile BUILD SUCCESS.
+
+**(후속) 예약자 정보 저장 위치 확인:** 사용자는 예약자 정보가 MEMBER가 아니라 RESERVATION으로 옮겨졌다고 알고 있었으나, **실제 DB(`user_tab_columns`, 읽기 전용 조회)의 RESERVATION에는 이름·이메일·전화·국가 컬럼이 없음** — RESV_NUM, ADMIN_IDX, USER_MAIL, RESV_PRICE, RESV_PEOPLE, RESV_STATUS, RESV_PAY_STATUS, RESV_PAY_METHOD, RESV_ARRIVAL_TIME, RESV_REQUEST, RESV_DAY, RESV_ORDER_ID 뿐. 이름 등은 여전히 MEMBER에 있음. 코드·전 브랜치 히스토리에도 추가 흔적 없음. 옮기려면 ALTER TABLE(사용자가 직접 실행) + prepare 저장 + 관리자 상세 표시가 필요 — **→ 이후 사용자가 컬럼을 직접 추가해 해결(맨 위 "예약자 정보를 RESERVATION에 저장" 참고).**
+
+
+**참고(기존 구조):** 결제 화면의 예약자 이름·이메일·전화번호는 **DB에 저장되지 않는다** — `prepare()`는 폼을 세션에만 두고, RESERVATION에는 도착 시간·요청 사항만 들어가며 예약자는 로그인 회원 이메일(`USER_MAIL`, MEMBER FK)로 기록된다. 예약 완료 메일도 로그인 회원에게 간다. 즉 "다른 분 정보"는 지금 구조에선 결제 화면에서만 쓰이고 관리자 예약 상세엔 나오지 않음.
+
+---
+
+## 관리자 예약현황 상세: 예약 취소 구현 — DB 상태만 변경, 토스 환불 없음 (2026-09-22, 미커밋)
+
+**⚠️ 최종 방식 (아래 초기 구현에서 변경됨):** 토스 환불을 호출하지 않고 **DB 상태만 바꾼다.** 예약·객실 예약 `RESV_STATUS='예약취소'`, 온천 `ONSEN_STATUS='예약취소'`, 결제완료였던 건은 `RESV_PAY_STATUS='결제취소'`(결제대기는 그대로). `TossPaymentService.cancelByOrderId`와 `PAY_STATUS_REFUNDED`/`resv.status.환불완료`/`adm.rv_cancel_confirm_refund`는 삭제, `PAY_STATUS_CANCELLED="결제취소"`·`resv.status.결제취소`(ko/en/ja) 추가, 확인창 문구는 하나로 통일. 메시지 673키, 중복 0.
+
+**변경 이유 — 토스 환불이 불가능했음:** 첫 구현은 주문번호로 결제를 조회(`GET /v1/payments/orders/{orderId}`)해 paymentKey를 얻고 취소하는 방식이었는데, 실제 취소 시 `NOT_FOUND_MERCHANT(존재하지 않는 상점 정보)`로 실패. 원인은 **`application.properties`의 토스 키가 문서 공개용 샘플 키(`test_gck_docs_…`/`test_gsk_docs_…`)**라는 것. 없는 주문번호로 직접 호출해도 같은 `NOT_FOUND_MERCHANT`가 나와 **샘플 키로는 주문번호 조회 API 자체를 못 쓴다**는 걸 확인(반면 paymentKey로 조회·취소 API는 `NOT_FOUND_PAYMENT`를 돌려줘 호출 자체는 가능). 샘플 키 결제는 토스 공용 테스트 상점에 기록돼 **개발자센터에서 수동 취소할 방법도 없음.** 테스트 결제라 실제 출금은 없으므로 사용자 결정으로 화면상 취소만 하기로 함.
+
+**나중에 실제 환불이 필요해지면:** ① 결제 승인 시 paymentKey를 RESERVATION에 새 컬럼으로 저장 → `POST /v1/payments/{paymentKey}/cancel` 직접 호출(키 종류와 무관하게 동작), 또는 ② 토스 개발자센터에서 우리 상점 전용 테스트 키를 발급받아 교체. 어느 쪽이든 **이미 샘플 키로 결제된 예약은 환불 불가.**
+
+**(초기 구현 기록 — 아래 중 토스 환불 관련 내용은 위 최종 방식으로 대체됨)**
+
+**사용자 결정:** ① 취소 시 DB에서 지우지 않고 **상태만 `예약취소`로** 바꿔 기록 유지 ② **결제완료 건은 토스 결제 취소(환불)까지** 호출.
+
+**구현:**
+- `TossPaymentService.cancelByOrderId(orderId, reason)` 신규 — DB에 `paymentKey`를 저장하지 않으므로 `GET /v1/payments/orders/{orderId}`로 결제를 조회해 paymentKey를 얻고 `POST /v1/payments/{paymentKey}/cancel`(전액, Idempotency-Key 포함) 호출. 인증 헤더 생성은 `basicAuth()`로 confirm과 공용화.
+- `AdminReservationService.cancelReservation(resvNum, adminIdx)` (`@Transactional`):
+  - 예약이 없거나 **다른 관리자 예약이면 거부**, 이미 `예약취소`면 거부.
+  - `결제완료`면 **토스 환불을 먼저** 호출 → 실패 시 예외로 끝나 DB는 그대로. 성공하면 결제상태를 `환불완료`로. `결제대기`는 환불 없이 상태만 취소(결제상태는 결제대기 유지).
+  - RESERVATION·ROOM_RESERVATION의 `RESV_STATUS='예약취소'` + 결제상태, ONSEN_RESERVATION의 `ONSEN_STATUS='예약취소'`. **RESTAURANT_RESERVATION은 상태 컬럼이 없어 그대로 둠**(예약 본체 상태로 판단).
+  - (한계) 토스 환불 성공 후 DB 갱신이 실패하면 환불만 되고 DB는 롤백됨 — 드문 경우라 로그로 확인.
+- 상수: `PaymentReservationService.STATUS_CANCELLED="예약취소"`, `PAY_STATUS_REFUNDED="환불완료"`.
+- `AdminController`: `POST /Admin/reservation_cancel`(resvNum, page, checkInDate, keyword) → 처리 후 **같은 예약·페이지·필터로 리다이렉트**(URLEncoder로 인코딩), 결과는 flash `cancelResult=success|fail`.
+- `admin_reservation.html`: 동작 없던 버튼을 POST 폼으로. `confirm()` 확인창(결제완료 건은 "전액 환불됩니다" 문구). 이미 취소된 예약이면 버튼 대신 "취소된 예약입니다". 처리 결과 메시지 표시.
+- **취소건이 객실을 계속 점유하지 않도록 `RESV_STATUS != '예약취소'` 조건 추가:**
+  - `RoomReservationMapper.findOverlapping` — **손님 예약 화면의 객실 가능 여부**, 객실 현황 캘린더·당일 객실 관리, 판매관리, 대시보드 가동률이 전부 이걸 씀.
+  - `RoomReservationMapper.findByAdminAndCheckInRange`(대시보드 매출), `RevenueMapper`의 매출 거래·오늘 체크인·오늘 체크아웃 3개, `AdminReservationMapper.countTodayCheckIns/Outs`.
+  - 관리자 예약 목록·회원 마이페이지 목록은 **취소건도 계속 보여줌**(기록 유지 목적, 상태 라벨 `예약취소`).
+- 메시지 ko/en/ja: `resv.status.환불완료`, `adm.rv_cancel_confirm`, `adm.rv_cancel_confirm_refund`, `adm.rv_cancel_done`, `adm.rv_cancel_fail`, `adm.rv_cancelled_note` 추가(`resv.status.예약취소`는 기존에 있었음). 3개 언어 674키, 중복 0.
+
+**검증:** `clean compile` BUILD SUCCESS, 18080 기동으로 매퍼 파싱 정상 + `POST /Admin/reservation_cancel` 매핑 확인(비로그인 302). **로그인 후 실제 취소·토스 테스트 환불·객실 재오픈은 미확인.** 확인 순서: 결제완료 예약 취소 → 토스 개발자센터에서 해당 결제가 취소됐는지 → 상세에 "취소된 예약입니다" + 결제상태 환불완료 → 같은 날짜로 손님 예약 화면에서 그 객실이 다시 예약 가능인지 → 오늘 체크인 숫자 감소.
+
+---
+
+## 예약 시 식사·온천 예약을 DB에 저장 — 관리자 예약현황 상세에 식사/온천이 안 뜨던 문제 (2026-09-22, 미커밋)
+
+**증상:** `admin_reservation.html` 상세 패널에 객실만 나오고 식사·온천 예약이 비어 있음.
+
+**원인:** 화면/조회 쿼리 문제가 아니라 **데이터가 애초에 저장되지 않았다.** `RESTAURANT_RESERVATION` / `ONSEN_RESERVATION`에 INSERT하는 코드가 프로젝트 어디에도 없었음(조회는 `AdminReservationMapper`, 삭제는 회원탈퇴 `ReservationMapper`뿐). 결제 준비(`PaymentReservationService.saveAsWaiting`)가 RESERVATION·ROOM_RESERVATION만 저장했기 때문. 9/18 기록의 "온천/식사 선택값은 ReservationContext에 담기만 하고 테이블엔 저장 안 함"이 그대로 남아 있던 것.
+
+**구현:**
+- `PaymentMapper(.java/.xml)`: `insertRestaurantReservation`, `insertOnsenReservation` 추가. 두 테이블 PK(`RESTAURANT_FACILITY_IDX`/`ONSEN_FACILITY_IDX`)는 IDENTITY(9/16 실측)라 컬럼 목록에서 뺌. 비어 있을 수 있는 `timeSlot`/`headcount`에 `jdbcType` 지정(ORA-17004 재발 방지).
+- `saveAsWaiting()`(이미 `@Transactional`) — ROOM_RESERVATION 저장 직후:
+  - **식사:** `courseIdx`가 있으면 **숙박하는 밤마다 1건**(체크인일 ~ 체크아웃 전날). 코스 요금이 "1박 기준, 숙박 일수만큼 적용"(`resv.course_per_night_note`)이라 그에 맞춤. 인원 = 예약 인원. **식사 시간대는 예약 화면에서 받지 않아 NULL.** `RESTAURANT_SIDEMENU`가 NOT NULL인데 입력 UI가 없어 **`"-"`로 채움**(`NO_SIDEMENU` 상수).
+  - **온천:** eartth21/yeseong이 만든 `ReservationContext.onsenPicks`(날짜·온천·시간대 목록, `ReservationService.parseOnsenPicks`)를 **선택 1건당 1행**으로 저장. 상태 `예약완료`, 인원 = 예약 인원. `onsenIdx`가 없는 항목은 건너뜀.
+- `admin_reservation.html`: 식사·온천 상세 문구의 시간대가 null이면 `"null 타임"` 대신 `"- 타임"`으로 표시(`?: '-'`).
+
+**검증:** `clean compile` BUILD SUCCESS, 포트 18080으로 기동해 매퍼 XML 파싱 정상 확인 후 종료. **실제 결제 골든패스(예약 → 결제 → 관리자 상세)로 행이 생기는지는 미확인.**
+
+**주의:**
+- **이미 만들어진 기존 예약에는 식사·온천 행이 없으므로 계속 안 뜬다.** 이번 수정 이후 새로 한 예약부터 표시됨.
+- 결제창을 띄웠다 취소하면 객실처럼 식사·온천 행도 `결제대기` 예약에 딸린 채 남는다(기존 트레이드오프와 동일).
+- 식사 시간대·사이드메뉴를 실제로 받으려면 예약 화면에 입력 칸을 추가해야 함 — 필요 시 사용자와 논의.
+
+---
+
 ## Choiyeongsu13 병합 + dto→domain 재통일 + Lombok 전환 (2026-09-22)
 
 **⚠️ 먼저 알아둘 것: `remote.origin.fetch`가 `+refs/heads/june47087-byte:refs/remotes/origin/june47087-byte` 하나만 추적하도록 설정돼 있다.** 그래서 `git fetch origin`을 해도 다른 브랜치의 원격 추적 정보가 갱신되지 않는다. 이번 세션 초반에 이걸 모르고 "Choiyeongsu13/eartth21은 고유 커밋 0개"라고 잘못 판단했다. **팀원 브랜치를 볼 때는 반드시 `git ls-remote origin`으로 실제 상태를 확인하거나 `git fetch origin '+refs/heads/*:refs/remotes/origin/*'`로 받을 것.** (config는 사용자 확인 없이 안 고쳤음 — 고칠지 논의 필요.)
@@ -78,15 +182,29 @@
 
 ---
 
-## [보류/할 일] 관리자 예약현황: 통계 타일 + 필터 바 실제 동작 구현 (2026-09-22 요청, 아직 구현 안 함)
+## 관리자 예약현황: 오늘 체크인/아웃 실제 집계 + 체크인 날짜 필터(하루) (2026-09-22, 미커밋)
 
-**사용자 지시: "일단 기억만 해둬" — 지금은 구현하지 않고 기록만 함. 사용자가 착수하라고 하면 진행.**
+**사용자 요구:** 통계 타일의 "오늘 체크인/체크아웃" 샘플값(4, 3)을 실제 값으로. 필터 바에서 "예약 상태"는 삭제. "체크인 기간"은 **날짜 하루만** 고르게 — 방식은 `reservation/reservation.html` 검색 조건 바의 달력 버튼(= `<input type="date">` 브라우저 기본 캘린더)과 같게, 단 칸은 하나만. **(후속 요청) 검색 칸도 실제 동작하도록 구현** — 아래 "검색 추가" 참고.
 
-대상: `templates/admin/admin_reservation.html`
-- **통계 타일 (165행):** 지금은 "전체 예약"(`reservationList` 크기)만 실제 값. "오늘 체크인"(하드코딩 `4`), "오늘 체크아웃"(하드코딩 `3`)은 가짜 값 → 실제 값으로 교체해야 함. **"오늘"의 기준은 DB `SYSDATE`** (사용자 명시). 로그인한 관리자의 예약만 집계(ROOM_RESERVATION의 `RESV_CHECK_IN`/`RESV_CHECK_OUT` = 오늘, `ADMIN_IDX` 조건). 구현 시 자바 `LocalDate.now()`가 아니라 SQL의 `TRUNC(SYSDATE)`로 비교할 것. 또한 취소 예약을 제외할지(현재 취소 기능은 없음) 정해야 함.
-- **필터 바 (172행):** 체크인 기간 / 예약 상태 / 검색(예약자 이름·이메일) 세 칸이 텍스트만 있는 목업(날짜 `2026.09.13 — 2026.09.19`도 하드코딩). 실제 조회 조건으로 동작하게 해야 함. 목록·상세는 서버 렌더링(`?idx=`) 방식이므로 필터도 같은 방식(쿼리 파라미터 → `AdminReservationService.getReservationList`에 조건 추가)이 자연스러움. 필터 적용 중에도 카드 클릭(`idx`) 시 필터가 유지되도록 링크에 필터 파라미터를 같이 실어야 함(문의 관리의 `status=${statusFilter}` 방식 참고).
+**구현:**
+- `AdminReservationMapper(.java/.xml)`:
+  - `selectReservationList(adminIdx, checkInDate)` — `checkInDate`가 있으면 `EXISTS (ROOM_RESERVATION에서 TRUNC(RESV_CHECK_IN) = checkInDate)` 조건 추가. 목록 카드는 대표 객실(MIN ROOM_RESV_NUM) 1건만 조인하므로, 여러 객실 예약 중 어느 하나라도 그날 체크인이면 걸리도록 EXISTS 사용.
+  - `countTodayCheckIns` / `countTodayCheckOuts` 신규 — **`TRUNC(SYSDATE)` 비교(사용자 지정 기준)**. **ROOM_RESERVATION 행 단위, 상태 필터 없음** → eartth21 대시보드(`RevenueMapper.findCheckIns/OutsByAdminAndDate`)와 같은 기준이라 두 화면 숫자가 일치. (대시보드는 `LocalDate.now()`를 쓰므로 서버·DB 시간대가 다르면 어긋날 수 있음 — 로컬에선 같은 PC라 문제없음.)
+- `AdminReservationService`: 1인자 `getReservationList`는 컨트롤러 외 사용처가 없어 2인자로 교체, count 메서드 2개 추가.
+- `AdminController.reservationStatus()`: `@RequestParam checkInDate`(`@DateTimeFormat ISO.DATE`, 선택) 추가. 모델에 `todayCheckInCount`, `todayCheckOutCount`, `checkInDate`, `allReservationCount`. **"전체 예약" 타일은 날짜 필터와 무관하게 전체 건수**(필터 중이면 무필터 목록을 한 번 더 조회). 목록 헤더 건수(`totcount`)는 필터된 건수. 페이지 넘김 링크에 `&checkInDate=` 유지(`PageIndex` 5인자, ISO 날짜라 인코딩 불필요).
+- `admin_reservation.html`: 타일 3개 모두 실제 값. 필터 바의 "예약 상태" 칸 삭제, "체크인 기간" 칸을 GET 폼 + `<input type="date" name="checkInDate" onchange="this.form.submit()">` 하나로 교체(예약 화면과 같은 인라인 스타일). 날짜 선택 즉시 조회, 필터 중엔 옆에 "전체" 링크로 해제. 카드 링크에 `checkInDate` 추가(선택해도 필터 유지). 목록이 비었을 때 안내 문구 추가(필터 유무에 따라 문구 다름).
+- 메시지(ko/en/ja): `adm.rv_period` 값을 "체크인 기간"→"체크인 날짜"/"Check-in date"/"チェックイン日"로 변경, `adm.rv_empty`·`adm.rv_empty_date` 추가, 안 쓰게 된 `adm.rv_state` 삭제. 3개 언어 모두 668키, 중복 0.
 
-**미결정(착수 전 확인할 것):** 예약 상태 필터에 쓸 값 목록(현재 DB에 확인된 값: `예약완료`, `체크인` + 결제상태 `결제대기`/`결제완료`), 체크인 기간 입력 UI(날짜 2개 입력? 기본값은?).
+**검증:** `mvnw clean compile` BUILD SUCCESS. 비로그인 요청 `?checkInDate=2026-09-22` → 302(파라미터 바인딩 오류 없음). **로그인 후 실제 집계값·날짜 필터 동작은 미확인.** 내 서버는 사용자가 Eclipse(STS)로 띄운 서버(11:51 기동)가 8080을 쓰고 있어서 기동 못 함 — 사용자 서버는 끄지 않았다. `clean compile`이 그 서버가 쓰는 `target/classes`를 지웠다 다시 만들었는데 확인 결과 서버는 정상 응답(200).
+
+**검색 추가 (같은 날 후속 요청):**
+- `selectReservationList(adminIdx, checkInDate, keyword)` — `keyword`가 있으면 `<bind>`로 `'%'+대문자+'%'`를 만들어 **닉네임 / 이메일 / 영문 이름(이름 성, 성 이름 둘 다) / 일본어 이름(성+이름)** 중 하나라도 부분 일치하면 표시. 영문·이메일은 `UPPER`로 대소문자 무시. 값은 바인드 파라미터라 SQL 인젝션 없음. (`%`·`_`를 입력하면 와일드카드로 동작 — 이스케이프는 안 함.)
+- 컨트롤러: `keyword`는 앞뒤 공백 제거, 빈 문자열이면 null. `filtered = checkInDate != null || keyword != null`. "전체 예약" 타일은 필터 중이면 무필터로 한 번 더 조회해 전체 건수 표시. 페이지 링크에 `&keyword=`(URLEncoder로 인코딩 — `PageIndex`가 `th:utext`로 출력되므로 인코딩이 곧 XSS 방어이기도 함).
+- 화면: 필터 바 전체를 하나의 GET `<form class="search-bar">`로 묶어 **날짜와 검색어가 함께 전송**됨. 날짜는 바꾸면 즉시 조회, 검색어는 Enter 또는 돋보기 버튼. 필터가 하나라도 걸려 있으면 "전체" 링크로 모두 해제. 카드 링크에 `keyword`도 유지.
+- 메시지: `adm.rv_empty_date`를 날짜·검색 공통 문구 `adm.rv_empty_filtered`("검색 조건에 맞는 예약이 없습니다" / en / ja)로 교체. 3개 언어 668키, 중복 0.
+- 검증: `clean compile` BUILD SUCCESS, **포트 18080으로 잠깐 기동**해 MyBatis 매퍼 XML(`<bind>` 포함) 파싱 정상 + `?checkInDate=&keyword=(한글)&page=2` 바인딩 오류 없음(비로그인 302) 확인 후 종료. 8080은 사용자 Eclipse용으로 비워 둠. **로그인 후 실제 검색 결과는 미확인.**
+
+**참고:** 결제창을 띄웠다 취소한 `결제대기` 예약도 "오늘 체크인" 집계와 목록에 포함된다(대시보드와 동일 기준). 제외하려면 두 count 쿼리와 목록 쿼리에 `RESV_PAY_STATUS = '결제완료'` 조건을 넣으면 됨 — 사용자 결정 필요.
 
 ---
 

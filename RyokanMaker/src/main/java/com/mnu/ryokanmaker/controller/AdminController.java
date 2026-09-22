@@ -249,14 +249,37 @@ public class AdminController {
 	@GetMapping("reservation_status")
 	public String reservationStatus(@RequestParam(value = "idx", required = false) Integer idx,
 			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(value = "checkInDate", required = false)
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+			@RequestParam(value = "keyword", required = false) String keyword,
 			HttpSession session, Model model) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
+		Integer adminIdx = loginAdmin.getAdminIdx();
+
+		if (keyword != null) {
+			keyword = keyword.strip();
+			if (keyword.isEmpty()) {
+				keyword = null;
+			}
+		}
+		boolean filtered = checkInDate != null || keyword != null;
 
 		List<AdminReservationListItemDto> allList =
-				adminReservationService.getReservationList(loginAdmin.getAdminIdx());
+				adminReservationService.getReservationList(adminIdx, checkInDate, keyword);
+
+		// "전체 예약" 타일은 필터와 무관하게 전체 건수를 보여준다
+		int allReservationCount = filtered
+				? adminReservationService.getReservationList(adminIdx, null, null).size()
+				: allList.size();
+		model.addAttribute("allReservationCount", allReservationCount);
+		model.addAttribute("todayCheckInCount", adminReservationService.countTodayCheckIns(adminIdx));
+		model.addAttribute("todayCheckOutCount", adminReservationService.countTodayCheckOuts(adminIdx));
+		model.addAttribute("checkInDate", checkInDate);
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("filtered", filtered);
 
 		int maxlist = 10;
 		int totcount = allList.size();
@@ -270,8 +293,11 @@ public class AdminController {
 		model.addAttribute("page", nowpage);
 		model.addAttribute("totpage", totpage);
 		model.addAttribute("totcount", totcount);
+		// 필터는 페이지를 넘겨도 유지돼야 하므로 링크에 같이 싣는다 (날짜는 ISO 형식이라 인코딩 불필요)
+		String extraQuery = (checkInDate == null ? "" : "&checkInDate=" + checkInDate)
+				+ (keyword == null ? "" : "&keyword=" + URLEncoder.encode(keyword, StandardCharsets.UTF_8));
 		model.addAttribute("pageSkip",
-				PageIndex.pageList(nowpage, totpage, "/Admin/reservation_status", maxlist));
+				PageIndex.pageList(nowpage, totpage, "/Admin/reservation_status", maxlist, extraQuery));
 
 		if (!allList.isEmpty()) {
 			// 내 예약 목록 안에서만 고른다 (다른 관리자의 예약번호를 idx로 넣어도 조회되지 않게)
@@ -285,6 +311,37 @@ public class AdminController {
 		}
 
 		return "Admin/admin_reservation";
+	}
+
+	/** 예약 취소. 처리 후 보던 예약·페이지·필터 그대로 예약 현황으로 돌아간다. */
+	@PostMapping("reservation_cancel")
+	public String reservationCancel(@RequestParam("resvNum") Integer resvNum,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(value = "checkInDate", required = false) String checkInDate,
+			@RequestParam(value = "keyword", required = false) String keyword,
+			HttpSession session, RedirectAttributes redirectAttributes) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
+		try {
+			adminReservationService.cancelReservation(resvNum, loginAdmin.getAdminIdx());
+			redirectAttributes.addFlashAttribute("cancelResult", "success");
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			log.warn("예약 취소 실패 resvNum={}", resvNum, e);
+			redirectAttributes.addFlashAttribute("cancelResult", "fail");
+		}
+
+		StringBuilder url = new StringBuilder("redirect:/Admin/reservation_status?idx=")
+				.append(resvNum).append("&page=").append(page);
+		if (checkInDate != null && !checkInDate.isBlank()) {
+			url.append("&checkInDate=").append(URLEncoder.encode(checkInDate, StandardCharsets.UTF_8));
+		}
+		if (keyword != null && !keyword.isBlank()) {
+			url.append("&keyword=").append(URLEncoder.encode(keyword, StandardCharsets.UTF_8));
+		}
+		return url.toString();
 	}
 
 	@GetMapping("admin_login")

@@ -14,7 +14,6 @@ public class GuestInfoForm {
     private String lastNameEn;
     private String firstNameEn;
     private String email;
-    private String emailConfirm;
     private String country;
     private String phone;
     private String arrivalTime;

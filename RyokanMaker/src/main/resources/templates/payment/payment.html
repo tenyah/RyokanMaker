@@ -47,15 +47,23 @@
           <div class="panel-header"><h2 th:text="#{pay.step_guest}">예약자 정보</h2></div>
           <div class="panel-body">
 
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:4px;">
+              <span style="font-size:12.5px;color:var(--ink-soft);" th:text="#{pay.guest_prefilled}">회원님의 정보가 입력되어 있습니다.</span>
+              <button type="button" id="guest-other" class="btn-line" style="padding:8px 16px;font-size:12.5px;white-space:nowrap;" th:text="#{pay.guest_other}">다른 분 정보로 직접 입력</button>
+            </div>
+
+            <!-- pattern의 가나 범위는 PaymentController.KANA_NAME과 같아야 한다 -->
             <div class="payfield-row">
               <div class="payfield">
-                <label for="lastNameJp"><span th:text="#{pay.last_jp}">姓 (일본어)</span><span class="required">*</span></label>
-                <input type="text" id="lastNameJp" th:field="*{lastNameJp}" placeholder="例) 田中">
+                <label for="lastNameJp"><span th:text="#{pay.last_jp}">姓 (일본어)</span></label>
+                <input type="text" id="lastNameJp" th:field="*{lastNameJp}" maxlength="16" placeholder="例) たなか"
+                       pattern="[\u3040-\u309F\u30A0-\u30FF\uFF65-\uFF9F\u3000 ]+" th:title="#{pay.kana_only}">
                 <span class="payfield-error" th:if="${#fields.hasErrors('lastNameJp')}" th:errors="*{lastNameJp}"></span>
               </div>
               <div class="payfield">
-                <label for="firstNameJp"><span th:text="#{pay.first_jp}">名 (일본어)</span><span class="required">*</span></label>
-                <input type="text" id="firstNameJp" th:field="*{firstNameJp}" placeholder="例) 太郎">
+                <label for="firstNameJp"><span th:text="#{pay.first_jp}">名 (일본어)</span></label>
+                <input type="text" id="firstNameJp" th:field="*{firstNameJp}" maxlength="16" placeholder="例) たろう"
+                       pattern="[\u3040-\u309F\u30A0-\u30FF\uFF65-\uFF9F\u3000 ]+" th:title="#{pay.kana_only}">
                 <span class="payfield-error" th:if="${#fields.hasErrors('firstNameJp')}" th:errors="*{firstNameJp}"></span>
               </div>
             </div>
@@ -63,32 +71,26 @@
             <div class="payfield-row">
               <div class="payfield">
                 <label for="lastNameEn"><span th:text="#{pay.last_en}">Last Name (영문)</span><span class="required">*</span></label>
-                <input type="text" id="lastNameEn" th:field="*{lastNameEn}" placeholder="EUN">
+                <input type="text" id="lastNameEn" th:field="*{lastNameEn}" required maxlength="50" placeholder="EUN">
                 <span class="payfield-error" th:if="${#fields.hasErrors('lastNameEn')}" th:errors="*{lastNameEn}"></span>
               </div>
               <div class="payfield">
                 <label for="firstNameEn"><span th:text="#{pay.first_en}">First Name (영문)</span><span class="required">*</span></label>
-                <input type="text" id="firstNameEn" th:field="*{firstNameEn}" placeholder="YESEONG">
+                <input type="text" id="firstNameEn" th:field="*{firstNameEn}" required maxlength="50" placeholder="YESEONG">
                 <span class="payfield-error" th:if="${#fields.hasErrors('firstNameEn')}" th:errors="*{firstNameEn}"></span>
               </div>
             </div>
 
             <div class="payfield">
               <label for="email"><span th:text="#{pay.email}">이메일 주소</span><span class="required">*</span></label>
-              <input type="email" id="email" th:field="*{email}" placeholder="you@example.com">
+              <input type="email" id="email" th:field="*{email}" required maxlength="100" placeholder="you@example.com">
               <span class="payfield-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-            </div>
-
-            <div class="payfield">
-              <label for="emailConfirm"><span th:text="#{pay.email_confirm}">이메일 주소 확인</span><span class="required">*</span></label>
-              <input type="email" id="emailConfirm" th:field="*{emailConfirm}" placeholder="you@example.com">
-              <span class="payfield-error" th:if="${#fields.hasErrors('emailConfirm')}" th:errors="*{emailConfirm}"></span>
             </div>
 
             <div class="payfield-row">
               <div class="payfield">
                 <label for="country"><span th:text="#{pay.country}">국가 / 지역</span><span class="required">*</span></label>
-                <select id="country" th:field="*{country}">
+                <select id="country" th:field="*{country}" required>
                   <option th:each="entry : ${countryOptions}"
                           th:value="${entry.key}"
                           th:text="#{${entry.value}}"></option>
@@ -97,7 +99,7 @@
               </div>
               <div class="payfield">
                 <label for="phone"><span th:text="#{pay.phone}">전화번호 (국가번호 포함)</span><span class="required">*</span></label>
-                <input type="tel" id="phone" th:field="*{phone}" placeholder="+82 10-0000-0000">
+                <input type="tel" id="phone" th:field="*{phone}" required maxlength="20" placeholder="+82 10-0000-0000">
                 <span class="payfield-error" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
               </div>
             </div>
@@ -270,6 +272,13 @@
     payButton.disabled = !(agreeCancelPolicy.checked && agreePrivacyPolicy.checked);
   }
 
+  // 다른 사람 이름으로 예약: 미리 채워 둔 회원 정보(텍스트 칸)를 비우고 직접 입력하게 한다.
+  document.getElementById('guest-other').addEventListener('click', () => {
+    ['lastNameJp', 'firstNameJp', 'lastNameEn', 'firstNameEn', 'email', 'phone']
+      .forEach(name => { form.querySelector('[name="' + name + '"]').value = ''; });
+    form.querySelector('[name="lastNameJp"]').focus();
+  });
+
   agreeCancelPolicy.addEventListener('change', updatePayButtonState);
   agreePrivacyPolicy.addEventListener('change', updatePayButtonState);
   updatePayButtonState();
@@ -300,7 +309,12 @@
     });
 
     if (!prepareResponse.ok) {
-      if (prepareResponse.status === 401) {
+      const reason = await prepareResponse.text();
+      if (prepareResponse.status === 400 && reason === 'invalid guest info') {
+        alert(/*[[#{pay.alert_guest_required}]]*/ '영문 이름과 이메일을 입력해주세요.');
+      } else if (prepareResponse.status === 400 && reason === 'invalid jp name') {
+        alert(/*[[#{pay.kana_only}]]*/ '일본어 이름은 히라가나 또는 가타카나로 입력해주세요.');
+      } else if (prepareResponse.status === 401) {
         alert(/*[[#{pay.alert_login}]]*/ '로그인이 필요합니다. 다시 로그인해주세요.');
         window.location.href = '/member/login';
       } else {

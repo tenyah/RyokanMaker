@@ -21,9 +21,15 @@ public class AdminReservationDetailDto {
     // 예약자 정보 (MEMBER)
     private String userNickname;
     private String userMail;
-    private String userTel;
-    private String userCountry;
     private String resvArrivalTime;
+    // 예약자(실제 숙박객) — 예약한 회원(userMail/userNickname)과 다를 수 있다
+    private String resvLastNameEn;
+    private String resvFirstNameEn;
+    private String resvLastNameJp;
+    private String resvFirstNameJp;
+    private String resvMail;
+    private String resvCountry;  // 결제 화면 국가 코드(KR/JP/...)
+    private String resvTel;
 
     // 예약 정보 (RESERVATION)
     private Integer resvPeople;

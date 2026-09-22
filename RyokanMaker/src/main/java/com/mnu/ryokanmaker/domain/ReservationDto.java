@@ -27,4 +27,12 @@ public class ReservationDto {
     private String resvArrivalTime;
     private String resvRequest;
     private LocalDate resvDay;
+    // 예약자(실제 숙박객) 정보. 예약한 회원(userMail)과 다른 사람일 수 있다. 영문 이름·메일은 NOT NULL, 일본어 이름은 선택.
+    private String resvLastNameEn;
+    private String resvFirstNameEn;
+    private String resvLastNameJp;
+    private String resvFirstNameJp;
+    private String resvMail;
+    private String resvCountry;  // 결제 화면 국가 코드(KR/JP/US/CN/TW/ETC)
+    private String resvTel;
 }

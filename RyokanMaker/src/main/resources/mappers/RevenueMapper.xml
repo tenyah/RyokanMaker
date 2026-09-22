@@ -20,6 +20,7 @@
         WHERE rr.ADMIN_IDX = #{adminIdx}
           AND rr.RESV_CHECK_IN &gt;= #{rangeStart}
           AND rr.RESV_CHECK_IN &lt; #{rangeEnd}
+          AND rr.RESV_STATUS != '예약취소'
         ORDER BY rr.RESV_CHECK_IN DESC, rr.ROOM_RESV_NUM DESC
     </select>
 
@@ -40,6 +41,7 @@
         LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
         WHERE rr.ADMIN_IDX = #{adminIdx}
           AND rr.RESV_CHECK_IN = #{date}
+          AND rr.RESV_STATUS != '예약취소'
         ORDER BY r.RESV_ARRIVAL_TIME
     </select>
 
@@ -60,6 +62,7 @@
         LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
         WHERE rr.ADMIN_IDX = #{adminIdx}
           AND rr.RESV_CHECK_OUT = #{date}
+          AND rr.RESV_STATUS != '예약취소'
         ORDER BY rm.ROOM_NAME
     </select>
 

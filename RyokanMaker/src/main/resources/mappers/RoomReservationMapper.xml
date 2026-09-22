@@ -8,6 +8,7 @@
 		FROM ROOM_RESERVATION
 		WHERE RESV_CHECK_IN &lt; #{rangeEnd}
 		  AND RESV_CHECK_OUT &gt; #{rangeStart}
+		  AND RESV_STATUS != '예약취소'
 	</select>
 
 	<!-- 당일 객실 관리: 체크인 표시/취소. RESERVATION 과 ROOM_RESERVATION 상태를 같이 맞춘다 -->
@@ -41,6 +42,7 @@
 		WHERE ADMIN_IDX = #{adminIdx}
 		  AND RESV_CHECK_IN &gt;= #{rangeStart}
 		  AND RESV_CHECK_IN &lt; #{rangeEnd}
+		  AND RESV_STATUS != '예약취소'
 	</select>
 
 </mapper>

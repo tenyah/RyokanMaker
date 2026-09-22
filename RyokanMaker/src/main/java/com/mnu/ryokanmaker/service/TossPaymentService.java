@@ -24,18 +24,20 @@ public class TossPaymentService {
         this.restClient = RestClient.create("https://api.tosspayments.com");
     }
 
+    private String basicAuth() {
+        return "Basic " + Base64.getEncoder()
+                .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
+    }
+
     /**
      * 결제 승인 API 호출. 호출 전에 반드시 서버에 저장된 주문 금액과 amount가
      * 일치하는지 검증한 뒤 호출해야 한다 (successUrl의 amount는 위변조 가능).
      */
     public Map<String, Object> confirm(String paymentKey, String orderId, int amount) {
-        String encodedAuth = Base64.getEncoder()
-                .encodeToString((secretKey + ":").getBytes(StandardCharsets.UTF_8));
-
         try {
             return restClient.post()
                     .uri("/v1/payments/confirm")
-                    .header(HttpHeaders.AUTHORIZATION, "Basic " + encodedAuth)
+                    .header(HttpHeaders.AUTHORIZATION, basicAuth())
                     .header("Idempotency-Key", UUID.randomUUID().toString())
                     .body(Map.of(
                             "paymentKey", paymentKey,

@@ -7,6 +7,7 @@ import com.mnu.ryokanmaker.domain.MemberDto;
 import com.mnu.ryokanmaker.domain.OnsenPickDto;
 import com.mnu.ryokanmaker.domain.PriceBreakdownDto;
 import com.mnu.ryokanmaker.domain.ReservationContext;
+import com.mnu.ryokanmaker.domain.ReservationDto;
 import com.mnu.ryokanmaker.domain.ReservationSummary;
 import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
 import com.mnu.ryokanmaker.domain.RoomDto;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
@@ -114,7 +116,8 @@ public class PaymentController {
                            @RequestParam(required = false) List<String> onsen,
                            Model model, HttpSession session) {
 
-        if (loginMember(session) == null) {
+        MemberDto member = loginMember(session);
+        if (member == null) {
             return "redirect:/member/login";
         }
 
@@ -152,6 +155,14 @@ public class PaymentController {
         GuestInfoForm guestInfoForm = new GuestInfoForm();
         // 토스페이먼츠 orderId 규칙: 영문/숫자/-_, 6~64자, 결제마다 고유해야 함
         guestInfoForm.setOrderId("RYOKAN-" + UUID.randomUUID().toString().replace("-", ""));
+        // 기본은 로그인한 회원 본인 정보. 다른 사람 이름으로 예약할 때는 화면에서 지우고 직접 입력한다.
+        guestInfoForm.setLastNameJp(member.getUserLastNameJp());
+        guestInfoForm.setFirstNameJp(member.getUserFirstNameJp());
+        guestInfoForm.setLastNameEn(member.getUserLastNameEn());
+        guestInfoForm.setFirstNameEn(member.getUserFirstNameEn());
+        guestInfoForm.setEmail(member.getUserMail());
+        guestInfoForm.setPhone(member.getUserTel());
+        guestInfoForm.setCountry(countryCodeOf(member.getUserCountry()));
 
         // 결제창을 띄우기 직전(/payment/prepare)에 이 선택값으로 예약을 저장한다.
         session.setAttribute(SESSION_RESERVATION_CONTEXT + guestInfoForm.getOrderId(),
@@ -198,6 +209,19 @@ public class PaymentController {
                 (ReservationContext) session.getAttribute(SESSION_RESERVATION_CONTEXT + guestInfoForm.getOrderId());
         if (context == null) {
             return ResponseEntity.badRequest().body("reservation expired");
+        }
+        // RESERVATION 예약자 컬럼 제약(NOT NULL, VARCHAR2 바이트 길이)을 저장 전에 확인한다
+        if (isBlank(guestInfoForm.getLastNameEn()) || isBlank(guestInfoForm.getFirstNameEn())
+                || isBlank(guestInfoForm.getEmail()) || isBlank(guestInfoForm.getCountry())
+                || isBlank(guestInfoForm.getPhone())
+                || tooLong(guestInfoForm.getLastNameEn(), 50) || tooLong(guestInfoForm.getFirstNameEn(), 50)
+                || tooLong(guestInfoForm.getLastNameJp(), 50) || tooLong(guestInfoForm.getFirstNameJp(), 50)
+                || tooLong(guestInfoForm.getEmail(), 100) || tooLong(guestInfoForm.getCountry(), 50)
+                || tooLong(guestInfoForm.getPhone(), 20)) {
+            return ResponseEntity.badRequest().body("invalid guest info");
+        }
+        if (!isKanaOrBlank(guestInfoForm.getLastNameJp()) || !isKanaOrBlank(guestInfoForm.getFirstNameJp())) {
+            return ResponseEntity.badRequest().body("invalid jp name");
         }
 
         session.setAttribute("guestInfoForm", guestInfoForm);
@@ -254,15 +278,26 @@ public class PaymentController {
     private void sendReservationMail(HttpSession session, String orderId) {
         MemberDto member = loginMember(session);
         ReservationContext context = (ReservationContext) session.getAttribute(SESSION_RESERVATION_CONTEXT + orderId);
-        if (member == null || context == null) {
-            log.warn("예약 완료 메일 생략: 세션에 회원/예약 정보가 없음 (orderId={})", orderId);
+        if (context == null) {
+            log.warn("예약 완료 메일 생략: 세션에 예약 정보가 없음 (orderId={})", orderId);
             return;
         }
         try {
+            // 수신자는 로그인 회원이 아니라 결제 화면에서 입력한 예약자 메일(RESV_MAIL)
+            ReservationDto guest = paymentReservationService.findGuestByOrderId(orderId);
+            if (guest == null || guest.getResvMail() == null) {
+                log.warn("예약 완료 메일 생략: 예약자 메일이 없음 (orderId={})", orderId);
+                return;
+            }
+            // 본인 예약이면 닉네임, 다른 분 예약이면 입력한 영문 이름으로 부른다
+            String guestName = (member != null && guest.getResvMail().equalsIgnoreCase(member.getUserMail()))
+                    ? member.getUserNickname()
+                    : guest.getResvLastNameEn() + " " + guest.getResvFirstNameEn();
+
             RoomDto room = roomMapper.findById(context.getRoomIdx());
             AdminPlanDto plan = planMapper.findById(context.getPlanIdx());
             AdminDto admin = adminMapper.selectByAdminIdx(context.getAdminIdx());
-            emailService.sendReservationConfirmed(member.getUserMail(), member.getUserNickname(),
+            emailService.sendReservationConfirmed(guest.getResvMail(), guestName,
                     admin != null ? admin.getRyokanName() : null, orderId,
                     room != null ? room.getRoomName() : null, plan != null ? plan.getPlanName() : null,
                     context.getCheckIn(), context.getCheckOut(), context.getPeople(), context.getTotalAmount());
@@ -278,6 +313,40 @@ public class PaymentController {
     // ---------------------------------------------------------------
     // 아래는 전부 화면 확인용 더미 데이터입니다. (실제로는 Service에서 조회)
     // ---------------------------------------------------------------
+
+    // 일본어 이름: 히라가나(3040-309F)·가타카나(30A0-30FF, 장음 ー 포함)·반각 가타카나(FF65-FF9F)와 공백만 허용.
+    // payment.html의 입력창 pattern과 같은 범위여야 한다.
+    private static final java.util.regex.Pattern KANA_NAME =
+            java.util.regex.Pattern.compile("[\\u3040-\\u309F\\u30A0-\\u30FF\\uFF65-\\uFF9F\\u3000 ]+");
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
+    // Oracle VARCHAR2 길이는 바이트 기준(UTF-8에서 가나 1글자 = 3바이트). 저장 시 앞뒤 공백은 제거된다.
+    private static boolean tooLong(String s, int maxBytes) {
+        return s != null && s.strip().getBytes(StandardCharsets.UTF_8).length > maxBytes;
+    }
+
+    /** 일본어 이름은 선택 입력이라 비어 있으면 통과, 입력했다면 가나만 허용. */
+    private static boolean isKanaOrBlank(String name) {
+        return name == null || name.isBlank() || KANA_NAME.matcher(name).matches();
+    }
+
+    /** 회원 국가(COUNTRY_CODE 테이블의 국가명)를 결제 화면 선택지 코드로 바꾼다. */
+    private static String countryCodeOf(String countryName) {
+        if (countryName == null || countryName.isBlank()) {
+            return null;
+        }
+        return switch (countryName.strip()) {
+            case "대한민국" -> "KR";
+            case "일본" -> "JP";
+            case "미국" -> "US";
+            case "중국" -> "CN";
+            case "대만" -> "TW";
+            default -> "ETC";
+        };
+    }
 
     private Map<String, String> buildCountryOptions() {
         Map<String, String> countries = new LinkedHashMap<>();

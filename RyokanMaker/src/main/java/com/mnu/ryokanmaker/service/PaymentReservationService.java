@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mnu.ryokanmaker.domain.GuestInfoForm;
+import com.mnu.ryokanmaker.domain.OnsenPickDto;
 import com.mnu.ryokanmaker.domain.ReservationContext;
 import com.mnu.ryokanmaker.domain.ReservationDto;
 import com.mnu.ryokanmaker.domain.RoomReservationDto;
@@ -22,6 +23,24 @@ public class PaymentReservationService {
     public static final String STATUS_RESERVED = "예약완료";
     public static final String PAY_STATUS_WAITING = "결제대기";
     public static final String PAY_STATUS_PAID = "결제완료";
+    public static final String STATUS_CANCELLED = "예약취소";
+    public static final String PAY_STATUS_CANCELLED = "결제취소";
+
+    // RESTAURANT_SIDEMENU가 NOT NULL인데 예약 화면에 사이드메뉴 입력이 없어서 채우는 값
+    private static final String NO_SIDEMENU = "-";
+
+    /** 주문번호로 저장된 예약자 정보(이름·RESV_MAIL). 없으면 null. */
+    public ReservationDto findGuestByOrderId(String orderId) {
+        return paymentMapper.selectGuestByOrderId(orderId);
+    }
+
+    private static String trimToNull(String s) {
+        if (s == null) {
+            return null;
+        }
+        String t = s.strip();
+        return t.isEmpty() ? null : t;
+    }
 
     @Autowired
     private PaymentMapper paymentMapper;
@@ -40,6 +59,13 @@ public class PaymentReservationService {
         reservation.setResvRequest(guestInfoForm.getRequestNote());
         reservation.setResvDay(LocalDate.now());
         reservation.setResvOrderId(guestInfoForm.getOrderId());
+        reservation.setResvLastNameEn(trimToNull(guestInfoForm.getLastNameEn()));
+        reservation.setResvFirstNameEn(trimToNull(guestInfoForm.getFirstNameEn()));
+        reservation.setResvLastNameJp(trimToNull(guestInfoForm.getLastNameJp()));
+        reservation.setResvFirstNameJp(trimToNull(guestInfoForm.getFirstNameJp()));
+        reservation.setResvMail(trimToNull(guestInfoForm.getEmail()));
+        reservation.setResvCountry(trimToNull(guestInfoForm.getCountry()));
+        reservation.setResvTel(trimToNull(guestInfoForm.getPhone()));
         paymentMapper.insertReservation(reservation);
 
         RoomReservationDto roomReservation = new RoomReservationDto();
@@ -56,7 +82,27 @@ public class PaymentReservationService {
         roomReservation.setResvPayStatus(PAY_STATUS_WAITING);
         paymentMapper.insertRoomReservation(roomReservation);
 
-        return reservation.getResvNum();
+        Integer resvNum = reservation.getResvNum();
+
+        // 식사 코스는 1박 기준이라 숙박하는 밤마다 한 건씩 저장한다
+        if (context.getCourseIdx() != null) {
+            for (LocalDate night = context.getCheckIn(); night.isBefore(context.getCheckOut()); night = night.plusDays(1)) {
+                paymentMapper.insertRestaurantReservation(context.getAdminIdx(), userMail, resvNum,
+                        night, context.getPeople(), NO_SIDEMENU, context.getCourseIdx());
+            }
+        }
+
+        if (context.getOnsenPicks() != null) {
+            for (OnsenPickDto pick : context.getOnsenPicks()) {
+                if (pick.getOnsenIdx() == null) {
+                    continue;
+                }
+                paymentMapper.insertOnsenReservation(context.getAdminIdx(), userMail, resvNum,
+                        pick.getDate(), pick.getTimeSlot(), context.getPeople(), STATUS_RESERVED, pick.getOnsenIdx());
+            }
+        }
+
+        return resvNum;
     }
 
     /** 결제 승인이 끝난 뒤 RESERVATION과 ROOM_RESERVATION의 결제 상태/수단을 갱신한다. */
