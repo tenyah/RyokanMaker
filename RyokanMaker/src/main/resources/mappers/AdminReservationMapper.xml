@@ -8,7 +8,7 @@
         (한 예약에 객실이 여러 개면 상세 패널에서 전부 확인 가능).
         컬럼명은 실제 Oracle DB 스키마(user_tab_columns 조회 결과) 기준 SCREAMING_SNAKE_CASE.
     -->
-    <select id="selectReservationList" resultType="com.mnu.ryokanmaker.dto.AdminReservationListItemDto">
+    <select id="selectReservationList" resultType="com.mnu.ryokanmaker.domain.AdminReservationListItemDto">
         SELECT
             r.RESV_NUM          AS resvNum,
             m.USER_NICKNAME     AS userNickname,
@@ -34,11 +34,48 @@
             <if test="adminIdx != null">
                 r.ADMIN_IDX = #{adminIdx}
             </if>
+            <if test="checkInDate != null">
+                AND EXISTS (
+                    SELECT 1 FROM ROOM_RESERVATION rr3
+                    WHERE rr3.RESV_NUM = r.RESV_NUM
+                      AND TRUNC(rr3.RESV_CHECK_IN) = #{checkInDate}
+                )
+            </if>
+            <if test="keyword != null">
+                <bind name="kw" value="'%' + keyword.toUpperCase() + '%'"/>
+                AND (
+                    UPPER(m.USER_NICKNAME) LIKE #{kw}
+                    OR UPPER(r.USER_MAIL) LIKE #{kw}
+                    OR UPPER(m.USER_FIRST_NAME_EN || ' ' || m.USER_LAST_NAME_EN) LIKE #{kw}
+                    OR UPPER(m.USER_LAST_NAME_EN || ' ' || m.USER_FIRST_NAME_EN) LIKE #{kw}
+                    OR (m.USER_LAST_NAME_JP || m.USER_FIRST_NAME_JP) LIKE #{kw}
+                    OR UPPER(r.RESV_MAIL) LIKE #{kw}
+                    OR UPPER(r.RESV_FIRST_NAME_EN || ' ' || r.RESV_LAST_NAME_EN) LIKE #{kw}
+                    OR UPPER(r.RESV_LAST_NAME_EN || ' ' || r.RESV_FIRST_NAME_EN) LIKE #{kw}
+                    OR (r.RESV_LAST_NAME_JP || r.RESV_FIRST_NAME_JP) LIKE #{kw}
+                )
+            </if>
         </where>
         ORDER BY r.RESV_NUM DESC
     </select>
 
-    <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.dto.ReservationDto">
+    <select id="countTodayCheckIns" resultType="int">
+        SELECT COUNT(*)
+        FROM ROOM_RESERVATION
+        WHERE ADMIN_IDX = #{adminIdx}
+          AND TRUNC(RESV_CHECK_IN) = TRUNC(SYSDATE)
+          AND RESV_STATUS != '예약취소'
+    </select>
+
+    <select id="countTodayCheckOuts" resultType="int">
+        SELECT COUNT(*)
+        FROM ROOM_RESERVATION
+        WHERE ADMIN_IDX = #{adminIdx}
+          AND TRUNC(RESV_CHECK_OUT) = TRUNC(SYSDATE)
+          AND RESV_STATUS != '예약취소'
+    </select>
+
+    <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.domain.ReservationDto">
         SELECT
             RESV_NUM         AS resvNum,
             ADMIN_IDX        AS adminIdx,
@@ -50,12 +87,40 @@
             RESV_PAY_METHOD  AS resvPayMethod,
             RESV_ARRIVAL_TIME AS resvArrivalTime,
             RESV_REQUEST     AS resvRequest,
-            RESV_DAY         AS resvDay
+            RESV_DAY         AS resvDay,
+            RESV_ORDER_ID    AS resvOrderId,
+            RESV_LAST_NAME_EN  AS resvLastNameEn,
+            RESV_FIRST_NAME_EN AS resvFirstNameEn,
+            RESV_LAST_NAME_JP  AS resvLastNameJp,
+            RESV_FIRST_NAME_JP AS resvFirstNameJp,
+            RESV_MAIL          AS resvMail,
+            RESV_COUNTRY       AS resvCountry,
+            RESV_TEL           AS resvTel
         FROM RESERVATION
         WHERE RESV_NUM = #{resvNum}
     </select>
 
-    <select id="selectMember" resultType="com.mnu.ryokanmaker.dto.MemberDto">
+    <!-- 예약 취소: 기록은 남기고 상태만 바꾼다. ADMIN_IDX 조건으로 다른 관리자의 예약은 건드리지 않는다 -->
+    <update id="cancelReservation">
+        UPDATE RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <update id="cancelRoomReservations">
+        UPDATE ROOM_RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <!-- RESTAURANT_RESERVATION은 상태 컬럼이 없어 그대로 두고, 예약 본체 상태로 취소 여부를 판단한다 -->
+    <update id="cancelOnsenReservations">
+        UPDATE ONSEN_RESERVATION
+        SET ONSEN_STATUS = #{status}
+        WHERE RESV_NUM = #{resvNum} AND ADMIN_IDX = #{adminIdx}
+    </update>
+
+    <select id="selectMember" resultType="com.mnu.ryokanmaker.domain.MemberDto">
         SELECT
             USER_MAIL      AS userMail,
             USER_PASSWORD  AS userPassword,
@@ -67,7 +132,7 @@
         WHERE USER_MAIL = #{userMail}
     </select>
 
-    <select id="selectRoomItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRoomItemDto">
+    <select id="selectRoomItems" resultType="com.mnu.ryokanmaker.domain.AdminReservationRoomItemDto">
         SELECT
             rm.ROOM_NAME       AS roomName,
             p.PLAN_NAME        AS planName,
@@ -82,7 +147,7 @@
         ORDER BY rr.ROOM_RESV_NUM
     </select>
 
-    <select id="selectRestaurantItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationRestaurantItemDto">
+    <select id="selectRestaurantItems" resultType="com.mnu.ryokanmaker.domain.AdminReservationRestaurantItemDto">
         SELECT
             c.RESTAURANT_COURSE_NAME   AS courseName,
             rr.RESTAURANT_USE_DATE     AS restaurantUseDate,
@@ -95,7 +160,7 @@
         ORDER BY rr.RESTAURANT_FACILITY_IDX
     </select>
 
-    <select id="selectOnsenItems" resultType="com.mnu.ryokanmaker.dto.AdminReservationOnsenItemDto">
+    <select id="selectOnsenItems" resultType="com.mnu.ryokanmaker.domain.AdminReservationOnsenItemDto">
         SELECT
             o.ONSEN_NAME        AS onsenName,
             orr.ONSEN_USE_DATE  AS onsenUseDate,

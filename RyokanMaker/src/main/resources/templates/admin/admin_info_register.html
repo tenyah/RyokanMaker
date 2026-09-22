@@ -74,7 +74,7 @@
 
 <div class="admin-shell">
 
-  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false)}"></div>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='info', showInfoSubmenu=true, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
   <main class="admin-main" th:with="_p1=${@tr.prefetch(roomList, 'roomName', 'roomLevel', 'roomMemo')}, _p2=${@tr.prefetch(courseList, 'restaurantCourseName', 'restaurantCourseInfo', 'restaurantCourseMemo')}, _p3=${@tr.prefetch(onsenList, 'onsenName', 'onsenInfo', 'onsenMemo')}, _p4=${@tr.prefetch(planList, 'planName', 'planInfo')}, _p5=${@tr.prefetch(facilityList, 'facilityName', 'facilityInfo', 'facilityMemo')}, _p6=${@tr.prefetch(noticeList, 'noticeTitle', 'noticeContent')}">
@@ -636,7 +636,7 @@
       </form>
     </div>
 
-    <!-- SECTION 6: 교통안내 (신규) — ADMIN.RYOKAN_ACCESS 단일 텍스트 컬럼(최대 100byte)에 대응 -->
+    <!-- SECTION 6: 교통안내 (신규) — ADMIN.RYOKAN_ACCESS 단일 텍스트 컬럼(VARCHAR2(1000) BYTE)에 대응 -->
     <div id="section-route" class="section-tag">
       <div class="num">7</div>
       <div class="label" th:text="#{adm.ir_s_route}">교통안내 입력</div>
@@ -646,9 +646,21 @@
     <div class="admin-section-body">
       <form class="form-card" th:action="@{/Admin/admin_access_save}" method="post">
 
+        <div class="notice-banner" th:if="${pageTextError != null and pageTextErrorGroup == 'ACCESS'}" th:text="#{${pageTextError}}">저장에 실패했습니다.</div>
+
+        <div class="img-hint" th:text="#{adm.ir_ac_hint}">비워 두고 저장하면 기본 문구가 표시됩니다.</div>
+
+        <div class="field" th:each="def : ${textGroups['ACCESS']}">
+          <label th:text="#{${def.labelKey()}}">문구</label>
+          <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="300"
+                    th:placeholder="${@pt.placeholder(def.key())}" th:text="${pageTexts[def.key()]}"></textarea>
+          <input th:unless="${def.multiline()}" type="text" th:name="${'pc_' + def.key()}" maxlength="300"
+                 th:placeholder="${@pt.placeholder(def.key())}" th:value="${pageTexts[def.key()]}">
+        </div>
+
         <div class="field">
-          <label th:text="#{nav.access}">교통안내</label>
-          <input type="text" name="ryokanAccess" maxlength="33" th:placeholder="#{adm.ir_route_ph}" th:value="${admin.ryokanAccess}">
+          <label th:text="#{adm.ir_ac_line}">추가 안내문 (한 줄, 카드 위에 표시)</label>
+          <input type="text" name="ryokanAccess" maxlength="300" th:placeholder="#{adm.ir_route_ph}" th:value="${admin.ryokanAccess}">
           <div class="img-hint" th:text="#{adm.ir_route_hint}">여관 하나당 한 줄만 등록됩니다.</div>
         </div>
 
@@ -718,6 +730,79 @@
       </form>
     </div>
 
+    <!-- SECTION 9: 페이지 문구 (손님 화면의 소개·설명 문구. PAGE_CONTENT 테이블, 교통안내 문구는 위 교통안내 섹션) -->
+    <div id="section-pagetext" class="section-tag">
+      <div class="num">9</div>
+      <div class="label" th:text="#{adm.ir_s_pagetext}">페이지 문구</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-section-body">
+      <th:block th:each="entry : ${textGroups}" th:if="${entry.key != 'ACCESS'}">
+        <form class="form-card" th:action="@{/Admin/admin_page_text_save}" method="post">
+          <input type="hidden" name="group" th:value="${entry.key}">
+
+          <div class="sub-label" style="margin-bottom:2px;" th:text="#{${'adm.pt_group_' + entry.key.toLowerCase()}}">메인 화면</div>
+          <div class="notice-banner" th:if="${pageTextError != null and pageTextErrorGroup == entry.key}" th:text="#{${pageTextError}}">저장에 실패했습니다.</div>
+          <div class="img-hint" th:text="#{adm.ir_ac_hint}">비워 두고 저장하면 기본 문구가 표시됩니다.</div>
+
+          <div class="field" th:each="def : ${entry.value}">
+            <label th:text="#{${def.labelKey()}}">문구</label>
+            <textarea th:if="${def.multiline()}" th:name="${'pc_' + def.key()}" maxlength="300"
+                      th:placeholder="${@pt.placeholder(def.key())}" th:text="${pageTexts[def.key()]}"></textarea>
+            <input th:unless="${def.multiline()}" type="text" th:name="${'pc_' + def.key()}" maxlength="300"
+                   th:placeholder="${@pt.placeholder(def.key())}" th:value="${pageTexts[def.key()]}">
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;">
+            <button type="submit" class="btn-gold small" th:text="#{common.save}">저장</button>
+          </div>
+        </form>
+      </th:block>
+    </div>
+
+
+    <!-- SECTION 10: 메일 발송 설정 (손님에게 가는 메일을 이 관리자 메일 주소로 직접 발송) -->
+    <div id="section-mail" class="section-tag">
+      <div class="num">10</div>
+      <div class="label" th:text="#{adm.ir_s_mail}">메일 발송 설정</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-section-body">
+      <form class="form-card" th:action="@{/Admin/admin_mail_save}" method="post" autocomplete="off">
+
+        <div class="notice-banner" th:if="${mailError}" th:text="#{${mailError}}">저장에 실패했습니다.</div>
+        <div class="notice-banner" th:if="${mailMessage}" th:text="#{${mailMessage}}">저장되었습니다.</div>
+        <div class="notice-banner" th:unless="${mailSecretAvailable}" th:text="#{adm.ir_mail_no_key}">서버에 MAIL_SECRET_KEY가 설정되어 있지 않아 저장할 수 없습니다.</div>
+
+        <div class="img-hint" th:text="#{adm.ir_mail_hint}">비밀번호 찾기 등 손님에게 가는 메일이 이 관리자 메일 주소에서 료칸 이름으로 발송됩니다.</div>
+
+        <div class="field">
+          <label th:text="#{adm.ir_mail_sender}">보내는 메일 주소</label>
+          <div th:text="${!#strings.isEmpty(admin?.adminMail)} ? ${admin.adminMail} : #{adm.ir_mail_no_address}">admin@example.com</div>
+        </div>
+
+        <div class="field">
+          <label th:text="#{adm.ir_mail_status}">저장 상태</label>
+          <div th:text="${mailPasswordSet} ? #{adm.ir_mail_set} : #{adm.ir_mail_unset}">미설정</div>
+        </div>
+
+        <div class="field">
+          <label th:text="#{adm.ir_mail_pw}">메일 앱 비밀번호</label>
+          <input type="password" name="mailPassword" autocomplete="new-password" maxlength="100" th:placeholder="#{adm.ir_mail_pw_ph}">
+          <div class="img-hint" th:text="#{adm.ir_mail_pw_hint}">Gmail 2단계 인증 후 발급한 앱 비밀번호 16자리를 입력하세요.</div>
+        </div>
+
+        <div class="field" th:if="${mailPasswordSet}">
+          <label><input type="checkbox" name="clear" value="Y"> <span th:text="#{adm.ir_mail_clear}">저장된 비밀번호 삭제</span></label>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="submit" class="btn-gold small" th:text="#{common.save}">저장</button>
+        </div>
+      </form>
+    </div>
     <!-- 저장 영역 : 임시저장 없이 바로 저장 -->
     <div class="save-bar">
       <div class="status" th:text="#{adm.ir_last_saved}">마지막 저장: 아직 저장되지 않음</div>

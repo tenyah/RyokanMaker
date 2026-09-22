@@ -6,23 +6,25 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.mnu.ryokanmaker.dto.AdminPlanDto;
-import com.mnu.ryokanmaker.dto.BathAvailabilityDto;
-import com.mnu.ryokanmaker.dto.OnsenDayDto;
-import com.mnu.ryokanmaker.dto.OnsenDto;
-import com.mnu.ryokanmaker.dto.OnsenPickDto;
-import com.mnu.ryokanmaker.dto.PriceBreakdownDto;
-import com.mnu.ryokanmaker.dto.RestaurantCourseDto;
-import com.mnu.ryokanmaker.dto.RoomAvailabilityDto;
-import com.mnu.ryokanmaker.dto.RoomDto;
-import com.mnu.ryokanmaker.dto.RoomReservationDto;
-import com.mnu.ryokanmaker.dto.SlotDto;
+import com.mnu.ryokanmaker.domain.AdminPlanDto;
+import com.mnu.ryokanmaker.domain.BathAvailabilityDto;
+import com.mnu.ryokanmaker.domain.OnsenDayDto;
+import com.mnu.ryokanmaker.domain.OnsenDto;
+import com.mnu.ryokanmaker.domain.OnsenPickDto;
+import com.mnu.ryokanmaker.domain.PriceBreakdownDto;
+import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
+import com.mnu.ryokanmaker.domain.RoomAvailabilityDto;
+import com.mnu.ryokanmaker.domain.RoomDto;
+import com.mnu.ryokanmaker.domain.RoomReservationDto;
+import com.mnu.ryokanmaker.domain.SlotDto;
 import com.mnu.ryokanmaker.mapper.OnsenMapper;
 import com.mnu.ryokanmaker.mapper.PlanMapper;
 import com.mnu.ryokanmaker.mapper.RestaurantCourseMapper;
@@ -90,21 +92,28 @@ public class ReservationService {
         return rooms;
     }
 
-    // TODO: 시간대별 예약 가능 여부는 나중에 OnsenReservationMapper로 교체 (현재는 목업)
     /** 숙박 기간의 매일(체크인 ~ 체크아웃 전날)마다 온천/시간대 선택표를 만든다. */
     public List<OnsenDayDto> getOnsenDays(LocalDate checkIn, LocalDate checkOut) {
         List<OnsenDto> onsenList = onsenMapper.findAllOnSale();
+        // 이미 예약된 칸: "날짜|온천idx|시간" 형태로 모아 두고 칸마다 조회한다
+        Set<String> reserved = new HashSet<>();
+        for (OnsenPickDto r : onsenMapper.findReservedSlots(checkIn, checkOut)) {
+            reserved.add(slotKey(r.getDate(), r.getOnsenIdx(), r.getTimeSlot()));
+        }
         List<OnsenDayDto> days = new ArrayList<>();
         for (LocalDate date : checkIn.datesUntil(checkOut).toList()) {
-            days.add(new OnsenDayDto(date, buildBaths(onsenList, date)));
+            days.add(new OnsenDayDto(date, buildBaths(onsenList, date, reserved)));
         }
         return days;
     }
 
-    private List<BathAvailabilityDto> buildBaths(List<OnsenDto> onsenList, LocalDate date) {
+    private static String slotKey(LocalDate date, Integer onsenIdx, String timeSlot) {
+        return date + "|" + onsenIdx + "|" + timeSlot;
+    }
+
+    private List<BathAvailabilityDto> buildBaths(List<OnsenDto> onsenList, LocalDate date, Set<String> reserved) {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
         int onsenBasePrice = onsenList.stream().mapToInt(o -> priceOf(o.getOnsenPrice())).min().orElse(0);
-        int dayShift = (int) (date.toEpochDay() % 3);
 
         // 표 헤더는 하나라서, 모든 온천의 1시간 단위 시작시각을 합쳐서 공통 컬럼으로 사용
         TreeSet<LocalTime> allTimes = new TreeSet<>();
@@ -113,16 +122,15 @@ public class ReservationService {
         }
 
         List<BathAvailabilityDto> baths = new ArrayList<>();
-        for (int i = 0; i < onsenList.size(); i++) {
-            OnsenDto onsen = onsenList.get(i);
+        for (OnsenDto onsen : onsenList) {
             List<LocalTime> ownTimes = hourlySlots(onsen);
             List<SlotDto> slots = new ArrayList<>();
-            int t = 0;
             for (LocalTime time : allTimes) {
-                // 해당 온천 이용시간 밖이면 마감 처리. 이용시간 안의 예약여부는 아직 목업
-                boolean available = ownTimes.contains(time) && (i + t + dayShift) % 3 != 0;
-                slots.add(new SlotDto(time.format(fmt), available));
-                t++;
+                String slot = time.format(fmt);
+                // 이 온천의 이용시간 안이고, 아직 아무도 예약하지 않은 칸만 예약 가능
+                boolean available = ownTimes.contains(time)
+                        && !reserved.contains(slotKey(date, onsen.getOnsenIdx(), slot));
+                slots.add(new SlotDto(slot, available));
             }
             baths.add(new BathAvailabilityDto(onsen.getOnsenIdx(), onsen.getOnsenName(), slots,
                     priceOf(onsen.getOnsenPrice()) - onsenBasePrice));

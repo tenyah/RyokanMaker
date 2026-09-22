@@ -1,17 +1,30 @@
 package com.mnu.ryokanmaker.mapper;
 
-import com.mnu.ryokanmaker.dto.AdminReservationListItemDto;
+import com.mnu.ryokanmaker.domain.AdminReservationListItemDto;
+import com.mnu.ryokanmaker.domain.ReservationDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-/** 마이페이지(회원 본인) 예약 현황 조회/회원탈퇴 시 예약 정리용 매퍼. */
+/** 마이페이지(회원 본인) 예약 현황 조회/취소·회원탈퇴 시 예약 정리용 매퍼. */
 @Mapper
 public interface ReservationMapper {
 
     /** 특정 회원(userMail)의 예약 내역 전체 조회 (최신순). */
     List<AdminReservationListItemDto> selectReservationListByUserMail(@Param("userMail") String userMail);
+
+    /** 마이페이지 예약 취소 시 소유자(userMail) 확인용 RESERVATION 헤더 조회. */
+    ReservationDto selectReservationHeader(@Param("resvNum") Integer resvNum);
+
+    int cancelReservation(@Param("resvNum") Integer resvNum, @Param("userMail") String userMail,
+            @Param("status") String status, @Param("payStatus") String payStatus);
+
+    int cancelRoomReservations(@Param("resvNum") Integer resvNum, @Param("userMail") String userMail,
+            @Param("status") String status, @Param("payStatus") String payStatus);
+
+    int cancelOnsenReservations(@Param("resvNum") Integer resvNum, @Param("userMail") String userMail,
+            @Param("status") String status);
 
     /*
      * 회원탈퇴 시 삭제 순서 (FK 때문에 순서 중요):

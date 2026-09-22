@@ -3,7 +3,7 @@
 <mapper namespace="com.mnu.ryokanmaker.mapper.RestaurantCourseMapper">
 
 	<!-- RESTAURANT_COURSE_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
-	<insert id="insertCourse" parameterType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+	<insert id="insertCourse" parameterType="com.mnu.ryokanmaker.domain.RestaurantCourseDto">
 		INSERT INTO RESTAURANT_COURSE (
 			RESTAURANT_COURSE_NAME,
 			RESTAURANT_COURSE_IMAGE,
@@ -23,7 +23,7 @@
 		)
 	</insert>
 
-	<select id="selectCoursesByAdmin" resultType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+	<select id="selectCoursesByAdmin" resultType="com.mnu.ryokanmaker.domain.RestaurantCourseDto">
 		SELECT *
 		FROM RESTAURANT_COURSE
 		WHERE ADMIN_IDX = #{adminIdx}
@@ -31,7 +31,7 @@
 	</select>
 
 	<!-- restaurantCourseImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
-	<update id="updateCourse" parameterType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+	<update id="updateCourse" parameterType="com.mnu.ryokanmaker.domain.RestaurantCourseDto">
 		UPDATE RESTAURANT_COURSE
 		<set>
 			RESTAURANT_COURSE_NAME = #{restaurantCourseName},
@@ -52,7 +52,7 @@
 	</delete>
 
 	<!-- 사용자 예약 화면(식사 코스 선택)에 노출할 판매중 코스 전체 조회 -->
-	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.RestaurantCourseDto">
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.RestaurantCourseDto">
 		SELECT *
 		FROM RESTAURANT_COURSE
 		WHERE RESTAURANT_SALE_YN = 'Y'

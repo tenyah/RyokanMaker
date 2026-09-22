@@ -15,8 +15,9 @@
   <!-- 타이틀 -->
   <section class="page-title">
     <div class="crumb">Dining &nbsp;/&nbsp; お食事</div>
-    <h1 th:text="#{dining.title}">식사 안내</h1>
+    <h1 th:text="${@pt.t('DINING_TITLE')}">식사 안내</h1>
     <div class="rule"></div>
+    <p class="desc" th:if="${!#strings.isEmpty(@pt.t('DINING_DESC'))}" th:text="${@pt.t('DINING_DESC')}" style="white-space:pre-line;"></p>
   </section>
 
   <!--
@@ -49,7 +50,7 @@
     <div class="intro-empty" th:if="${#lists.isEmpty(courses)}" th:text="#{dining.empty}">등록된 식사 코스 정보가 없습니다.</div>
   </section>
 
-  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-16px 56px 64px;" th:text="#{dining.note}">
+  <p style="text-align:center; font-size:12px; color:var(--ink-faint); margin:-16px 56px 64px;" th:text="${@pt.t('DINING_NOTE')}">
     ※ 식사 코스는 숙박 예약 시 플랜에 포함된 경우에 한해 이용하실 수 있습니다.
   </p>
 

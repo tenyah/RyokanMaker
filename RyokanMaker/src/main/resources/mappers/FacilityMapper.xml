@@ -3,7 +3,7 @@
 <mapper namespace="com.mnu.ryokanmaker.mapper.FacilityMapper">
 
 	<!-- FACILITY_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
-	<insert id="insertFacility" parameterType="com.mnu.ryokanmaker.dto.FacilityDto">
+	<insert id="insertFacility" parameterType="com.mnu.ryokanmaker.domain.FacilityDto">
 		INSERT INTO FACILITY (
 			ADMIN_IDX,
 			FACILITY_NAME,
@@ -19,7 +19,7 @@
 		)
 	</insert>
 
-	<select id="selectFacilitiesByAdmin" resultType="com.mnu.ryokanmaker.dto.FacilityDto">
+	<select id="selectFacilitiesByAdmin" resultType="com.mnu.ryokanmaker.domain.FacilityDto">
 		SELECT *
 		FROM FACILITY
 		WHERE ADMIN_IDX = #{adminIdx}
@@ -27,7 +27,7 @@
 	</select>
 
 	<!-- facilityImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
-	<update id="updateFacility" parameterType="com.mnu.ryokanmaker.dto.FacilityDto">
+	<update id="updateFacility" parameterType="com.mnu.ryokanmaker.domain.FacilityDto">
 		UPDATE FACILITY
 		<set>
 			FACILITY_NAME = #{facilityName},

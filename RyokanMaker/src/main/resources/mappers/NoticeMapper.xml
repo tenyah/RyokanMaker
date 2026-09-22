@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.NoticeMapper">
 
-    <resultMap id="noticeResultMap" type="com.mnu.ryokanmaker.dto.NoticeDto">
+    <resultMap id="noticeResultMap" type="com.mnu.ryokanmaker.domain.NoticeDto">
         <id     column="NOTICE_IDX"        property="noticeIdx"/>
         <result column="ADMIN_IDX"         property="adminIdx"/>
         <result column="NOTICE_TITLE"      property="noticeTitle"/>
@@ -23,7 +23,7 @@
         NOTICE_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외.
         NOTICE_CREATED_AT은 DB에 DEFAULT가 없어서 등록 시 SYSTIMESTAMP로 직접 채움 (자바에서 값을 안 보냄).
     -->
-    <insert id="insertNotice" parameterType="com.mnu.ryokanmaker.dto.NoticeDto">
+    <insert id="insertNotice" parameterType="com.mnu.ryokanmaker.domain.NoticeDto">
         INSERT INTO NOTICE (
             ADMIN_IDX,
             NOTICE_TITLE,
@@ -45,7 +45,7 @@
     </select>
 
     <!-- 수정 시 NOTICE_CREATED_AT은 건드리지 않음(최초 등록 시각 그대로 유지) -->
-    <update id="updateNotice" parameterType="com.mnu.ryokanmaker.dto.NoticeDto">
+    <update id="updateNotice" parameterType="com.mnu.ryokanmaker.domain.NoticeDto">
         UPDATE NOTICE
         <set>
             NOTICE_TITLE = #{noticeTitle},

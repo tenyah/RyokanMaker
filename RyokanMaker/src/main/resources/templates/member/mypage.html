@@ -18,7 +18,7 @@
     <div class="crumb">HOME &nbsp;/&nbsp; <span th:text="#{mypage.title}">마이페이지</span></div>
     <h1 th:text="#{mypage.title}">마이페이지</h1>
     <div class="rule"></div>
-    <p class="desc" th:text="#{mypage.desc}">회원 정보를 확인하고 수정할 수 있습니다.</p>
+    <p class="desc" th:text="${@pt.t('MYPAGE_DESC')}">회원 정보를 확인하고 수정할 수 있습니다.</p>
   </section>
 
   <div th:if="${message}" class="form-card" style="padding-bottom:0;">
@@ -39,6 +39,7 @@
           <th th:text="#{resv.people}">인원</th>
           <th th:text="#{resv.amount}">금액</th>
           <th th:text="#{resv.status}">상태</th>
+          <th th:text="#{mypage.resv_action}">관리</th>
         </tr>
       </thead>
       <tbody th:with="_p=${@tr.prefetch(reservations, 'roomName', 'planName')}">
@@ -50,6 +51,14 @@
           <td th:text="${r.resvPeople}">2</td>
           <td th:text="#{common.price(${#numbers.formatInteger(r.resvPrice, 0, 'COMMA')})}">848,508원</td>
           <td th:text="${@tr.label('resv.status', r.resvStatus)}">예약완료</td>
+          <td>
+            <form th:unless="${r.resvStatus == '예약취소'}" th:action="@{/member/reservation_cancel}" method="post" style="margin:0;"
+                  th:data-confirm="#{mypage.resv_cancel_confirm}"
+                  onsubmit="return confirm(this.dataset.confirm);">
+              <input type="hidden" name="resvNum" th:value="${r.resvNum}">
+              <button type="submit" class="btn-line" style="padding:11px 20px;font-size:12.5px;white-space:nowrap;" th:text="#{mypage.resv_cancel}">예약 취소</button>
+            </form>
+          </td>
         </tr>
       </tbody>
     </table>

@@ -32,7 +32,7 @@
 
 <div class="admin-shell">
 
-  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='room', showInfoSubmenu=false, showRequestsLink=false)}"></div>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='room', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
   <main class="admin-main" th:with="_p=${@tr.prefetch(roomList, 'roomName', 'roomLevel', 'roomMemo')}">
@@ -41,7 +41,7 @@
       <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.room}">객실 현황</span></div>
       <h1 th:text="#{adm.room}">객실 현황</h1>
       <div class="rule"></div>
-      <p th:text="#{adm.rs_desc}">날짜별로 각 객실이 지금 예약 가능한 상태인지 확인합니다.</p>
+      <p th:text="#{adm.rs_desc}">날짜별로 각 객실이 지금 예약 가능한 상태인지 확인합니다. 오늘 객실의 판매 가능 · 고장 · 체크인 여부는 아래에서 관리하며, 위쪽 캘린더에 바로 반영됩니다.</p>
     </div>
 
     <!-- 통계 타일 -->
@@ -49,7 +49,7 @@
       <div class="stat-tile"><div class="label" th:text="#{adm.rs_total}">전체 객실</div><div class="value" th:text="${#lists.size(roomList)}">0</div></div>
       <div class="stat-tile accent-gold"><div class="label" th:text="#{adm.on_sale}">판매중</div>
         <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn == 'Y'])}">0</div></div>
-      <div class="stat-tile accent-muted"><div class="label" th:text="#{adm.sale_stopped}">판매중지</div>
+      <div class="stat-tile accent-muted"><div class="label" th:text="#{adm.rs_broken}">고장(예약 불가)</div>
         <div class="value" th:text="${#lists.size(roomList.?[roomSaleYn != 'Y'])}">0</div></div>
     </div>
 
@@ -71,7 +71,8 @@
     <div class="legend">
       <div class="legend-item"><span class="legend-swatch" style="background:#fff;"></span><span th:text="#{adm.available}">판매가능</span></div>
       <div class="legend-item"><span class="legend-swatch" style="background:var(--gold-pale);border-color:var(--gold);"></span><span th:text="#{adm.booked}">예약완료</span></div>
-      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span><span th:text="#{adm.sale_stopped}">판매중지</span></div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--gold-deep);"></span><span th:text="#{adm.checked_in}">체크인</span></div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--ink-faint);"></span><span th:text="#{adm.rs_broken}">고장(예약 불가)</span></div>
     </div>
 
     <!-- 캘린더 표 -->
@@ -89,34 +90,36 @@
             <td class="cell"
                 th:each="d : ${row.days}"
                 th:if="${row.room.roomSaleYn == 'Y'}"
-                th:classappend="${d.booked} ? 'cell-booked' : 'cell-available'">
-              <span class="status-label" th:text="${d.booked} ? #{adm.booked} : #{adm.available}">판매가능</span>
+                th:classappend="${d.checkedIn} ? 'cell-checkedin' : (${d.booked} ? 'cell-booked' : 'cell-available')">
+              <span class="status-label" th:text="${d.checkedIn} ? #{adm.checked_in} : (${d.booked} ? #{adm.booked} : #{adm.available})">판매가능</span>
             </td>
             <td class="cell cell-closed" th:if="${row.room.roomSaleYn != 'Y'}" th:each="d : ${row.days}">
-              <span class="status-label" th:text="#{adm.sale_stopped}">판매중지</span>
+              <span class="status-label" th:text="#{adm.rs_broken_short}">고장</span>
             </td>
           </tr>
         </tbody>
       </table>
-      <p th:if="${#lists.isEmpty(statusGrid)}" style="color:var(--ink-faint);font-size:13px;padding:24px 0;" th:text="#{adm.rs_empty}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</p>
+      <p th:if="${#lists.isEmpty(statusGrid)}" style="color:var(--ink-faint);font-size:13px;padding:24px 0;" th:text="#{adm.rs_empty}">등록된 객실이 없습니다. 정보 등록 화면에서 객실을 추가해 주세요.</p>
     </div>
 
-    <!-- 등록된 객실 / 등록·수정 폼 -->
+    <!-- 당일 객실 관리 -->
     <div class="section-tag" style="margin-top:40px;">
       <div class="num">1</div>
-      <div class="label" th:text="#{adm.rs_manage}">객실 등록 · 관리</div>
+      <div class="label" th:text="#{adm.rs_today_manage}">당일 객실 관리</div>
       <div class="line"></div>
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
         <div>
-          <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.rs_registered(${#lists.size(roomList)})}">등록된 객실 (0)</div>
+          <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.rs_today_rooms(${#temporals.format(#temporals.createToday(), 'yyyy.MM.dd')}, ${#lists.size(roomList)})}">오늘 객실 (0)</div>
 
-          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}" th:text="#{adm.rs_empty}">등록된 객실이 없습니다. 아래에서 새 객실을 추가해 주세요.</div>
+          <div class="img-hint" th:if="${#lists.isEmpty(roomList)}" th:text="#{adm.rs_empty}">등록된 객실이 없습니다. 정보 등록 화면에서 객실을 추가해 주세요.</div>
 
           <div class="list-item" th:each="room : ${roomList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo}">
+               th:with="todayResv=${todayResvMap[room.roomIdx]},
+                        broken=${room.roomSaleYn != 'Y'},
+                        checkedIn=${todayResvMap[room.roomIdx] != null and todayResvMap[room.roomIdx].resvStatus == '체크인'}">
             <div class="thumb">
               <img th:if="${room.thumbnailUrl != null}" th:src="@{${room.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${room.thumbnailUrl != null}" width="20" height="20"><use href="#i-bed"/></svg>
@@ -124,7 +127,8 @@
             <div class="info">
               <div class="name" th:text="${@tr.t(room.roomName)}">스탠다드 객실</div>
               <div class="desc">
-                <span th:text="#{adm.rs_line(${@tr.t(room.roomLevel)}, ${#numbers.formatInteger(room.roomPrice, 0, 'COMMA')}, ${room.roomPeople})}">스탠다드 · 1박 78,000원 · 기준 2인</span>
+                <span th:text="${@tr.t(room.roomLevel)}">스탠다드</span> ·
+                <strong th:text="${broken} ? #{adm.rs_broken} : (${checkedIn} ? #{adm.checked_in} : (${todayResv != null} ? #{adm.rs_booked_before_in} : #{adm.available}))">판매가능</strong>
                 <span th:if="${room.roomMemo != null and !room.roomMemo.isEmpty()}" th:text="' · ' + #{adm.note} + ': ' + ${@tr.t(room.roomMemo)}"></span>
               </div>
             </div>
@@ -132,70 +136,28 @@
               <form th:action="@{/Admin/room_toggle_sale}" method="post" style="display:inline;">
                 <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
                 <input type="hidden" name="redirectTo" value="room_status">
-                <input type="hidden" name="roomSaleYn" th:value="${room.roomSaleYn == 'Y'} ? 'N' : 'Y'">
-                <button type="submit" class="icon-btn" th:title="${room.roomSaleYn == 'Y'} ? #{adm.to_stop} : #{adm.to_sale}">
-                  <svg width="14" height="14"><use th:href="${room.roomSaleYn == 'Y'} ? '#i-x' : '#i-plus'"/></svg>
-                </button>
+                <input type="hidden" name="roomSaleYn" value="Y">
+                <button type="submit" class="small" th:classappend="${broken} ? 'btn-line' : 'btn-gold'" style="padding:9px 16px;font-size:12.5px;" th:text="#{adm.available}">판매가능</button>
               </form>
-              <button type="button" class="icon-btn" onclick="editRoom(this)"><svg width="14" height="14"><use href="#i-pencil"/></svg></button>
-              <form th:action="@{/Admin/room_delete}" method="post" style="display:inline;" th:data-confirm="#{adm.rs_delete_confirm}" onsubmit="return confirm(this.dataset.confirm);">
+              <form th:action="@{/Admin/room_checkin}" method="post" style="display:inline;">
+                <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
+                <input type="hidden" name="checkedIn" th:value="${checkedIn} ? 'N' : 'Y'">
+                <button type="submit" class="small" th:classappend="${checkedIn} ? 'btn-gold' : 'btn-line'" style="padding:9px 16px;font-size:12.5px;"
+                        th:disabled="${broken or todayResv == null}"
+                        th:title="${todayResv == null} ? #{adm.rs_no_today_resv} : (${checkedIn} ? #{adm.rs_checkin_cancel} : #{adm.rs_checkin_mark_title})"
+                        th:text="${checkedIn} ? #{adm.rs_checkin_cancel} : #{adm.rs_checkin_mark}">체크인 표시</button>
+              </form>
+              <form th:action="@{/Admin/room_toggle_sale}" method="post" style="display:inline;">
                 <input type="hidden" name="roomIdx" th:value="${room.roomIdx}">
                 <input type="hidden" name="redirectTo" value="room_status">
-                <button type="submit" class="icon-btn danger"><svg width="14" height="14"><use href="#i-x"/></svg></button>
+                <input type="hidden" name="roomSaleYn" value="N">
+                <button type="submit" class="small" th:classappend="${broken} ? 'btn-gold' : 'btn-line'" style="padding:9px 16px;font-size:12.5px;" th:text="#{adm.rs_broken_short}">고장</button>
               </form>
             </div>
           </div>
         </div>
-
-        <div class="divider"></div>
-      </form>
-
-      <!-- 새 객실 추가 / 수정 공용 폼 : roomIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
-      <form class="form-card" id="roomForm" th:action="@{/Admin/room_save}" method="post" enctype="multipart/form-data">
-
-        <input type="hidden" id="roomIdx" name="roomIdx" value="0">
-        <input type="hidden" name="redirectTo" value="room_status">
-
-        <div class="sub-label" id="roomFormTitle" th:text="#{adm.rs_new}">새 객실 추가</div>
-
-        <div>
-          <div class="img-field-head">
-            <div class="sub-label" th:text="#{adm.rs_images}">객실 이미지</div>
-            <div class="count-badge">0 / 10</div>
-          </div>
-          <div class="img-grid" style="grid-template-columns:repeat(5,120px);">
-            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"><svg width="19" height="19"><use href="#i-upload"/></svg><span th:text="#{adm.add_image}">이미지 추가</span></div>
-            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
-            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
-            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
-            <div class="img-tile"><input type="file" name="roomImageFiles" accept="image/*"></div>
-          </div>
-          <div class="img-hint" th:text="#{adm.rs_img_hint}">최대 10장까지 등록됩니다.</div>
-        </div>
-
-        <div class="field-row">
-          <div class="field"><label th:text="#{adm.rs_name}">객실 이름</label><input type="text" id="roomName" name="roomName" th:placeholder="#{adm.rs_name_ph}" required></div>
-          <div class="field"><label th:text="#{adm.rs_level}">객실 등급</label><input type="text" id="roomLevel" name="roomLevel" th:placeholder="#{adm.rs_level_ph}" required></div>
-        </div>
-
-        <div class="field-row">
-          <div class="field"><label th:text="#{adm.rs_price}">1박 가격</label><input type="number" id="roomPrice" name="roomPrice" th:placeholder="#{adm.rs_price_ph}" required></div>
-          <div class="field"><label th:text="#{adm.rs_people}">기준 인원</label><input type="number" id="roomPeople" name="roomPeople" th:placeholder="#{adm.rs_people_ph}" required></div>
-        </div>
-
-        <div class="field-row">
-          <div class="field"><label th:text="#{adm.rs_info}">객실 설명</label><textarea id="roomInfo" name="roomInfo" th:placeholder="#{adm.rs_info_ph}"></textarea></div>
-          <div class="field"><label th:text="#{adm.note}">비고</label><textarea id="roomMemo" name="roomMemo" th:placeholder="#{adm.rs_memo_ph}"></textarea></div>
-        </div>
-
-        <div style="display:flex;justify-content:flex-end;gap:10px;">
-          <button type="button" class="btn-line small" id="roomCancelBtn" style="display:none;" onclick="resetRoomForm()" th:text="#{common.cancel}">취소</button>
-          <button type="submit" class="btn-gold small"><svg width="14" height="14"><use href="#i-tag"/></svg>&nbsp;<span id="roomSubmitLabel" th:text="#{adm.rs_add}">객실 추가</span></button>
-        </div>
-
-      </form>
+      </div>
     </div>
-
   </main>
 </div>
 
@@ -206,103 +168,6 @@ document.addEventListener('click', function (e) {
     if (!menu.contains(e.target)) menu.classList.remove('open');
   });
 });
-
-/* ---------------- 이미지 업로드 미리보기 ---------------- */
-function updateImgGridCount(tile) {
-  var grid = tile.closest('.img-grid');
-  if (!grid) return;
-  var badge = grid.parentElement.querySelector('.count-badge');
-  if (!badge) return;
-  var filled = grid.querySelectorAll('.img-tile.filled').length;
-  var total = grid.querySelectorAll('.img-tile').length;
-  badge.textContent = filled + ' / ' + total;
-}
-
-function showTilePreview(tile, dataUrl) {
-  tile.classList.add('filled');
-  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = 'none'; });
-  tile.style.backgroundImage = 'url(' + dataUrl + ')';
-  tile.style.backgroundSize = 'cover';
-  tile.style.backgroundPosition = 'center';
-  if (!tile.querySelector('.remove')) {
-    var removeBtn = document.createElement('div');
-    removeBtn.className = 'remove';
-    removeBtn.innerHTML = '<svg width="10" height="10"><use href="#i-x"/></svg>';
-    tile.appendChild(removeBtn);
-  }
-}
-
-function clearTilePreview(tile) {
-  var input = tile.querySelector('input[type="file"]');
-  if (input) input.value = '';
-  tile.classList.remove('filled');
-  tile.style.backgroundImage = '';
-  var removeBtn = tile.querySelector('.remove');
-  if (removeBtn) removeBtn.remove();
-  tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = ''; });
-}
-
-document.addEventListener('change', function (e) {
-  var input = e.target;
-  if (input.tagName !== 'INPUT' || input.type !== 'file') return;
-  var tile = input.closest('.img-tile');
-  if (!tile) return;
-
-  var file = input.files && input.files[0];
-  if (!file) return;
-
-  var reader = new FileReader();
-  reader.onload = function (ev) {
-    showTilePreview(tile, ev.target.result);
-    updateImgGridCount(tile);
-  };
-  reader.readAsDataURL(file);
-});
-
-document.addEventListener('click', function (e) {
-  var removeBtn = e.target.closest('.img-tile .remove');
-  if (!removeBtn) return;
-  e.preventDefault();
-  var tile = removeBtn.closest('.img-tile');
-  clearTilePreview(tile);
-  updateImgGridCount(tile);
-});
-
-function clearImageGrids(form) {
-  form.querySelectorAll('.img-tile').forEach(function (tile) {
-    clearTilePreview(tile);
-  });
-  form.querySelectorAll('.count-badge').forEach(function (badge) {
-    var total = badge.parentElement.parentElement.querySelectorAll('.img-tile').length;
-    badge.textContent = '0 / ' + total;
-  });
-}
-
-/* ---------------- 객실 등록/수정 폼 ---------------- */
-function editRoom(btn) {
-  var item = btn.closest('.list-item');
-  clearImageGrids(document.getElementById('roomForm'));
-  document.getElementById('roomIdx').value = item.dataset.idx;
-  document.getElementById('roomName').value = item.dataset.name || '';
-  document.getElementById('roomLevel').value = item.dataset.level || '';
-  document.getElementById('roomPrice').value = item.dataset.price || '';
-  document.getElementById('roomPeople').value = item.dataset.people || '';
-  document.getElementById('roomInfo').value = item.dataset.info || '';
-  document.getElementById('roomMemo').value = item.dataset.memo || '';
-  document.getElementById('roomFormTitle').textContent = T.editTitle;
-  document.getElementById('roomSubmitLabel').textContent = T.editSubmit;
-  document.getElementById('roomCancelBtn').style.display = '';
-  document.getElementById('roomForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-function resetRoomForm() {
-  var form = document.getElementById('roomForm');
-  form.reset();
-  clearImageGrids(form);
-  document.getElementById('roomIdx').value = '0';
-  document.getElementById('roomFormTitle').textContent = T.newTitle;
-  document.getElementById('roomSubmitLabel').textContent = T.newSubmit;
-  document.getElementById('roomCancelBtn').style.display = 'none';
-}
 </script>
 </body>
 </html>

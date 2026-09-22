@@ -38,10 +38,10 @@
 
 <div class="admin-shell">
 
-  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='reservation', showInfoSubmenu=false, showRequestsLink=false)}"></div>
+  <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='reservation', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
   <!-- 메인 콘텐츠 -->
-  <main class="admin-main" th:with="_p1=${@tr.prefetch(reservationList, 'roomName', 'planName')}, _p2=${detail != null ? @tr.prefetch(detail.rooms, 'roomName', 'planName') : ''}, _p3=${detail != null ? @tr.prefetch(detail.restaurants, 'courseName', 'restaurantSidemenu') : ''}, _p4=${detail != null ? @tr.prefetch(detail.onsens, 'onsenName') : ''}, _p5=${detail != null ? @tr.prefetchAll(detail.resvRequest, detail.userCountry, detail.resvPayMethod) : ''}">
+  <main class="admin-main" th:with="_p1=${@tr.prefetch(reservationList, 'roomName', 'planName')}, _p2=${detail != null ? @tr.prefetch(detail.rooms, 'roomName', 'planName') : ''}, _p3=${detail != null ? @tr.prefetch(detail.restaurants, 'courseName', 'restaurantSidemenu') : ''}, _p4=${detail != null ? @tr.prefetch(detail.onsens, 'onsenName') : ''}, _p5=${detail != null ? @tr.prefetchAll(detail.resvRequest, detail.resvCountry, detail.resvPayMethod) : ''}">
 
     <div class="admin-head">
       <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.reservation}">예약 현황</span></div>
@@ -52,26 +52,32 @@
 
     <!-- 통계 타일 -->
     <div class="stat-grid cols-3" style="margin:0 56px 20px;">
-      <div class="stat-tile"><div class="label" th:text="#{adm.rv_total}">전체 예약</div><div class="value" th:text="${#lists.size(reservationList)}">34</div></div>
-      <div class="stat-tile accent-gold"><div class="label" th:text="#{adm.rv_today_in}">오늘 체크인</div><div class="value">4</div></div>
-      <div class="stat-tile"><div class="label" th:text="#{adm.rv_today_out}">오늘 체크아웃</div><div class="value">3</div></div>
+      <div class="stat-tile"><div class="label" th:text="#{adm.rv_total}">전체 예약</div><div class="value" th:text="${allReservationCount}">0</div></div>
+      <div class="stat-tile accent-gold"><div class="label" th:text="#{adm.rv_today_in}">오늘 체크인</div><div class="value" th:text="${todayCheckInCount}">0</div></div>
+      <div class="stat-tile"><div class="label" th:text="#{adm.rv_today_out}">오늘 체크아웃</div><div class="value" th:text="${todayCheckOutCount}">0</div></div>
     </div>
 
     <!-- 필터 바 -->
-    <div class="search-bar" style="margin:0 56px 18px;">
+    <form class="search-bar" style="margin:0 56px 18px;" th:action="@{/Admin/reservation_status}" method="get">
       <div class="search-field">
-        <div class="field-label" th:text="#{adm.rv_period}">체크인 기간</div>
-        <div class="field-value">2026.09.13 — 2026.09.19</div>
-      </div>
-      <div class="search-field">
-        <div class="field-label" th:text="#{adm.rv_state}">예약 상태</div>
-        <div class="field-value" th:text="#{adm.all}">전체</div>
+        <div class="field-label" th:text="#{adm.rv_period}">체크인 날짜</div>
+        <input type="date" name="checkInDate" th:value="${checkInDate}" onchange="this.form.submit()"
+               style="border:none;font-family:var(--serif);font-size:15px;color:var(--ink);background:transparent;">
       </div>
       <div class="search-field" style="flex:1;">
         <div class="field-label" th:text="#{common.search}">검색</div>
-        <div class="field-value" style="color:var(--ink-faint);display:flex;align-items:center;gap:6px;"><svg width="13" height="13"><use href="#i-search"/></svg><span th:text="#{adm.rv_search_ph}">예약자 이름, 이메일로 검색</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="text" name="keyword" th:value="${keyword}" th:placeholder="#{adm.rv_search_ph}"
+                 style="flex:1;min-width:0;border:none;font-family:var(--serif);font-size:15px;color:var(--ink);background:transparent;outline:none;">
+          <button type="submit" th:title="#{common.search}"
+                  style="border:none;background:transparent;cursor:pointer;color:var(--ink-soft);display:flex;padding:4px;">
+            <svg width="15" height="15"><use href="#i-search"/></svg>
+          </button>
+          <a th:if="${filtered}" th:href="@{/Admin/reservation_status}"
+             style="font-size:12px;color:var(--gold-deep);white-space:nowrap;margin-left:8px;" th:text="#{adm.all}">전체</a>
+        </div>
       </div>
-    </div>
+    </form>
 
     <div style="margin:0 56px;display:grid;grid-template-columns:1fr 1.4fr;gap:20px;">
 
@@ -79,17 +85,22 @@
       <div class="form-card" style="padding:0;">
         <div style="padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;">
           <span class="sub-label" style="margin:0;" th:text="#{adm.rv_list}">예약 목록</span>
-          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="#{adm.count(${#lists.size(reservationList)})}">34건</span>
+          <span style="font-size:11.5px;color:var(--ink-faint);" th:text="#{adm.count(${totcount})} + ' · ' + ${page} + '/' + ${totpage}">34건 · 1/1</span>
         </div>
 
-        <div th:each="item, iter : ${reservationList}"
-             style="padding:14px 16px;border-bottom:1px solid var(--line);"
-             th:style="${!iter.last} ? 'padding:14px 16px;border-bottom:1px solid var(--line);' : 'padding:14px 16px;'"
-             th:classappend="${detail != null and item.resvNum == detail.resvNum} ? 'reservation-row-active'">
+        <div class="img-hint" style="padding:16px 18px;" th:if="${#lists.isEmpty(reservationList)}"
+             th:text="${filtered} ? #{adm.rv_empty_filtered} : #{adm.rv_empty}">예약이 없습니다.</div>
+
+        <a th:each="item, iter : ${reservationList}"
+           th:href="@{/Admin/reservation_status(idx=${item.resvNum}, page=${page}, checkInDate=${checkInDate}, keyword=${keyword})}"
+           style="text-decoration:none;color:inherit;display:block;"
+           th:classappend="${detail != null and item.resvNum == detail.resvNum} ? 'reservation-row-active'">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--line);"
+             th:style="${!iter.last} ? 'padding:14px 16px;border-bottom:1px solid var(--line);' : 'padding:14px 16px;'">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
             <span style="font-family:var(--serif);font-size:14px;color:var(--ink);">
-              <span th:text="${item.userNickname}">다나카 유키</span>
-              <span style="font-size:11px;color:var(--ink-faint);font-family:var(--sans);" th:text="'#' + ${item.resvNum}">#R20260914-03</span>
+              <span style="font-size:17px;color:var(--ink-faint);font-family:var(--sans);" th:text="'#' + ${item.resvNum}">#R20260914-03</span>
+              <span style="font-size:12px" th:text="${item.userNickname}">다나카 유키</span>
             </span>
             <span style="font-size:10.5px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:3px 9px;flex:0 0 auto;" th:text="${@tr.label('resv.status', item.resvStatus)}">확정</span>
           </div>
@@ -101,6 +112,10 @@
             <span style="font-size:11.5px;color:var(--ink-faint);" th:text="'₩' + ${#numbers.formatInteger(item.resvPrice, 0, 'COMMA')}">₩248,000</span>
           </div>
         </div>
+        </a>
+
+        <!-- 페이지 넘김 -->
+        <div class="page-skip" th:if="${totcount > 0}" th:utext="${pageSkip}"></div>
       </div>
 
       <!-- 상세 -->
@@ -108,8 +123,8 @@
 
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <div>
-            <div style="font-family:var(--serif);font-size:19px;color:var(--ink);" th:text="${detail.userNickname}">다나카 유키 (田中 由紀)</div>
-            <div style="font-size:12px;color:var(--ink-soft);margin-top:4px;" th:text="#{adm.rv_no(${detail.resvNum})} + (${detail.resvDay} != null ? (' ' + #{adm.rv_received(${#temporals.format(detail.resvDay, 'yyyy.MM.dd')})}) : '')">예약번호 #R20260914-03 &nbsp;·&nbsp; 2026.09.14 14:22 접수</div>
+            <div style="font-size:19px;color:var(--ink-soft);margin-top:4px;" th:text="#{adm.rv_no(${detail.resvNum})}">예약번호 #R20260914-03</div>
+            <div style="font-family:var(--serif);font-size:12px;color:var(--ink);" th:text="${detail.userNickname} + (${detail.resvDay} != null ? (' ' + #{adm.rv_received(${#temporals.format(detail.resvDay, 'yyyy.MM.dd')})}) : '')">다나카 유키 (田中 由紀)</div>
           </div>
           <span style="font-size:10.5px;font-weight:500;color:var(--gold-deep);background:var(--gold-pale);padding:4px 11px;flex:0 0 auto;" th:text="${@tr.label('resv.status', detail.resvStatus)}">확정</span>
         </div>
@@ -118,10 +133,16 @@
 
         <!-- 예약자 정보 -->
         <div class="sub-label" style="display:flex;align-items:center;gap:7px;margin-bottom:10px;"><svg width="14" height="14"><use href="#i-user"/></svg><span th:text="#{adm.rv_guest}">예약자 정보</span></div>
+        <div class="field-row" style="margin-bottom:12px;"
+             th:with="nameEn=${#strings.trim((detail.resvLastNameEn ?: '') + ' ' + (detail.resvFirstNameEn ?: ''))},
+                      nameJp=${#strings.trim((detail.resvLastNameJp ?: '') + ' ' + (detail.resvFirstNameJp ?: ''))}">
+          <div class="field"><label th:text="#{adm.rv_name_en}">영문 이름</label><div style="font-size:13.5px;color:var(--ink);" th:text="${#strings.isEmpty(nameEn)} ? '-' : ${nameEn}">TANAKA YUKI</div></div>
+          <div class="field"><label th:text="#{adm.rv_name_jp}">일본어 이름</label><div style="font-size:13.5px;color:var(--ink);" th:text="${#strings.isEmpty(nameJp)} ? '-' : ${nameJp}">たなか ゆき</div></div>
+        </div>
         <div class="field-row">
-          <div class="field"><label th:text="#{member.email}">이메일</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.userMail}">tanaka.yuki@example.jp</div></div>
-          <div class="field"><label th:text="#{member.tel}">연락처</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.userTel}">+81 90-1234-5678</div></div>
-          <div class="field"><label th:text="#{adm.rv_nationality}">국적</label><div style="font-size:13.5px;color:var(--ink);" th:text="${@tr.t(detail.userCountry)}">일본</div></div>
+          <div class="field"><label th:text="#{member.email}">이메일</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvMail ?: '-'}">tanaka.yuki@example.jp</div></div>
+          <div class="field"><label th:text="#{member.tel}">연락처</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvTel ?: '-'}">+81 90-1234-5678</div></div>
+          <div class="field"><label th:text="#{adm.rv_nationality}">국적</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvCountry != null} ? ${@tr.t(detail.resvCountry)} : '-'">일본</div></div>
           <div class="field"><label th:text="#{pay.arrival}">도착 예정 시간</label><div style="font-size:13.5px;color:var(--ink);" th:text="${detail.resvArrivalTime}">15:30</div></div>
         </div>
 
@@ -161,7 +182,7 @@
           <div class="info">
             <div class="name" th:text="${@tr.t(restaurant.courseName)}">달 코스 『계절의 맛 가이세키』</div>
             <div class="desc"
-                 th:text="#{adm.rv_meal_detail(${#temporals.format(restaurant.restaurantUseDate, 'yyyy.MM.dd')}, ${restaurant.restaurantTimeSlot}, ${restaurant.restaurantHeadcount}, ${@tr.t(restaurant.restaurantSidemenu) ?: '-'})}">
+                 th:text="#{adm.rv_meal_detail(${#temporals.format(restaurant.restaurantUseDate, 'yyyy.MM.dd')}, ${restaurant.restaurantTimeSlot ?: '-'}, ${restaurant.restaurantHeadcount}, ${@tr.t(restaurant.restaurantSidemenu) ?: '-'})}">
               이용일 2026.10.03 · 18:00 타임 · 2명 · 사이드메뉴: 갑각류 제외
             </div>
           </div>
@@ -176,14 +197,25 @@
           <div class="info">
             <div class="name" th:text="${@tr.t(onsen.onsenName)}">노천탕 (露天湯) — 전세탕</div>
             <div class="desc"
-                 th:text="#{adm.rv_onsen_detail(${#temporals.format(onsen.onsenUseDate, 'yyyy.MM.dd')}, ${onsen.onsenTimeSlot}, ${onsen.onsenHeadcount}, ${@tr.label('resv.status', onsen.onsenStatus)})}">
+                 th:text="#{adm.rv_onsen_detail(${#temporals.format(onsen.onsenUseDate, 'yyyy.MM.dd')}, ${onsen.onsenTimeSlot ?: '-'}, ${onsen.onsenHeadcount}, ${@tr.label('resv.status', onsen.onsenStatus)})}">
               이용일 2026.10.03 · 20:00 타임 · 2명 · 상태: 확정
             </div>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-          <button type="button" class="btn-line" style="padding:11px 20px;font-size:12.5px;" th:text="#{adm.rv_cancel}">예약 취소</button>
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:20px;">
+          <span th:if="${cancelResult == 'success'}" style="font-size:12.5px;color:var(--gold-deep);" th:text="#{adm.rv_cancel_done}">예약을 취소했습니다.</span>
+          <span th:if="${cancelResult == 'fail'}" style="font-size:12.5px;color:var(--warn);" th:text="#{adm.rv_cancel_fail}">예약을 취소하지 못했습니다.</span>
+          <span th:if="${detail.resvStatus == '예약취소'}" style="font-size:12.5px;color:var(--ink-faint);" th:text="#{adm.rv_cancelled_note}">취소된 예약입니다.</span>
+          <form th:unless="${detail.resvStatus == '예약취소'}" th:action="@{/Admin/reservation_cancel}" method="post" style="margin:0;"
+                th:data-confirm="#{adm.rv_cancel_confirm}"
+                onsubmit="return confirm(this.dataset.confirm);">
+            <input type="hidden" name="resvNum" th:value="${detail.resvNum}">
+            <input type="hidden" name="page" th:value="${page}">
+            <input type="hidden" name="checkInDate" th:value="${checkInDate}">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+            <button type="submit" class="btn-line" style="padding:11px 20px;font-size:12.5px;" th:text="#{adm.rv_cancel}">예약 취소</button>
+          </form>
         </div>
 
       </div>

@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.mnu.ryokanmaker.dto.InquiryDto;
+import com.mnu.ryokanmaker.domain.InquiryDto;
 
 @Mapper
 public interface InquiryMapper {

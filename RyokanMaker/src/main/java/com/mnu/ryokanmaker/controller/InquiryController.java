@@ -1,7 +1,7 @@
 package com.mnu.ryokanmaker.controller;
 
-import com.mnu.ryokanmaker.dto.InquiryDto;
-import com.mnu.ryokanmaker.dto.MemberDto;
+import com.mnu.ryokanmaker.domain.InquiryDto;
+import com.mnu.ryokanmaker.domain.MemberDto;
 import com.mnu.ryokanmaker.service.InquiryService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;

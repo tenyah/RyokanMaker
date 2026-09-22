@@ -36,7 +36,7 @@
 
 <div class="auth-page">
   <div class="auth-card">
-    <div style="text-align:right;font-size:12px;margin-bottom:10px;display:flex;gap:10px;justify-content:flex-end;"><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','ko');location.href=u;return false;">KO</a><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','en');location.href=u;return false;">EN</a><a href="#" onclick="var u=new URL(location.href);u.searchParams.set('lang','ja');location.href=u;return false;">JA</a></div>
+    <div style="text-align:right;font-size:12px;margin-bottom:10px;display:flex;gap:10px;justify-content:flex-end;"><a href="#" onclick="var u=new window.URL(location.href);u.searchParams.set('lang','ko');location.href=u;return false;">KO</a><a href="#" onclick="var u=new window.URL(location.href);u.searchParams.set('lang','en');location.href=u;return false;">EN</a><a href="#" onclick="var u=new window.URL(location.href);u.searchParams.set('lang','ja');location.href=u;return false;">JA</a></div>
     <div class="auth-logo">
       <img th:if="${siteInfo != null and siteInfo.logoUrl != null}" th:src="@{${siteInfo.logoUrl}}"
            th:alt="${!#strings.isEmpty(siteInfo?.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">

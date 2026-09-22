@@ -8,20 +8,37 @@
         useGeneratedKeys로 채번된 값을 다시 dto(resvNum / roomResvNum)에 담아온다.
         컬럼명은 실제 Oracle DB 스키마(user_tab_columns 조회 결과) 기준 SCREAMING_SNAKE_CASE.
     -->
-    <insert id="insertReservation" parameterType="com.mnu.ryokanmaker.dto.ReservationDto"
+    <insert id="insertReservation" parameterType="com.mnu.ryokanmaker.domain.ReservationDto"
             useGeneratedKeys="true" keyProperty="resvNum" keyColumn="RESV_NUM">
         INSERT INTO RESERVATION (
             ADMIN_IDX, USER_MAIL, RESV_PRICE, RESV_PEOPLE,
             RESV_STATUS, RESV_PAY_STATUS, RESV_PAY_METHOD,
-            RESV_ARRIVAL_TIME, RESV_REQUEST, RESV_DAY, RESV_ORDER_ID
+            RESV_ARRIVAL_TIME, RESV_REQUEST, RESV_DAY, RESV_ORDER_ID,
+            RESV_LAST_NAME_EN, RESV_FIRST_NAME_EN, RESV_LAST_NAME_JP, RESV_FIRST_NAME_JP, RESV_MAIL,
+            RESV_COUNTRY, RESV_TEL
         ) VALUES (
             #{adminIdx}, #{userMail}, #{resvPrice}, #{resvPeople},
             #{resvStatus}, #{resvPayStatus}, #{resvPayMethod,jdbcType=VARCHAR},
-            #{resvArrivalTime,jdbcType=VARCHAR}, #{resvRequest,jdbcType=VARCHAR}, #{resvDay}, #{resvOrderId}
+            #{resvArrivalTime,jdbcType=VARCHAR}, #{resvRequest,jdbcType=VARCHAR}, #{resvDay}, #{resvOrderId},
+            #{resvLastNameEn}, #{resvFirstNameEn},
+            #{resvLastNameJp,jdbcType=VARCHAR}, #{resvFirstNameJp,jdbcType=VARCHAR}, #{resvMail},
+            #{resvCountry}, #{resvTel}
         )
     </insert>
 
-    <insert id="insertRoomReservation" parameterType="com.mnu.ryokanmaker.dto.RoomReservationDto"
+    <!-- 예약 완료 메일 수신자·호칭용: 결제 화면에서 입력한 예약자 정보 -->
+    <select id="selectGuestByOrderId" resultType="com.mnu.ryokanmaker.domain.ReservationDto">
+        SELECT
+            RESV_NUM           AS resvNum,
+            USER_MAIL          AS userMail,
+            RESV_LAST_NAME_EN  AS resvLastNameEn,
+            RESV_FIRST_NAME_EN AS resvFirstNameEn,
+            RESV_MAIL          AS resvMail
+        FROM RESERVATION
+        WHERE RESV_ORDER_ID = #{resvOrderId}
+    </select>
+
+    <insert id="insertRoomReservation" parameterType="com.mnu.ryokanmaker.domain.RoomReservationDto"
             useGeneratedKeys="true" keyProperty="roomResvNum" keyColumn="ROOM_RESV_NUM">
         INSERT INTO ROOM_RESERVATION (
             USER_MAIL, ADMIN_IDX, ROOM_IDX, RESV_NUM, PLAN_IDX,
@@ -59,5 +76,26 @@
         FROM RESERVATION
         WHERE RESV_ORDER_ID = #{resvOrderId}
     </select>
+
+    <!-- 식사 시간대는 예약 화면에서 받지 않으므로 RESTAURANT_TIME_SLOT은 비워 둔다 -->
+    <insert id="insertRestaurantReservation">
+        INSERT INTO RESTAURANT_RESERVATION (
+            USER_MAIL, ADMIN_IDX, RESV_NUM, RESTAURANT_USE_DATE,
+            RESTAURANT_HEADCOUNT, RESTAURANT_SIDEMENU, COURSE_IDX
+        ) VALUES (
+            #{userMail}, #{adminIdx}, #{resvNum}, #{useDate},
+            #{headcount,jdbcType=INTEGER}, #{sidemenu}, #{courseIdx}
+        )
+    </insert>
+
+    <insert id="insertOnsenReservation">
+        INSERT INTO ONSEN_RESERVATION (
+            ADMIN_IDX, USER_MAIL, RESV_NUM, ONSEN_USE_DATE,
+            ONSEN_TIME_SLOT, ONSEN_HEADCOUNT, ONSEN_STATUS, ONSEN_IDX
+        ) VALUES (
+            #{adminIdx}, #{userMail}, #{resvNum}, #{useDate},
+            #{timeSlot,jdbcType=VARCHAR}, #{headcount,jdbcType=INTEGER}, #{status}, #{onsenIdx}
+        )
+    </insert>
 
 </mapper>

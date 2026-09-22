@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.PageContentMapper">
+
+    <resultMap id="pageContentResultMap" type="com.mnu.ryokanmaker.domain.PageContentDto">
+        <id     column="ADMIN_IDX"     property="adminIdx"/>
+        <id     column="PAGE_KEY"      property="pageKey"/>
+        <result column="CONTENT_TEXT"  property="contentText"/>
+    </resultMap>
+
+    <select id="selectByAdmin" resultMap="pageContentResultMap">
+        SELECT ADMIN_IDX, PAGE_KEY, CONTENT_TEXT
+        FROM PAGE_CONTENT
+        WHERE ADMIN_IDX = #{adminIdx}
+    </select>
+
+    <update id="upsert">
+        MERGE INTO PAGE_CONTENT t
+        USING (SELECT #{adminIdx, jdbcType=NUMERIC} AS ADMIN_IDX,
+                      #{pageKey, jdbcType=VARCHAR} AS PAGE_KEY,
+                      #{contentText, jdbcType=VARCHAR} AS CONTENT_TEXT
+               FROM DUAL) s
+        ON (t.ADMIN_IDX = s.ADMIN_IDX AND t.PAGE_KEY = s.PAGE_KEY)
+        WHEN MATCHED THEN
+            UPDATE SET t.CONTENT_TEXT = s.CONTENT_TEXT
+        WHEN NOT MATCHED THEN
+            INSERT (ADMIN_IDX, PAGE_KEY, CONTENT_TEXT)
+            VALUES (s.ADMIN_IDX, s.PAGE_KEY, s.CONTENT_TEXT)
+    </update>
+
+    <delete id="delete">
+        DELETE FROM PAGE_CONTENT
+        WHERE ADMIN_IDX = #{adminIdx} AND PAGE_KEY = #{pageKey}
+    </delete>
+
+</mapper>

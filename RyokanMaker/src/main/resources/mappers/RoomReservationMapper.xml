@@ -3,11 +3,46 @@
 <mapper namespace="com.mnu.ryokanmaker.mapper.RoomReservationMapper">
 
 	<!-- 체크인/체크아웃 구간이 [rangeStart, rangeEnd)와 겹치는 예약 조회 -->
-	<select id="findOverlapping" resultType="com.mnu.ryokanmaker.dto.RoomReservationDto">
+	<select id="findOverlapping" resultType="com.mnu.ryokanmaker.domain.RoomReservationDto">
 		SELECT *
 		FROM ROOM_RESERVATION
 		WHERE RESV_CHECK_IN &lt; #{rangeEnd}
 		  AND RESV_CHECK_OUT &gt; #{rangeStart}
+		  AND RESV_STATUS != '예약취소'
+	</select>
+
+	<!-- 당일 객실 관리: 체크인 표시/취소. RESERVATION 과 ROOM_RESERVATION 상태를 같이 맞춘다 -->
+	<update id="updateResvStatusByRoomAndDate">
+		UPDATE RESERVATION
+		SET RESV_STATUS = #{toStatus}
+		WHERE RESV_STATUS = #{fromStatus}
+		  AND RESV_NUM IN (
+		      SELECT RESV_NUM FROM ROOM_RESERVATION
+		      WHERE ADMIN_IDX = #{adminIdx}
+		        AND ROOM_IDX = #{roomIdx}
+		        AND RESV_CHECK_IN &lt;= #{date}
+		        AND RESV_CHECK_OUT &gt; #{date}
+		  )
+	</update>
+
+	<update id="updateRoomResvStatusByRoomAndDate">
+		UPDATE ROOM_RESERVATION
+		SET RESV_STATUS = #{toStatus}
+		WHERE ADMIN_IDX = #{adminIdx}
+		  AND ROOM_IDX = #{roomIdx}
+		  AND RESV_STATUS = #{fromStatus}
+		  AND RESV_CHECK_IN &lt;= #{date}
+		  AND RESV_CHECK_OUT &gt; #{date}
+	</update>
+
+	<!-- 매출 집계용 : 체크인 날짜가 범위 안이고, 해당 관리자 소유인 객실 예약만 -->
+	<select id="findByAdminAndCheckInRange" resultType="com.mnu.ryokanmaker.domain.RoomReservationDto">
+		SELECT *
+		FROM ROOM_RESERVATION
+		WHERE ADMIN_IDX = #{adminIdx}
+		  AND RESV_CHECK_IN &gt;= #{rangeStart}
+		  AND RESV_CHECK_IN &lt; #{rangeEnd}
+		  AND RESV_STATUS != '예약취소'
 	</select>
 
 </mapper>

@@ -7,7 +7,7 @@
         대표 객실명/플랜명은 그 예약에 딸린 ROOM_RESERVATION 중 ROOM_RESV_NUM이 가장 작은 1건만 조인해서 보여준다.
         AdminReservationMapper.selectReservationList와 동일한 조인이지만 USER_MAIL 기준으로 필터링한다.
     -->
-    <select id="selectReservationListByUserMail" resultType="com.mnu.ryokanmaker.dto.AdminReservationListItemDto">
+    <select id="selectReservationListByUserMail" resultType="com.mnu.ryokanmaker.domain.AdminReservationListItemDto">
         SELECT
             r.RESV_NUM          AS resvNum,
             m.USER_NICKNAME     AS userNickname,
@@ -32,6 +32,39 @@
         WHERE r.USER_MAIL = #{userMail}
         ORDER BY r.RESV_NUM DESC
     </select>
+
+    <!-- 마이페이지 예약 취소 시 소유자(userMail) 확인용 -->
+    <select id="selectReservationHeader" resultType="com.mnu.ryokanmaker.domain.ReservationDto">
+        SELECT
+            RESV_NUM        AS resvNum,
+            ADMIN_IDX       AS adminIdx,
+            USER_MAIL       AS userMail,
+            RESV_PRICE      AS resvPrice,
+            RESV_PEOPLE     AS resvPeople,
+            RESV_STATUS     AS resvStatus,
+            RESV_PAY_STATUS AS resvPayStatus
+        FROM RESERVATION
+        WHERE RESV_NUM = #{resvNum}
+    </select>
+
+    <update id="cancelReservation">
+        UPDATE RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND USER_MAIL = #{userMail}
+    </update>
+
+    <update id="cancelRoomReservations">
+        UPDATE ROOM_RESERVATION
+        SET RESV_STATUS = #{status}, RESV_PAY_STATUS = #{payStatus}
+        WHERE RESV_NUM = #{resvNum} AND USER_MAIL = #{userMail}
+    </update>
+
+    <!-- RESTAURANT_RESERVATION은 상태 컬럼이 없어 그대로 두고, 예약 본체 상태로 취소 여부를 판단한다 -->
+    <update id="cancelOnsenReservations">
+        UPDATE ONSEN_RESERVATION
+        SET ONSEN_STATUS = #{status}
+        WHERE RESV_NUM = #{resvNum} AND USER_MAIL = #{userMail}
+    </update>
 
     <delete id="deleteRoomReservationsByUserMail" parameterType="string">
         DELETE FROM ROOM_RESERVATION WHERE USER_MAIL = #{userMail}

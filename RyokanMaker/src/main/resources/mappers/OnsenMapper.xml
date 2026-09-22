@@ -2,8 +2,21 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mnu.ryokanmaker.mapper.OnsenMapper">
 
+	<!-- 예약 화면 온천 선택표용: 기간 내 예약된 (날짜, 온천, 시간대). 전세탕이라 한 시간대에 한 팀만 받는다 -->
+	<select id="findReservedSlots" resultType="com.mnu.ryokanmaker.domain.OnsenPickDto">
+		SELECT DISTINCT
+			TRUNC(ONSEN_USE_DATE) AS "date",
+			ONSEN_IDX             AS onsenIdx,
+			ONSEN_TIME_SLOT       AS timeSlot
+		FROM ONSEN_RESERVATION
+		WHERE ONSEN_USE_DATE &gt;= #{rangeStart}
+		  AND ONSEN_USE_DATE &lt; #{rangeEnd}
+		  AND ONSEN_TIME_SLOT IS NOT NULL
+		  AND NVL(ONSEN_STATUS, ' ') != '예약취소'
+	</select>
+
 	<!-- ONSEN_IDX는 IDENTITY(자동 채번)라 INSERT 시 컬럼 목록에서 제외 -->
-	<insert id="insertOnsen" parameterType="com.mnu.ryokanmaker.dto.OnsenDto">
+	<insert id="insertOnsen" parameterType="com.mnu.ryokanmaker.domain.OnsenDto">
 		INSERT INTO ONSEN (
 			ONSEN_NAME,
 			ONSEN_IMAGE,
@@ -25,7 +38,7 @@
 		)
 	</insert>
 
-	<select id="selectOnsensByAdmin" resultType="com.mnu.ryokanmaker.dto.OnsenDto">
+	<select id="selectOnsensByAdmin" resultType="com.mnu.ryokanmaker.domain.OnsenDto">
 		SELECT *
 		FROM ONSEN
 		WHERE ADMIN_IDX = #{adminIdx}
@@ -33,7 +46,7 @@
 	</select>
 
 	<!-- onsenImage가 null이면(새 이미지 없음) 기존 이미지를 그대로 유지 -->
-	<update id="updateOnsen" parameterType="com.mnu.ryokanmaker.dto.OnsenDto">
+	<update id="updateOnsen" parameterType="com.mnu.ryokanmaker.domain.OnsenDto">
 		UPDATE ONSEN
 		<set>
 			ONSEN_NAME = #{onsenName},
@@ -55,11 +68,18 @@
 	</delete>
 
 	<!-- 사용자 예약 화면(온천 선택)에 노출할 판매중 온천 전체 조회 -->
-	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.dto.OnsenDto">
+	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.OnsenDto">
 		SELECT *
 		FROM ONSEN
 		WHERE ONSEN_SALE_YN = 'Y'
 		ORDER BY ONSEN_IDX
 	</select>
+
+	<update id="updateSaleYn">
+		UPDATE ONSEN
+		SET ONSEN_SALE_YN = #{onsenSaleYn}
+		WHERE ONSEN_IDX = #{onsenIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
 
 </mapper>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mnu.ryokanmaker.mapper.RevenueMapper">
+
+    <!-- 일자별 매출조회 거래 목록 : ROOM_RESERVATION 1건 = 거래 1행 (체크인 날짜 기준) -->
+    <select id="findTxnsByAdminAndCheckInRange" resultType="com.mnu.ryokanmaker.domain.RevenueTxnDto">
+        SELECT
+            rr.RESV_NUM         AS resvNum,
+            rr.RESV_CHECK_IN    AS resvCheckIn,
+            m.USER_NICKNAME     AS userNickname,
+            rm.ROOM_NAME        AS roomName,
+            p.PLAN_NAME         AS planName,
+            rr.RESV_PAY_METHOD  AS resvPayMethod,
+            rr.RESV_PAY_STATUS  AS resvPayStatus,
+            rr.RESV_PRICE       AS resvPrice
+        FROM ROOM_RESERVATION rr
+        JOIN MEMBER m ON m.USER_MAIL = rr.USER_MAIL
+        JOIN ROOM rm ON rm.ROOM_IDX = rr.ROOM_IDX
+        LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
+        WHERE rr.ADMIN_IDX = #{adminIdx}
+          AND rr.RESV_CHECK_IN &gt;= #{rangeStart}
+          AND rr.RESV_CHECK_IN &lt; #{rangeEnd}
+          AND rr.RESV_STATUS != '예약취소'
+        ORDER BY rr.RESV_CHECK_IN DESC, rr.ROOM_RESV_NUM DESC
+    </select>
+
+    <!-- 오늘 체크인하는 예약 목록 (대시보드) -->
+    <select id="findCheckInsByAdminAndDate" resultType="com.mnu.ryokanmaker.domain.CheckInOutRowDto">
+        SELECT
+            m.USER_NICKNAME      AS userNickname,
+            rm.ROOM_NAME         AS roomName,
+            p.PLAN_NAME          AS planName,
+            r.RESV_ARRIVAL_TIME  AS resvArrivalTime,
+            (rr.RESV_CHECK_OUT - rr.RESV_CHECK_IN) AS nights,
+            r.RESV_REQUEST       AS resvRequest,
+            rr.RESV_PAY_STATUS   AS resvPayStatus
+        FROM ROOM_RESERVATION rr
+        JOIN RESERVATION r ON r.RESV_NUM = rr.RESV_NUM
+        JOIN MEMBER m ON m.USER_MAIL = rr.USER_MAIL
+        JOIN ROOM rm ON rm.ROOM_IDX = rr.ROOM_IDX
+        LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
+        WHERE rr.ADMIN_IDX = #{adminIdx}
+          AND rr.RESV_CHECK_IN = #{date}
+          AND rr.RESV_STATUS != '예약취소'
+        ORDER BY r.RESV_ARRIVAL_TIME
+    </select>
+
+    <!-- 오늘 체크아웃하는 예약 목록 (대시보드) -->
+    <select id="findCheckOutsByAdminAndDate" resultType="com.mnu.ryokanmaker.domain.CheckInOutRowDto">
+        SELECT
+            m.USER_NICKNAME      AS userNickname,
+            rm.ROOM_NAME         AS roomName,
+            p.PLAN_NAME          AS planName,
+            r.RESV_ARRIVAL_TIME  AS resvArrivalTime,
+            (rr.RESV_CHECK_OUT - rr.RESV_CHECK_IN) AS nights,
+            r.RESV_REQUEST       AS resvRequest,
+            rr.RESV_PAY_STATUS   AS resvPayStatus
+        FROM ROOM_RESERVATION rr
+        JOIN RESERVATION r ON r.RESV_NUM = rr.RESV_NUM
+        JOIN MEMBER m ON m.USER_MAIL = rr.USER_MAIL
+        JOIN ROOM rm ON rm.ROOM_IDX = rr.ROOM_IDX
+        LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
+        WHERE rr.ADMIN_IDX = #{adminIdx}
+          AND rr.RESV_CHECK_OUT = #{date}
+          AND rr.RESV_STATUS != '예약취소'
+        ORDER BY rm.ROOM_NAME
+    </select>
+
+</mapper>

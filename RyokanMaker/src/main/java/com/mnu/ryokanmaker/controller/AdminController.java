@@ -1,8 +1,11 @@
 package com.mnu.ryokanmaker.controller;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,30 +18,34 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.mnu.ryokanmaker.dto.AdminDto;
-import com.mnu.ryokanmaker.dto.AdminPlanDto;
-import com.mnu.ryokanmaker.dto.AdminReservationDetailDto;
-import com.mnu.ryokanmaker.dto.AdminReservationListItemDto;
-import com.mnu.ryokanmaker.dto.FacilityDto;
-import com.mnu.ryokanmaker.dto.InquiryDto;
-import com.mnu.ryokanmaker.dto.NoticeDto;
-import com.mnu.ryokanmaker.dto.OnsenDto;
-import com.mnu.ryokanmaker.dto.PlanSalesRowDto;
-import com.mnu.ryokanmaker.dto.RestaurantCourseDto;
-import com.mnu.ryokanmaker.dto.RoomDto;
-import com.mnu.ryokanmaker.dto.RoomStatusRowDto;
+import com.mnu.ryokanmaker.domain.AdminDto;
+import com.mnu.ryokanmaker.domain.AdminPlanDto;
+import com.mnu.ryokanmaker.domain.AdminReservationDetailDto;
+import com.mnu.ryokanmaker.domain.AdminReservationListItemDto;
+import com.mnu.ryokanmaker.domain.FacilityDto;
+import com.mnu.ryokanmaker.domain.InquiryDto;
+import com.mnu.ryokanmaker.domain.NoticeDto;
+import com.mnu.ryokanmaker.domain.OnsenDto;
+import com.mnu.ryokanmaker.domain.PlanSalesRowDto;
+import com.mnu.ryokanmaker.domain.RestaurantCourseDto;
+import com.mnu.ryokanmaker.domain.RoomDto;
+import com.mnu.ryokanmaker.domain.RoomStatusRowDto;
 import com.mnu.ryokanmaker.service.AdminReservationService;
 import com.mnu.ryokanmaker.service.AdminService;
 import com.mnu.ryokanmaker.service.FacilityService;
 import com.mnu.ryokanmaker.service.InquiryService;
 import com.mnu.ryokanmaker.service.NoticeService;
 import com.mnu.ryokanmaker.service.OnsenService;
+import com.mnu.ryokanmaker.service.PageContentService;
+import com.mnu.ryokanmaker.service.PageTextDefs;
 import com.mnu.ryokanmaker.service.PlanSalesService;
 import com.mnu.ryokanmaker.service.PlanService;
 import com.mnu.ryokanmaker.service.RestaurantCourseService;
 import com.mnu.ryokanmaker.service.RoomService;
 import com.mnu.ryokanmaker.service.RoomStatusService;
+import com.mnu.ryokanmaker.util.PageIndex;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -83,6 +90,9 @@ public class AdminController {
 	@Autowired
 	private PlanSalesService planSalesService;
 
+	@Autowired
+	private PageContentService pageContentService;
+
 	private static final int STATUS_RANGE_DAYS = 7;
 
 	private AdminDto currentAdmin(HttpSession session) {
@@ -122,6 +132,10 @@ public class AdminController {
 		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdminIdx()));
 		model.addAttribute("facilityList", facilityService.getFacilityList(loginAdmin.getAdminIdx()));
 		model.addAttribute("noticeList", noticeService.getNoticeList(loginAdmin.getAdminIdx()));
+		model.addAttribute("pageTexts", pageContentService.getMap(loginAdmin.getAdminIdx()));
+		model.addAttribute("textGroups", PageTextDefs.byGroup());
+		model.addAttribute("mailPasswordSet", adminService.hasMailPassword(loginAdmin.getAdminIdx()));
+		model.addAttribute("mailSecretAvailable", adminService.isMailSecretAvailable());
 		return "Admin/admin_info_register";
 	}
 	@GetMapping("plan_sales")
@@ -138,6 +152,7 @@ public class AdminController {
 
 		List<PlanSalesRowDto> salesGrid = planSalesService.getSalesGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
 		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdminIdx()));
+		model.addAttribute("onsenList", onsenService.getOnsenList(loginAdmin.getAdminIdx()));
 		model.addAttribute("salesGrid", salesGrid);
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
@@ -159,6 +174,7 @@ public class AdminController {
 		List<RoomStatusRowDto> statusGrid = roomStatusService.getStatusGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
 		model.addAttribute("roomList", roomService.getRoomList(loginAdmin.getAdminIdx()));
 		model.addAttribute("statusGrid", statusGrid);
+		model.addAttribute("todayResvMap", roomStatusService.getTodayReservations(LocalDate.now()));
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
 		return "Admin/room_status";
@@ -166,6 +182,7 @@ public class AdminController {
 	@GetMapping("admin_inquiry")
 	public String adminInquiry(@RequestParam(value = "idx", required = false) Integer idx,
 			@RequestParam(value = "status", required = false) String status,
+			@RequestParam(defaultValue = "1") int page,
 			HttpSession session, Model model) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
@@ -178,9 +195,26 @@ public class AdminController {
 		}
 
 		Integer adminIdx = loginAdmin.getAdminIdx();
-		List<InquiryDto> inquiryList = inquiryService.getInquiryList(adminIdx, status);
+		List<InquiryDto> allList = inquiryService.getInquiryList(adminIdx, status);
+
+		int maxlist = 10;
+		int totcount = allList.size();
+		int totpage = (totcount == 0) ? 1 : (totcount + maxlist - 1) / maxlist;
+		int nowpage = Math.min(Math.max(page, 1), totpage);
+		int offset = (nowpage - 1) * maxlist;
+		List<InquiryDto> inquiryList = allList.subList(offset, Math.min(offset + maxlist, totcount));
+
+		// 상태 필터는 페이지를 넘겨도 유지돼야 하므로 링크에 같이 싣는다
+		String extraQuery = (status == null) ? ""
+				: "&status=" + URLEncoder.encode(status, StandardCharsets.UTF_8);
+
 		model.addAttribute("inquiryList", inquiryList);
 		model.addAttribute("statusFilter", status);
+		model.addAttribute("page", nowpage);
+		model.addAttribute("totpage", totpage);
+		model.addAttribute("totcount", totcount);
+		model.addAttribute("pageSkip",
+				PageIndex.pageList(nowpage, totpage, "/Admin/admin_inquiry", maxlist, extraQuery));
 		model.addAttribute("totalCount", inquiryService.countTotal(adminIdx));
 		model.addAttribute("pendingCount", inquiryService.countByStatus(adminIdx, "답변대기"));
 		model.addAttribute("answeredCount", inquiryService.countByStatus(adminIdx, "답변완료"));
@@ -199,6 +233,7 @@ public class AdminController {
 	@PostMapping("inquiry_answer")
 	public String inquiryAnswer(@RequestParam("inquiryIdx") Integer inquiryIdx,
 			@RequestParam("inquiryAnswerContent") String inquiryAnswerContent,
+			@RequestParam(defaultValue = "1") int page,
 			HttpSession session) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
@@ -207,28 +242,106 @@ public class AdminController {
 
 		inquiryService.answerInquiry(inquiryIdx, loginAdmin.getAdminIdx(), inquiryAnswerContent);
 
-		return "redirect:/Admin/admin_inquiry?idx=" + inquiryIdx;
+		return "redirect:/Admin/admin_inquiry?idx=" + inquiryIdx + "&page=" + page;
 	}
 
-	/** 예약 현황 화면: 왼쪽 예약 목록 + 첫 번째 예약의 상세 패널을 함께 조회. */
+	/** 예약 현황 화면: 왼쪽 예약 목록 + 선택한(idx) 예약의 상세 패널을 함께 조회. idx가 없으면 첫 번째 예약. */
 	@GetMapping("reservation_status")
-	public String reservationStatus(HttpSession session, Model model) {
+	public String reservationStatus(@RequestParam(value = "idx", required = false) Integer idx,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(value = "checkInDate", required = false)
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+			@RequestParam(value = "keyword", required = false) String keyword,
+			HttpSession session, Model model) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		Integer adminIdx = loginAdmin.getAdminIdx();
+
+		if (keyword != null) {
+			keyword = keyword.strip();
+			if (keyword.isEmpty()) {
+				keyword = null;
+			}
+		}
+		boolean filtered = checkInDate != null || keyword != null;
+
+		List<AdminReservationListItemDto> allList =
+				adminReservationService.getReservationList(adminIdx, checkInDate, keyword);
+
+		// "전체 예약" 타일은 필터와 무관하게 전체 건수를 보여준다
+		int allReservationCount = filtered
+				? adminReservationService.getReservationList(adminIdx, null, null).size()
+				: allList.size();
+		model.addAttribute("allReservationCount", allReservationCount);
+		model.addAttribute("todayCheckInCount", adminReservationService.countTodayCheckIns(adminIdx));
+		model.addAttribute("todayCheckOutCount", adminReservationService.countTodayCheckOuts(adminIdx));
+		model.addAttribute("checkInDate", checkInDate);
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("filtered", filtered);
+
+		int maxlist = 10;
+		int totcount = allList.size();
+		int totpage = (totcount == 0) ? 1 : (totcount + maxlist - 1) / maxlist;
+		int nowpage = Math.min(Math.max(page, 1), totpage);
+		int offset = (nowpage - 1) * maxlist;
+		List<AdminReservationListItemDto> reservationList =
+				allList.subList(offset, Math.min(offset + maxlist, totcount));
+
+		model.addAttribute("reservationList", reservationList);
+		model.addAttribute("page", nowpage);
+		model.addAttribute("totpage", totpage);
+		model.addAttribute("totcount", totcount);
+		// 필터는 페이지를 넘겨도 유지돼야 하므로 링크에 같이 싣는다 (날짜는 ISO 형식이라 인코딩 불필요)
+		String extraQuery = (checkInDate == null ? "" : "&checkInDate=" + checkInDate)
+				+ (keyword == null ? "" : "&keyword=" + URLEncoder.encode(keyword, StandardCharsets.UTF_8));
+		model.addAttribute("pageSkip",
+				PageIndex.pageList(nowpage, totpage, "/Admin/reservation_status", maxlist, extraQuery));
+
+		if (!allList.isEmpty()) {
+			// 내 예약 목록 안에서만 고른다 (다른 관리자의 예약번호를 idx로 넣어도 조회되지 않게)
+			Integer selectedResvNum = allList.stream()
+					.map(AdminReservationListItemDto::getResvNum)
+					.filter(n -> n.equals(idx))
+					.findFirst()
+					.orElse(reservationList.get(0).getResvNum());
+			AdminReservationDetailDto detail = adminReservationService.getReservationDetail(selectedResvNum);
+			model.addAttribute("detail", detail);
+		}
+
+		return "Admin/admin_reservation";
+	}
+
+	/** 예약 취소. 처리 후 보던 예약·페이지·필터 그대로 예약 현황으로 돌아간다. */
+	@PostMapping("reservation_cancel")
+	public String reservationCancel(@RequestParam("resvNum") Integer resvNum,
+			@RequestParam(defaultValue = "1") int page,
+			@RequestParam(value = "checkInDate", required = false) String checkInDate,
+			@RequestParam(value = "keyword", required = false) String keyword,
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
 
-		List<AdminReservationListItemDto> reservationList =
-				adminReservationService.getReservationList(loginAdmin.getAdminIdx());
-		model.addAttribute("reservationList", reservationList);
-
-		if (!reservationList.isEmpty()) {
-			Integer firstResvNum = reservationList.get(0).getResvNum();
-			AdminReservationDetailDto detail = adminReservationService.getReservationDetail(firstResvNum);
-			model.addAttribute("detail", detail);
+		try {
+			adminReservationService.cancelReservation(resvNum, loginAdmin.getAdminIdx());
+			redirectAttributes.addFlashAttribute("cancelResult", "success");
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			log.warn("예약 취소 실패 resvNum={}", resvNum, e);
+			redirectAttributes.addFlashAttribute("cancelResult", "fail");
 		}
 
-		return "Admin/admin_reservation";
+		StringBuilder url = new StringBuilder("redirect:/Admin/reservation_status?idx=")
+				.append(resvNum).append("&page=").append(page);
+		if (checkInDate != null && !checkInDate.isBlank()) {
+			url.append("&checkInDate=").append(URLEncoder.encode(checkInDate, StandardCharsets.UTF_8));
+		}
+		if (keyword != null && !keyword.isBlank()) {
+			url.append("&keyword=").append(URLEncoder.encode(keyword, StandardCharsets.UTF_8));
+		}
+		return url.toString();
 	}
 
 	@GetMapping("admin_login")
@@ -336,24 +449,96 @@ public class AdminController {
 	}
 
 	/**
-	 * 교통안내(RYOKAN_ACCESS) 단독 수정. 인덱스 화면 본체 폼과 별도로 제출됨.
+	 * 교통안내 수정. 한 줄 안내(ADMIN.RYOKAN_ACCESS)와 화면의 나머지 문구(PAGE_CONTENT, 폼 필드명 pc_키)를
+	 * 함께 저장한다. 문구를 비워서 저장하면 기본 문구로 되돌아간다.
 	 */
 	@PostMapping("admin_access_save")
-	public String adminAccessSave(@RequestParam("ryokanAccess") String ryokanAccess, HttpSession session) {
+	public String adminAccessSave(@RequestParam(value = "ryokanAccess", required = false) String ryokanAccess,
+			@RequestParam Map<String, String> params,
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
 
-		AdminDto adminDto = new AdminDto();
-		adminDto.setAdminIdx(loginAdmin.getAdminIdx());
-		adminDto.setRyokanAccess(ryokanAccess);
-		adminService.updateRyokanAccess(adminDto);
+		if (ryokanAccess != null) {
+			ryokanAccess = PageContentService.truncateUtf8(ryokanAccess.strip(), 1000);
+			AdminDto adminDto = new AdminDto();
+			adminDto.setAdminIdx(loginAdmin.getAdminIdx());
+			adminDto.setRyokanAccess(ryokanAccess);
+			adminService.updateRyokanAccess(adminDto);
 
-		loginAdmin.setRyokanAccess(ryokanAccess);
-		session.setAttribute("admin", loginAdmin);
+			loginAdmin.setRyokanAccess(ryokanAccess);
+			session.setAttribute("admin", loginAdmin);
+		}
 
+		savePageTexts(loginAdmin, "ACCESS", params, redirectAttributes);
 		return "redirect:/Admin/admin_info_register#section-route";
+	}
+
+	/**
+	 * 손님 화면의 소개·설명 문구 저장 (메인/플랜 선택/로그인·회원가입/문의 등). group은 PageTextDefs의 그룹 코드.
+	 * 폼 필드명은 pc_키이고, 비워서 저장하면 기본 문구로 되돌아간다.
+	 */
+	@PostMapping("admin_page_text_save")
+	public String adminPageTextSave(@RequestParam("group") String group,
+			@RequestParam Map<String, String> params,
+			HttpSession session, RedirectAttributes redirectAttributes) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		if (PageTextDefs.ofGroup(group).isEmpty()) {
+			return "redirect:/Admin/admin_info_register#section-pagetext";
+		}
+
+		savePageTexts(loginAdmin, group, params, redirectAttributes);
+		return "ACCESS".equals(group)
+				? "redirect:/Admin/admin_info_register#section-route"
+				: "redirect:/Admin/admin_info_register#section-pagetext";
+	}
+
+	/**
+	 * 손님 대상 메일(비밀번호 찾기 등)을 이 관리자의 메일 주소(ADMIN_MAIL)로 직접 보내기 위한 메일 앱 비밀번호 저장.
+	 * 값은 암호화해서 저장하고 화면에 다시 보여주지 않는다. 비워서 저장하면 변경 없음, clear=Y면 삭제.
+	 */
+	@PostMapping("admin_mail_save")
+	public String adminMailSave(@RequestParam(value = "mailPassword", required = false) String mailPassword,
+			@RequestParam(value = "clear", required = false) String clear,
+			HttpSession session, RedirectAttributes redirectAttributes) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+
+		try {
+			if ("Y".equals(clear)) {
+				adminService.clearMailPassword(loginAdmin.getAdminIdx());
+				redirectAttributes.addFlashAttribute("mailMessage", "adm.ir_mail_cleared");
+			} else if (mailPassword != null && !mailPassword.isBlank()) {
+				if (!adminService.isMailSecretAvailable()) {
+					redirectAttributes.addFlashAttribute("mailError", "adm.ir_mail_no_key");
+				} else {
+					adminService.saveMailPassword(loginAdmin.getAdminIdx(), mailPassword);
+					redirectAttributes.addFlashAttribute("mailMessage", "adm.ir_mail_saved");
+				}
+			}
+		} catch (Exception e) {
+			log.warn("관리자 메일 앱 비밀번호 저장 실패 (ADMIN.MAIL_APP_PASSWORD 컬럼 확인 필요)", e);
+			redirectAttributes.addFlashAttribute("mailError", "adm.ir_mail_save_fail");
+		}
+		return "redirect:/Admin/admin_info_register#section-mail";
+	}
+
+	private void savePageTexts(AdminDto loginAdmin, String group, Map<String, String> params,
+			RedirectAttributes redirectAttributes) {
+		try {
+			pageContentService.saveGroup(loginAdmin.getAdminIdx(), group, params);
+		} catch (Exception e) {
+			log.warn("페이지 문구 저장 실패 (PAGE_CONTENT 테이블 확인 필요): group={}", group, e);
+			redirectAttributes.addFlashAttribute("pageTextError", "adm.ir_route_save_fail");
+			redirectAttributes.addFlashAttribute("pageTextErrorGroup", group);
+		}
 	}
 
 	/**
@@ -399,6 +584,19 @@ public class AdminController {
 		}
 		roomService.toggleSale(roomIdx, loginAdmin.getAdminIdx(), "Y".equals(roomSaleYn));
 		return roomRedirect(redirectTo);
+	}
+
+	/** 당일 객실 관리 - 오늘 그 객실 예약을 체크인 표시(Y) / 취소(N) */
+	@PostMapping("room_checkin")
+	public String roomCheckin(@RequestParam("roomIdx") Integer roomIdx,
+			@RequestParam("checkedIn") String checkedIn,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		roomStatusService.setCheckedIn(loginAdmin.getAdminIdx(), roomIdx, LocalDate.now(), "Y".equals(checkedIn));
+		return "redirect:/Admin/room_status";
 	}
 
 	/**
@@ -508,6 +706,18 @@ public class AdminController {
 		return planRedirect(redirectTo);
 	}
 
+	@PostMapping("onsen_toggle_sale")
+	public String onsenToggleSale(@RequestParam("onsenIdx") Integer onsenIdx,
+			@RequestParam("onsenSaleYn") String onsenSaleYn,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		onsenService.toggleSale(onsenIdx, loginAdmin.getAdminIdx(), "Y".equals(onsenSaleYn));
+		return "redirect:/Admin/plan_sales";
+	}
+
 	/**
 	 * 시설 등록/수정 (upsert) : facilityDto.facilityIdx가 없으면 신규 등록, 있으면 수정
 	 * 주의: FACILITY 테이블엔 노출여부(SALE_YN) 컬럼이 없어서 다른 섹션과 달리 노출 토글이 없음
@@ -570,28 +780,9 @@ public class AdminController {
 		return "redirect:/Admin/admin_login";
 	}
 
-	/** 교통안내(RYOKAN_ACCESS) 단독 수정 화면. admin_info_register의 section-route와는 별도의 전용 화면. */
+	/** 예전 교통안내 단독 수정 화면 주소. 이제 정보등록 화면의 교통안내 섹션으로 통합됨. */
 	@GetMapping("access_edit")
-	public String accessEditForm(HttpSession session, Model model) {
-		AdminDto admin = currentAdmin(session);
-		if (admin == null) {
-			return "redirect:/Admin/admin_login";
-		}
-		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
-		return "Admin/access_edit";
-	}
-
-	@PostMapping("access_edit")
-	public String accessEditSave(HttpSession session,
-			@RequestParam String ryokanAccess,
-			Model model) {
-		AdminDto admin = currentAdmin(session);
-		if (admin == null) {
-			return "redirect:/Admin/admin_login";
-		}
-		adminService.updateAccess(admin.getAdminIdx(), ryokanAccess);
-		model.addAttribute("admin", adminService.findByAdminIdx(admin.getAdminIdx()));
-		model.addAttribute("message", "adm.msg_access_saved");
-		return "Admin/access_edit";
+	public String accessEditRedirect() {
+		return "redirect:/Admin/admin_info_register#section-route";
 	}
 }
