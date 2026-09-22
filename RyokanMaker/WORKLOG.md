@@ -1,5 +1,15 @@
 # 작업 기록
 
+## 메일 계정을 application.properties에 평문으로 복원 (2026-09-22, 미커밋)
+
+**증상:** 회원가입 시 `MailAuthenticationException: failed to connect, no password specified?` — 가입은 정상, 가입 완료 메일만 실패. 원인은 Choiyeongsu13이 바꿔둔 `spring.mail.username/password=${MAIL_USERNAME:}/${MAIL_PASSWORD:}`인데 이 PC엔 환경변수가 없어 둘 다 빈 값. `EmailService.send()`는 계정이 비었는지 확인하지 않고 Gmail 접속을 시도하므로 **"조용히 건너뜀"이 아니라 매번 WARN + 긴 스택을 남긴다**(앞 항목의 "조용히 건너뜀" 서술은 틀림).
+
+**조치:** 사용자 지시로 이전에 쓰던 설정(Gmail 주소 + 16자리 앱 비밀번호, smtp auth/starttls)을 `application.properties`에 **평문으로** 넣음. 환경변수 방식과 "커밋하지 말라"는 팀원 주석은 제거됨.
+
+**⚠️ 주의:** 저장소가 공개라 **이 파일을 push하면 앱 비밀번호가 다시 공개된다**(이미 과거 커밋 `3382654`에도 있음). 사용자는 시연 후 비밀번호를 폐기할 계획. 또 팀원들은 환경변수 방식을 쓰고 있어, push하면 팀원 로컬 설정에도 영향. Eclipse 서버를 재시작해야 반영됨.
+
+---
+
 ## fetch 설정 수정 + yeseong `dc035a5`(환율 적용, 플랜 사진) 병합 — 실습 폴더 제외 (2026-09-22)
 
 **fetch 설정:** 사용자 승인으로 `remote.origin.fetch`를 `+refs/heads/june47087-byte:...`(단일 브랜치) → **`+refs/heads/*:refs/remotes/origin/*`**로 변경. 이제 `git fetch`만으로 팀원 브랜치가 모두 갱신된다(앞 항목들의 "fetch가 june47087-byte만 받는다" 주의사항은 해소됨).
