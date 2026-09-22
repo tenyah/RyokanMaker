@@ -53,7 +53,7 @@
           <div>
             <span class="from" th:text="#{rooms.per_night}">1박 기준</span>
             <span class="amount">
-              <span th:text="${'₩' + #numbers.formatInteger(room.roomPrice, 0, 'COMMA')}">₩300,000</span>
+              <span th:text="${@price.format(room.roomPrice)}">₩300,000</span>
               <span class="unit" th:text="#{rooms.from}">부터</span>
             </span>
           </div>

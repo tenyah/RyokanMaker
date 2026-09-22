@@ -1,5 +1,20 @@
 # 작업 기록
 
+## fetch 설정 수정 + yeseong `dc035a5`(환율 적용, 플랜 사진) 병합 — 실습 폴더 제외 (2026-09-22)
+
+**fetch 설정:** 사용자 승인으로 `remote.origin.fetch`를 `+refs/heads/june47087-byte:...`(단일 브랜치) → **`+refs/heads/*:refs/remotes/origin/*`**로 변경. 이제 `git fetch`만으로 팀원 브랜치가 모두 갱신된다(앞 항목들의 "fetch가 june47087-byte만 받는다" 주의사항은 해소됨).
+
+**yeseong `dc035a5` "환율적용, 플랜 사진 출력"(9/22 15:16):** 54개 파일 중 **43개는 RyokanMaker와 무관한 수업 실습 프로젝트**(`exMaven/`, `exMyBatisGradle/`, `exGradle/` + "스프링부트 실습용" 최상위 `README.md`). 사용자 지시로 이 3개 폴더와 README는 병합에서 제외(`git rm -r -f`, 병합 전 로컬에 같은 폴더가 없음을 확인). 우리 브랜치 최상위는 계속 `RyokanMaker/` 하나.
+- 실제 변경(11파일): `ExchangeRateService`(frankfurter.dev에서 JPY→KRW/USD 환율, 기동 시 `@PostConstruct` + 매일 03시 `@Scheduled`), `PriceDisplayHelper`, `RyokanMakerApplication`에 `@EnableScheduling`, `PaymentController`(DB 가격은 **엔화 기준**, 결제는 원화라 결제 금액을 원화로 환산), 메시지, `planSelect`/`reservation`/`rooms`/`plan_sales` 화면.
+- 충돌 4개:
+  - messages 3종: yeseong이 `adm.ir_onsen_price`/`adm.ir_course_price`/`adm.ir_price_ph`를 "(엔)" 문구로 바꿨는데, 우리 파일에선 이 키들이 앞선 eartth21 병합 때 **파일 끝으로 옮겨져 있어** 그대로 받으면 키 중복. → 충돌 블록은 버리고 **끝에 있는 기존 키의 값만 yeseong 문구로 교체**. 3개 언어 678키, 중복 0.
+  - `plan_sales.html`: 플랜 가격 `₩`→`¥`(DB가 엔화 기준)은 받고, 저쪽 줄에 남아 있던 연필 버튼(우리가 이전에 제거)은 버림.
+- `PaymentController`는 자동 병합 — yeseong의 환율 변환과 이쪽의 회원 정보 자동 입력·예약자 검증·RESV_MAIL 메일이 모두 유지됨.
+- 검증: compile BUILD SUCCESS, 18080 기동 성공 + 환율 갱신 로그(`1엔 = 8.7251원`) + 공개 화면 3개 200 확인 후 종료.
+- **참고:** `RESV_PRICE`/`ROOM_RESERVATION.RESV_PRICE`는 환산된 **원화** 결제액이 저장되고, 관리자 화면의 객실·플랜 가격(`ROOM_PRICE`/`PLAN_PRICE`)은 **엔화**다. 관리자 예약 목록의 `₩` 표시는 결제액이라 맞음.
+
+---
+
 ## 예약자 정보를 RESERVATION에 저장 + 관리자 상세에 이름·메일 표시 (2026-09-22, 미커밋)
 
 **배경:** 사용자가 DB의 RESERVATION에 예약자 컬럼 5개를 직접 추가(익스포트 `C:/Users/june3/Ryokan3.sql` 351행). 라이브 DB(`user_tab_columns`, 읽기 전용)에서도 동일 확인:
