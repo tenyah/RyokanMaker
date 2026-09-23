@@ -1,5 +1,21 @@
 # 작업 기록
 
+## eartth21 `4ad833f` 병합: 일자별 매출 엑셀 다운로드 + 관리자 로그인 후 대시보드 (2026-09-23)
+
+**받은 것:** eartth21의 새 커밋 1개(`4ad833f` "엑"). 공통 조상이 직전 eartth21 끝점(`1032d84`)이라 이미 통합된 부분 위에 얹힌 변경만 들어옴.
+- **엑셀 다운로드:** `pom.xml`에 `org.apache.poi:poi-ooxml:5.3.0` 추가. `AdminRevenueController`에 `GET /Admin/revenue_daily/export` — 화면과 **같은 조회 조건(period/start/end)** 으로 `.xlsx` 생성, 시트 2개(결제완료/결제대기), 헤더 굵게+회색, 금액 `#,##0` 서식, 결제완료 시트 끝에 합계행. 파일명 `매출내역_시작일_종료일.xlsx`(UTF-8 `ContentDisposition`).
+- **리팩터링:** 화면 메서드 안에 있던 기간 계산 switch를 `resolveRange()` + `record DateRange(start, endExclusive, period)`로 빼서 화면과 엑셀이 공유. 동작은 그대로.
+- **관리자 로그인 흐름:** 로그인/비번재설정 후 `redirect:/Admin/admin_info_register` → **`redirect:/Admin/dashboard`** (3곳).
+- `revenue_daily.html` 거래내역 패널 헤더에 엑셀 다운로드 버튼, 메시지 `adm.rvd_export` 3개 언어.
+
+**병합 방법:** 작업트리에 미커밋 변경(결제대기 패널 제거)이 같은 파일들에 있어 `git stash` → `git merge origin/eartth21`(**커밋 단위 충돌 0**) → `git stash pop`으로 되돌림. 이때 4개 파일 충돌.
+
+**충돌 해결 (`5a40c3d`):** eartth21의 헤더에는 안내문구(`adm.rvd_txn_hint`)와 엑셀 버튼이 같이 있었는데, 로컬에서 **결제대기 패널을 없애면서 "결제대기는 아래 별도 표에서 확인하세요" 문구가 맞지 않게 됨** → 문구는 빼고 버튼만 남김. 쓰이지 않게 된 `adm.rvd_txn_hint`는 ko/en/ja 셋 다 삭제(en/ja는 이미 지워져 있어 키 정합성도 맞춤).
+
+**검증:** compile BUILD SUCCESS(104 소스), 메시지 3개 언어 **677키 동일·차집합 없음**. **엑셀 다운로드 실제 동작은 미확인**(서버 띄워서 받아봐야 함). 아직 push 안 함.
+
+---
+
 ## yeseong `d095712` 병합: 마이페이지 예약 취소 + 코스 사진 (2026-09-22)
 
 **배경:** 메인 화면(`index.html` feature-card) 사진이 깨짐 → DB 이미지 경로와 로컬 파일 대조(읽기 전용) 결과 **14개 중 9개가 이 PC에 없음**. 원인은 **공용 DB + 각자 PC에 파일 저장** 구조(`ImageJsonUtil`이 `src/main/resources/static/uploads`에 저장, DB엔 경로만). 다른 사람이 관리자 화면에서 올린 사진은 그 파일을 git으로 받기 전까지 경로만 있고 파일이 없다.
