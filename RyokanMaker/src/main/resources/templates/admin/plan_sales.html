@@ -97,7 +97,7 @@
     <p th:if="${#lists.isEmpty(planList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;" th:text="#{adm.ps_empty}">등록된 플랜이 없습니다. 정보 등록 화면에서 플랜을 추가해 주세요.</p>
 
 
-    <!-- 날짜별 예약 현황 -->
+    <!-- 당일 객실 관리 -->
     <div class="section-tag">
       <div class="num">2</div>
       <div class="label" th:text="#{adm.ps_grid}">플랜별 날짜별 예약 현황</div>
@@ -139,7 +139,7 @@
       <p th:if="${#lists.isEmpty(salesGrid)}" style="color:var(--ink-faint);font-size:13px;padding:16px 0;" th:text="#{adm.ps_empty_short}">등록된 플랜이 없습니다.</p>
     </div>
 
-    <!-- 가이세키/온천 한도 -->
+    <!-- 온천 판매 관리  -->
     <div class="section-tag">
       <div class="num">3</div>
       <div class="label" th:text="#{adm.ps_onsen_sale}">온천 판매 관리</div>
@@ -170,6 +170,9 @@
 
     </div>
     <p th:if="${#lists.isEmpty(onsenList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;" th:text="#{adm.ps_onsen_empty}">등록된 온천이 없습니다. 정보 등록 화면에서 온천을 추가해 주세요.</p>
+
+    <!-- 페이지 맨 아래 여백 -->
+    <div style="height:80px;"></div>
   </main>
 </div>
 
