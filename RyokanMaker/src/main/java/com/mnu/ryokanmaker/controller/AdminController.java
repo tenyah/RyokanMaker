@@ -236,7 +236,7 @@ public class AdminController {
 		if (currentAdmin(session) == null) {
 			return "Admin/admin_login";
 		}
-		return "redirect:/Admin/admin_info_register";
+		return "redirect:/Admin/dashboard";
 	}
 
 	@PostMapping("admin_login")
@@ -255,7 +255,7 @@ public class AdminController {
 		if (!"Y".equals(admin.getPwResetYn())) {
 			return "redirect:/Admin/admin_pwreset";
 		}
-		return "redirect:/Admin/admin_info_register";
+		return "redirect:/Admin/dashboard";
 	}
 
 	@GetMapping("admin_pwreset")
@@ -299,7 +299,7 @@ public class AdminController {
 		loginAdmin.setPwResetYn("Y");
 		session.setAttribute("admin", loginAdmin);
 
-		return "redirect:/Admin/admin_info_register";
+		return "redirect:/Admin/dashboard";
 	}
 
 	/**

@@ -43,9 +43,12 @@
     </div>
 
     <div class="panel">
-      <div class="panel-header">
+      <div class="panel-header" style="display:flex; align-items:center; flex-wrap:wrap; gap:12px;">
         <h2 th:text="#{adm.rvd_txn_list}">거래 내역</h2>
         <span class="hint" th:text="#{adm.rvd_txn_hint}">결제완료 건만 표시</span>
+        <a class="btn-line" style="margin-left:auto; padding:8px 16px; font-size:12px;"
+           th:href="@{/Admin/revenue_daily/export(period=${period}, start=${rangeStart}, end=${rangeEnd})}"
+           th:text="#{adm.rvd_export}">엑셀 다운로드</a>
       </div>
       <div class="period-filter">
         <a class="pf-btn" th:classappend="${period == 'month'} ? 'active'" th:href="@{/Admin/revenue_daily(period='month')}" th:text="#{adm.rvd_period_month}">이번달</a>

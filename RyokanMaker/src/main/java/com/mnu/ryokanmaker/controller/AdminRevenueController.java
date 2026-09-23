@@ -1,5 +1,8 @@
 package com.mnu.ryokanmaker.controller;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -10,9 +13,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -81,44 +98,17 @@ public class AdminRevenueController {
 		}
 		Integer adminIdx = loginAdmin.getAdminIdx();
 
-		LocalDate today = LocalDate.now();
-		LocalDate rangeStart;
-		LocalDate rangeEndExclusive;
+		DateRange range = resolveRange(period, customStart, customEnd);
 
-		switch (period) {
-			case "today" -> {
-				rangeStart = today;
-				rangeEndExclusive = today.plusDays(1);
-			}
-			case "week" -> {
-				rangeStart = today.minusDays(today.getDayOfWeek().getValue() % 7);
-				rangeEndExclusive = today.plusDays(1);
-			}
-			case "lastmonth" -> {
-				YearMonth lastMonth = YearMonth.from(today).minusMonths(1);
-				rangeStart = lastMonth.atDay(1);
-				rangeEndExclusive = lastMonth.plusMonths(1).atDay(1);
-			}
-			case "custom" -> {
-				rangeStart = customStart != null ? customStart : today.withDayOfMonth(1);
-				rangeEndExclusive = (customEnd != null ? customEnd : today).plusDays(1);
-			}
-			default -> {
-				period = "month";
-				rangeStart = today.withDayOfMonth(1);
-				rangeEndExclusive = today.plusDays(1);
-			}
-		}
-
-		List<RevenueTxnDto> all = revenueService.getTransactions(adminIdx, rangeStart, rangeEndExclusive);
+		List<RevenueTxnDto> all = revenueService.getTransactions(adminIdx, range.start(), range.endExclusive());
 		List<RevenueTxnDto> paid = all.stream().filter(t -> RevenueService.PAID.equals(t.getResvPayStatus())).toList();
 		List<RevenueTxnDto> pending = all.stream().filter(t -> !RevenueService.PAID.equals(t.getResvPayStatus())).toList();
 
 		int paidTotal = paid.stream().mapToInt(RevenueTxnDto::getResvPrice).sum();
 
-		model.addAttribute("period", period);
-		model.addAttribute("rangeStart", rangeStart);
-		model.addAttribute("rangeEnd", rangeEndExclusive.minusDays(1));
+		model.addAttribute("period", range.period());
+		model.addAttribute("rangeStart", range.start());
+		model.addAttribute("rangeEnd", range.endExclusive().minusDays(1));
 		model.addAttribute("paidTxns", paid);
 		model.addAttribute("pendingTxns", pending);
 		model.addAttribute("paidTotal", paidTotal);
@@ -127,6 +117,134 @@ public class AdminRevenueController {
 		model.addAttribute("pendingCount", pending.size());
 
 		return "Admin/revenue_daily";
+	}
+
+	/** 일자별 매출조회 화면과 동일한 조회 조건으로 엑셀(.xlsx) 다운로드. */
+	@GetMapping("revenue_daily/export")
+	public ResponseEntity<byte[]> exportRevenueDaily(
+			@RequestParam(value = "period", required = false, defaultValue = "month") String period,
+			@RequestParam(value = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate customStart,
+			@RequestParam(value = "end", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate customEnd,
+			HttpSession session) throws IOException {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+		}
+		Integer adminIdx = loginAdmin.getAdminIdx();
+
+		DateRange range = resolveRange(period, customStart, customEnd);
+		List<RevenueTxnDto> all = revenueService.getTransactions(adminIdx, range.start(), range.endExclusive());
+		List<RevenueTxnDto> paid = all.stream().filter(t -> RevenueService.PAID.equals(t.getResvPayStatus())).toList();
+		List<RevenueTxnDto> pending = all.stream().filter(t -> !RevenueService.PAID.equals(t.getResvPayStatus())).toList();
+
+		byte[] excel = buildRevenueExcel(paid, pending);
+
+		LocalDate rangeEnd = range.endExclusive().minusDays(1);
+		String filename = "매출내역_" + range.start() + "_" + rangeEnd + ".xlsx";
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentDisposition(ContentDisposition.attachment().filename(filename, StandardCharsets.UTF_8).build());
+		headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+		return new ResponseEntity<>(excel, headers, HttpStatus.OK);
+	}
+
+	/** period(today/week/month/lastmonth/custom) -> 실제 조회 시작일/종료일(배타적)로 변환. revenueDaily 화면·엑셀 다운로드가 공유. */
+	private DateRange resolveRange(String period, LocalDate customStart, LocalDate customEnd) {
+		LocalDate today = LocalDate.now();
+
+		return switch (period) {
+			case "today" -> new DateRange(today, today.plusDays(1), "today");
+			case "week" -> new DateRange(today.minusDays(today.getDayOfWeek().getValue() % 7), today.plusDays(1), "week");
+			case "lastmonth" -> {
+				YearMonth lastMonth = YearMonth.from(today).minusMonths(1);
+				yield new DateRange(lastMonth.atDay(1), lastMonth.plusMonths(1).atDay(1), "lastmonth");
+			}
+			case "custom" -> new DateRange(
+					customStart != null ? customStart : today.withDayOfMonth(1),
+					(customEnd != null ? customEnd : today).plusDays(1),
+					"custom");
+			default -> new DateRange(today.withDayOfMonth(1), today.plusDays(1), "month");
+		};
+	}
+
+	private record DateRange(LocalDate start, LocalDate endExclusive, String period) {
+	}
+
+	private static final String[] TXN_HEADERS = {"체크인일", "예약번호", "고객명", "객실", "플랜", "결제수단", "금액", "상태"};
+
+	/** 결제완료/결제대기 거래 목록을 시트 2개(결제완료/결제대기)로 담은 .xlsx 바이트를 만든다. */
+	private byte[] buildRevenueExcel(List<RevenueTxnDto> paid, List<RevenueTxnDto> pending) throws IOException {
+		try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+			CellStyle headerStyle = headerStyle(wb);
+			CellStyle moneyStyle = moneyStyle(wb);
+
+			writeTxnSheet(wb, "결제완료", paid, headerStyle, moneyStyle, true);
+			writeTxnSheet(wb, "결제대기", pending, headerStyle, moneyStyle, false);
+
+			wb.write(out);
+			return out.toByteArray();
+		}
+	}
+
+	private void writeTxnSheet(Workbook wb, String sheetName, List<RevenueTxnDto> rows,
+			CellStyle headerStyle, CellStyle moneyStyle, boolean withTotal) {
+		Sheet sheet = wb.createSheet(sheetName);
+
+		Row headerRow = sheet.createRow(0);
+		for (int i = 0; i < TXN_HEADERS.length; i++) {
+			Cell cell = headerRow.createCell(i);
+			cell.setCellValue(TXN_HEADERS[i]);
+			cell.setCellStyle(headerStyle);
+		}
+
+		DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+		int r = 1;
+		long total = 0;
+		for (RevenueTxnDto t : rows) {
+			Row row = sheet.createRow(r++);
+			row.createCell(0).setCellValue(t.getResvCheckIn() != null ? t.getResvCheckIn().format(dateFmt) : "");
+			row.createCell(1).setCellValue(t.getResvNum() != null ? "#" + t.getResvNum() : "");
+			row.createCell(2).setCellValue(t.getUserNickname() != null ? t.getUserNickname() : "");
+			row.createCell(3).setCellValue(t.getRoomName() != null ? t.getRoomName() : "");
+			row.createCell(4).setCellValue(t.getPlanName() != null ? t.getPlanName() : "-");
+			row.createCell(5).setCellValue(t.getResvPayMethod() != null ? t.getResvPayMethod() : "-");
+
+			int price = t.getResvPrice() != null ? t.getResvPrice() : 0;
+			Cell amountCell = row.createCell(6);
+			amountCell.setCellValue(price);
+			amountCell.setCellStyle(moneyStyle);
+			total += price;
+
+			row.createCell(7).setCellValue(t.getResvPayStatus() != null ? t.getResvPayStatus() : "");
+		}
+
+		if (withTotal && !rows.isEmpty()) {
+			Row totalRow = sheet.createRow(r);
+			totalRow.createCell(5).setCellValue("합계");
+			Cell totalCell = totalRow.createCell(6);
+			totalCell.setCellValue(total);
+			totalCell.setCellStyle(moneyStyle);
+		}
+
+		for (int i = 0; i < TXN_HEADERS.length; i++) {
+			sheet.autoSizeColumn(i);
+		}
+	}
+
+	private CellStyle headerStyle(Workbook wb) {
+		Font font = wb.createFont();
+		font.setBold(true);
+		CellStyle style = wb.createCellStyle();
+		style.setFont(font);
+		style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+		style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		return style;
+	}
+
+	private CellStyle moneyStyle(Workbook wb) {
+		CellStyle style = wb.createCellStyle();
+		style.setDataFormat(wb.createDataFormat().getFormat("#,##0"));
+		return style;
 	}
 
 	/** 실제로 쓰인 결제수단만, 금액 내림차순으로 집계한다 (카드/계좌이체로 미리 못박지 않음). */
