@@ -45,7 +45,6 @@
     <div class="panel">
       <div class="panel-header" style="display:flex; align-items:center; flex-wrap:wrap; gap:12px;">
         <h2 th:text="#{adm.rvd_txn_list}">거래 내역</h2>
-        <span class="hint" th:text="#{adm.rvd_txn_hint}">결제완료 건만 표시</span>
         <a class="btn-line" style="margin-left:auto; padding:8px 16px; font-size:12px;"
            th:href="@{/Admin/revenue_daily/export(period=${period}, start=${rangeStart}, end=${rangeEnd})}"
            th:text="#{adm.rvd_export}">엑셀 다운로드</a>
@@ -95,41 +94,7 @@
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <h2 th:text="#{adm.rvd_pending_list}">결제대기 내역</h2>
-        <span class="hint" th:text="#{adm.rvd_pending_hint(${pendingCount})}">0건 · 매출 합계에서 제외됨</span>
-      </div>
-      <div class="panel-body" style="padding-bottom:24px;">
-        <table class="txn-table" th:if="${!#lists.isEmpty(pendingTxns)}">
-          <thead>
-            <tr>
-              <th th:text="#{adm.rvd_col_checkin}">체크인일</th>
-              <th th:text="#{adm.rvd_col_resv}">예약번호</th>
-              <th th:text="#{adm.rvd_col_guest}">고객명</th>
-              <th th:text="#{adm.rvd_col_room}">객실</th>
-              <th th:text="#{adm.rvd_col_plan}">플랜</th>
-              <th th:text="#{adm.rvd_col_method}">결제수단</th>
-              <th style="text-align:right;" th:text="#{adm.rvd_col_amount}">금액</th>
-              <th th:text="#{adm.rvd_col_status}">상태</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr th:each="t : ${pendingTxns}" class="void">
-              <td th:text="${#temporals.format(t.resvCheckIn, 'yyyy.MM.dd')}">2026.09.18</td>
-              <td th:text="'#' + ${t.resvNum}">#10453</td>
-              <td class="guest" th:text="${t.userNickname}">고객명</td>
-              <td th:text="${@tr.t(t.roomName)}">객실</td>
-              <td th:text="${t.planName != null} ? ${@tr.t(t.planName)} : '-'">플랜</td>
-              <td><span class="pay-pill" th:text="${t.resvPayMethod != null} ? ${@tr.t(t.resvPayMethod)} : '-'">-</span></td>
-              <td class="num" th:text="'₩' + ${#numbers.formatInteger(t.resvPrice, 0, 'COMMA')}">₩0</td>
-              <td><span class="status-pill3 pending" th:text="${@tr.label('resv.status', t.resvPayStatus)}">결제대기</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="checklist-empty" th:if="${#lists.isEmpty(pendingTxns)}" th:text="#{adm.rvd_pending_empty}">결제대기 내역이 없습니다.</div>
-      </div>
-    </div>
+    
 
     <div style="height:56px;"></div>
   </main>
