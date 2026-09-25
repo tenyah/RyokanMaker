@@ -50,6 +50,6 @@ public class AdminDashboardController {
 		model.addAttribute("roomShare", revenueService.getRoomShare(adminIdx, monthStart, monthEnd));
 		model.addAttribute("planSettlement", revenueService.getPlanSettlement(adminIdx, monthStart, monthEnd));
 
-		return "Admin/dashboard";
+		return "admin/dashboard";
 	}
 }

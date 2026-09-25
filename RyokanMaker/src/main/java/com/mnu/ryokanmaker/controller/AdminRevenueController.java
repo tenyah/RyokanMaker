@@ -83,7 +83,7 @@ public class AdminRevenueController {
 				: Math.round((summary.getTotalRevenue() - prevSummary.getTotalRevenue()) * 100.0 / prevSummary.getTotalRevenue()));
 		model.addAttribute("dowLabels", dowLabels());
 
-		return "Admin/revenue_monthly";
+		return "admin/revenue_monthly";
 	}
 
 	/** 일자별 매출조회 : period(today/week/month/lastmonth/custom)로 조회 기간을 정한다. */
@@ -116,7 +116,7 @@ public class AdminRevenueController {
 		model.addAttribute("methodStats", methodBreakdown(paid));
 		model.addAttribute("pendingCount", pending.size());
 
-		return "Admin/revenue_daily";
+		return "admin/revenue_daily";
 	}
 
 	/** 일자별 매출조회 화면과 동일한 조회 조건으로 엑셀(.xlsx) 다운로드. */
