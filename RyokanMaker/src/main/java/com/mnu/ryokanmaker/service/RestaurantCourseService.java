@@ -50,6 +50,10 @@ public class RestaurantCourseService {
 		}
 	}
 
+	public void toggleSale(Integer restaurantCourseIdx, Integer adminIdx, boolean onSale) {
+		restaurantCourseMapper.updateSaleYn(restaurantCourseIdx, adminIdx, onSale ? "Y" : "N");
+	}
+
 	public void deleteCourse(Integer restaurantCourseIdx, Integer adminIdx) {
 		restaurantCourseMapper.deleteCourse(restaurantCourseIdx, adminIdx);
 	}

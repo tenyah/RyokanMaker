@@ -10,6 +10,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -153,6 +154,7 @@ public class AdminController {
 		List<PlanSalesRowDto> salesGrid = planSalesService.getSalesGrid(loginAdmin.getAdminIdx(), rangeStart, STATUS_RANGE_DAYS);
 		model.addAttribute("planList", planService.getPlanList(loginAdmin.getAdminIdx()));
 		model.addAttribute("onsenList", onsenService.getOnsenList(loginAdmin.getAdminIdx()));
+		model.addAttribute("courseList", restaurantCourseService.getCourseList(loginAdmin.getAdminIdx()));
 		model.addAttribute("salesGrid", salesGrid);
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
@@ -564,12 +566,17 @@ public class AdminController {
 	@PostMapping("room_delete")
 	public String roomDelete(@RequestParam("roomIdx") Integer roomIdx,
 			@RequestParam(value = "redirectTo", required = false, defaultValue = "admin_info_register") String redirectTo,
-			HttpSession session) {
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
-		roomService.deleteRoom(roomIdx, loginAdmin.getAdminIdx());
+		try {
+			roomService.deleteRoom(roomIdx, loginAdmin.getAdminIdx());
+		} catch (DataIntegrityViolationException e) {
+			log.warn("객실 삭제 실패 - 예약이 있어 삭제할 수 없음: roomIdx={}", roomIdx);
+			redirectAttributes.addFlashAttribute("deleteError", "adm.ir_delete_in_use");
+		}
 		return roomRedirect(redirectTo);
 	}
 
@@ -619,12 +626,18 @@ public class AdminController {
 	}
 
 	@PostMapping("course_delete")
-	public String courseDelete(@RequestParam("restaurantCourseIdx") Integer restaurantCourseIdx, HttpSession session) {
+	public String courseDelete(@RequestParam("restaurantCourseIdx") Integer restaurantCourseIdx,
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
-		restaurantCourseService.deleteCourse(restaurantCourseIdx, loginAdmin.getAdminIdx());
+		try {
+			restaurantCourseService.deleteCourse(restaurantCourseIdx, loginAdmin.getAdminIdx());
+		} catch (DataIntegrityViolationException e) {
+			log.warn("코스 삭제 실패 - 예약이 있어 삭제할 수 없음: courseIdx={}", restaurantCourseIdx);
+			redirectAttributes.addFlashAttribute("deleteError", "adm.ir_delete_in_use");
+		}
 		return "redirect:/Admin/admin_info_register#section-meal";
 	}
 
@@ -651,12 +664,18 @@ public class AdminController {
 	}
 
 	@PostMapping("onsen_delete")
-	public String onsenDelete(@RequestParam("onsenIdx") Integer onsenIdx, HttpSession session) {
+	public String onsenDelete(@RequestParam("onsenIdx") Integer onsenIdx,
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
-		onsenService.deleteOnsen(onsenIdx, loginAdmin.getAdminIdx());
+		try {
+			onsenService.deleteOnsen(onsenIdx, loginAdmin.getAdminIdx());
+		} catch (DataIntegrityViolationException e) {
+			log.warn("온천 삭제 실패 - 예약이 있어 삭제할 수 없음: onsenIdx={}", onsenIdx);
+			redirectAttributes.addFlashAttribute("deleteError", "adm.ir_delete_in_use");
+		}
 		return "redirect:/Admin/admin_info_register#section-onsen";
 	}
 
@@ -684,12 +703,17 @@ public class AdminController {
 	@PostMapping("plan_delete")
 	public String planDelete(@RequestParam("planIdx") Integer planIdx,
 			@RequestParam(value = "redirectTo", required = false, defaultValue = "admin_info_register") String redirectTo,
-			HttpSession session) {
+			HttpSession session, RedirectAttributes redirectAttributes) {
 		AdminDto loginAdmin = currentAdmin(session);
 		if (loginAdmin == null) {
 			return "redirect:/Admin/admin_login";
 		}
-		planService.deletePlan(planIdx, loginAdmin.getAdminIdx());
+		try {
+			planService.deletePlan(planIdx, loginAdmin.getAdminIdx());
+		} catch (DataIntegrityViolationException e) {
+			log.warn("플랜 삭제 실패 - 예약이 있어 삭제할 수 없음: planIdx={}", planIdx);
+			redirectAttributes.addFlashAttribute("deleteError", "adm.ir_delete_in_use");
+		}
 		return planRedirect(redirectTo);
 	}
 
@@ -704,6 +728,18 @@ public class AdminController {
 		}
 		planService.toggleSale(planIdx, loginAdmin.getAdminIdx(), "Y".equals(planSaleYn));
 		return planRedirect(redirectTo);
+	}
+
+	@PostMapping("course_toggle_sale")
+	public String courseToggleSale(@RequestParam("restaurantCourseIdx") Integer restaurantCourseIdx,
+			@RequestParam("restaurantSaleYn") String restaurantSaleYn,
+			HttpSession session) {
+		AdminDto loginAdmin = currentAdmin(session);
+		if (loginAdmin == null) {
+			return "redirect:/Admin/admin_login";
+		}
+		restaurantCourseService.toggleSale(restaurantCourseIdx, loginAdmin.getAdminIdx(), "Y".equals(restaurantSaleYn));
+		return "redirect:/Admin/plan_sales";
 	}
 
 	@PostMapping("onsen_toggle_sale")

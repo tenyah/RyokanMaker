@@ -16,7 +16,7 @@
 		) VALUES (
 			#{adminIdx},
 			#{planName},
-			#{planImage},
+			#{planImage,jdbcType=CLOB},
 			#{planIncludesMeal},
 			#{planIncludesOnsen},
 			#{planInfo},

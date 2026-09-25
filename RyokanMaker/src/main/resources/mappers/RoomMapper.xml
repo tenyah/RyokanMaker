@@ -21,7 +21,7 @@
 			#{roomInfo},
 			#{roomPrice},
 			#{roomPeople},
-			#{roomImage},
+			#{roomImage,jdbcType=CLOB},
 			#{roomMemo}
 		)
 	</insert>

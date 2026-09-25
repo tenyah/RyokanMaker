@@ -171,6 +171,37 @@
     </div>
     <p th:if="${#lists.isEmpty(onsenList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;" th:text="#{adm.ps_onsen_empty}">등록된 온천이 없습니다. 정보 등록 화면에서 온천을 추가해 주세요.</p>
 
+    <div class="section-tag">
+      <div class="num">4</div>
+      <div class="label" th:text="#{adm.ps_course_sale}">식사 코스 판매 관리</div>
+      <div class="line"></div>
+    </div>
+
+    <div class="admin-plan-grid" th:if="${!#lists.isEmpty(courseList)}">
+
+      <div class="admin-plan-card" th:each="course : ${courseList}" th:classappend="${course.restaurantSaleYn != 'Y'} ? 'off'">
+        <div class="card-head">
+          <div class="badges">
+            <span class="badge" th:text="#{nav.dining}">식사</span>
+          </div>
+          <form th:action="@{/Admin/course_toggle_sale}" method="post">
+            <input type="hidden" name="restaurantCourseIdx" th:value="${course.restaurantCourseIdx}">
+            <input type="hidden" name="restaurantSaleYn" th:value="${course.restaurantSaleYn == 'Y'} ? 'N' : 'Y'">
+            <label class="toggle"><input type="checkbox" th:checked="${course.restaurantSaleYn == 'Y'}" onchange="this.form.submit()"><span class="track"></span></label>
+          </form>
+        </div>
+        <div class="card-body">
+          <h3 th:text="${@tr.t(course.restaurantCourseName)}">특선 가이세키</h3>
+          <p th:text="${course.restaurantCourseInfo != null and !course.restaurantCourseInfo.isEmpty()} ? ${@tr.t(course.restaurantCourseInfo)} : (${course.restaurantSaleYn == 'Y'} ? '' : #{adm.ps_stopped_now})">코스 설명</p>
+          <div class="price-row">
+            <div><span class="from" th:text="#{adm.ir_course_price}">코스 가격</span><span class="amount" th:text="${course.restaurantCoursePrice != null} ? '¥' + ${#numbers.formatInteger(course.restaurantCoursePrice, 0, 'COMMA')} : '-'">¥28,000</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p th:if="${#lists.isEmpty(courseList)}" style="color:var(--ink-faint);font-size:13px;padding:0 56px 24px;" th:text="#{adm.ps_course_empty}">등록된 식사 코스가 없습니다. 정보 등록 화면에서 코스를 추가해 주세요.</p>
+
     <!-- 페이지 맨 아래 여백 -->
     <div style="height:80px;"></div>
   </main>

@@ -14,7 +14,7 @@
 			RESTAURANT_COURSE_PRICE
 		) VALUES (
 			#{restaurantCourseName},
-			#{restaurantCourseImage},
+			#{restaurantCourseImage,jdbcType=CLOB},
 			#{restaurantCourseInfo},
 			#{adminIdx},
 			#{restaurantSaleYn},
@@ -58,5 +58,12 @@
 		WHERE RESTAURANT_SALE_YN = 'Y'
 		ORDER BY RESTAURANT_COURSE_IDX
 	</select>
+
+	<update id="updateSaleYn">
+		UPDATE RESTAURANT_COURSE
+		SET RESTAURANT_SALE_YN = #{restaurantSaleYn}
+		WHERE RESTAURANT_COURSE_IDX = #{restaurantCourseIdx}
+		  AND ADMIN_IDX = #{adminIdx}
+	</update>
 
 </mapper>

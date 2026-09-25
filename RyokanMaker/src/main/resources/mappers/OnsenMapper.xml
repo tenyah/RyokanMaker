@@ -28,7 +28,7 @@
 			ONSEN_PRICE
 		) VALUES (
 			#{onsenName},
-			#{onsenImage},
+			#{onsenImage,jdbcType=CLOB},
 			#{onsenInfo},
 			#{adminIdx},
 			#{onsenSaleYn},

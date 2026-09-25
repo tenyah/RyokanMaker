@@ -14,7 +14,7 @@
 			#{adminIdx},
 			#{facilityName},
 			#{facilityInfo},
-			#{facilityImage},
+			#{facilityImage,jdbcType=CLOB},
 			#{facilityMemo}
 		)
 	</insert>

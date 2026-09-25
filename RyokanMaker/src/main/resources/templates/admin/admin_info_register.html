@@ -158,7 +158,8 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
+        <div class="notice-banner" style="margin:0 0 14px;" th:if="${deleteError}" th:text="#{${deleteError}}">예약이 있어 삭제할 수 없습니다.</div>
 
         <div>
           <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.rs_registered(${#lists.size(roomList)})}">등록된 객실 (0)</div>
@@ -189,7 +190,7 @@
         </div>
 
         <div class="divider"></div>
-      </form>
+      </div>
 
       <!-- 새 객실 추가 / 수정 공용 폼 : roomIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
       <form class="form-card" id="roomForm" th:action="@{/Admin/room_save}" method="post" enctype="multipart/form-data">
@@ -250,7 +251,8 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
+        <div class="notice-banner" style="margin:0 0 14px;" th:if="${deleteError}" th:text="#{${deleteError}}">예약이 있어 삭제할 수 없습니다.</div>
 
         <div>
           <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.ir_reg_course(${#lists.size(courseList)})}">등록된 코스 (0)</div>
@@ -283,7 +285,7 @@
         </div>
 
         <div class="divider"></div>
-      </form>
+      </div>
 
       <!-- 새 코스 추가 / 수정 공용 폼 : restaurantCourseIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
       <form class="form-card" id="courseForm" th:action="@{/Admin/course_save}" method="post" enctype="multipart/form-data">
@@ -344,7 +346,8 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
+        <div class="notice-banner" style="margin:0 0 14px;" th:if="${deleteError}" th:text="#{${deleteError}}">예약이 있어 삭제할 수 없습니다.</div>
 
         <div>
           <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.ir_reg_onsen(${#lists.size(onsenList)})}">등록된 온천 (0)</div>
@@ -378,7 +381,7 @@
         </div>
 
         <div class="divider"></div>
-      </form>
+      </div>
 
       <!-- 새 온천 추가 / 수정 공용 폼 : onsenIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
       <form class="form-card" id="onsenForm" th:action="@{/Admin/onsen_save}" method="post" enctype="multipart/form-data">
@@ -460,7 +463,8 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
+        <div class="notice-banner" style="margin:0 0 14px;" th:if="${deleteError}" th:text="#{${deleteError}}">예약이 있어 삭제할 수 없습니다.</div>
 
         <div>
           <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.ir_reg_plan(${#lists.size(planList)})}">등록된 플랜 (0)</div>
@@ -493,7 +497,7 @@
         </div>
 
         <div class="divider"></div>
-      </form>
+      </div>
 
       <!-- 새 플랜 추가 / 수정 공용 폼 : planIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
       <form class="form-card" id="planForm" th:action="@{/Admin/plan_save}" method="post" enctype="multipart/form-data">
@@ -559,7 +563,7 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
 
         <div>
           <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.ir_reg_facility(${#lists.size(facilityList)})}">등록된 시설 (0)</div>
@@ -590,7 +594,7 @@
         </div>
 
         <div class="divider"></div>
-      </form>
+      </div>
 
       <!-- 새 시설 추가 / 수정 공용 폼 : facilityIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
       <!-- 참고: FACILITY 테이블엔 노출여부(SALE_YN) 컬럼이 없어서 다른 섹션과 달리 "사이트에 노출" 토글이 없음 -->
@@ -679,7 +683,7 @@
     </div>
 
     <div class="admin-section-body">
-      <form class="form-card">
+      <div class="form-card">
 
         <div>
           <div class="sub-label" style="margin-bottom:10px;" th:text="#{adm.ir_reg_notice(${#lists.size(noticeList)})}">등록된 공지사항 (0)</div>
@@ -707,7 +711,7 @@
         </div>
 
         <div class="divider"></div>
-      </form>
+      </div>
 
       <!-- 새 공지사항 추가 / 수정 공용 폼 : noticeIdx가 있으면 수정, 없으면 신규 등록 (upsert) -->
       <form class="form-card" id="noticeForm" th:action="@{/Admin/notice_save}" method="post">
