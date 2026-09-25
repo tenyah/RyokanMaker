@@ -137,7 +137,7 @@ public class AdminController {
 		model.addAttribute("textGroups", PageTextDefs.byGroup());
 		model.addAttribute("mailPasswordSet", adminService.hasMailPassword(loginAdmin.getAdminIdx()));
 		model.addAttribute("mailSecretAvailable", adminService.isMailSecretAvailable());
-		return "Admin/admin_info_register";
+		return "admin/admin_info_register";
 	}
 	@GetMapping("plan_sales")
 	public String planSales(@RequestParam(value = "rangeStart", required = false)
@@ -158,7 +158,7 @@ public class AdminController {
 		model.addAttribute("salesGrid", salesGrid);
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
-		return "Admin/plan_sales";
+		return "admin/plan_sales";
 	}
 
 	@GetMapping("room_status")
@@ -179,7 +179,7 @@ public class AdminController {
 		model.addAttribute("todayResvMap", roomStatusService.getTodayReservations(LocalDate.now()));
 		model.addAttribute("rangeStart", rangeStart);
 		model.addAttribute("rangeEnd", rangeStart.plusDays(STATUS_RANGE_DAYS - 1));
-		return "Admin/room_status";
+		return "admin/room_status";
 	}
 	@GetMapping("admin_inquiry")
 	public String adminInquiry(@RequestParam(value = "idx", required = false) Integer idx,
@@ -226,7 +226,7 @@ public class AdminController {
 			model.addAttribute("selectedInquiry", inquiryService.getInquiry(selectedIdx, adminIdx));
 		}
 
-		return "Admin/admin_inquiry";
+		return "admin/admin_inquiry";
 	}
 
 	/**
@@ -312,7 +312,7 @@ public class AdminController {
 			model.addAttribute("detail", detail);
 		}
 
-		return "Admin/admin_reservation";
+		return "admin/admin_reservation";
 	}
 
 	/** 예약 취소. 처리 후 보던 예약·페이지·필터 그대로 예약 현황으로 돌아간다. */
@@ -349,7 +349,7 @@ public class AdminController {
 	@GetMapping("admin_login")
 	public String adminLoginForm(HttpSession session) {
 		if (currentAdmin(session) == null) {
-			return "Admin/admin_login";
+			return "admin/admin_login";
 		}
 		return "redirect:/Admin/dashboard";
 	}
@@ -361,7 +361,7 @@ public class AdminController {
 		AdminDto admin = adminService.authenticate(adminId, adminPassword);
 		if (admin == null) {
 			model.addAttribute("error", "error.admin.login_failed");
-			return "Admin/admin_login";
+			return "admin/admin_login";
 		}
 		admin.setAdminPassword(null);
 		session.setAttribute("admin", admin);
@@ -380,7 +380,7 @@ public class AdminController {
 			return "redirect:/Admin/admin_login";
 		}
 		model.addAttribute("admin", loginAdmin);
-		return "Admin/admin_pwreset";
+		return "admin/admin_pwreset";
 	}
 
 	/**
@@ -401,14 +401,14 @@ public class AdminController {
 		if (!newPassword.equals(newPasswordConfirm)) {
 			model.addAttribute("admin", loginAdmin);
 			model.addAttribute("error", "error.admin.pw_mismatch");
-			return "Admin/admin_pwreset";
+			return "admin/admin_pwreset";
 		}
 
 		boolean success = adminService.changePassword(loginAdmin.getAdminIdx(), currentPassword, newPassword);
 		if (!success) {
 			model.addAttribute("admin", loginAdmin);
 			model.addAttribute("error", "error.admin.pw_current");
-			return "Admin/admin_pwreset";
+			return "admin/admin_pwreset";
 		}
 
 		loginAdmin.setPwResetYn("Y");
