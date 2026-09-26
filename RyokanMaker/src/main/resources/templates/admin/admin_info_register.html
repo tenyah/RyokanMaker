@@ -167,7 +167,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(roomList)}" th:text="#{adm.rs_empty}">등록된 객실이 없습니다.</div>
 
           <div class="list-item" th:each="room : ${roomList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo}">
+               th:attr="data-idx=${room.roomIdx},data-name=${room.roomName},data-level=${room.roomLevel},data-price=${room.roomPrice},data-people=${room.roomPeople},data-info=${room.roomInfo},data-memo=${room.roomMemo},data-images=${#strings.listJoin(room.imageUrls, '|')}">
             <div class="thumb">
               <img th:if="${room.thumbnailUrl != null}" th:src="@{${room.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${room.thumbnailUrl != null}" width="20" height="20"><use href="#i-image"/></svg>
@@ -260,7 +260,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(courseList)}" th:text="#{adm.ir_course_empty}">등록된 코스가 없습니다.</div>
 
           <div class="list-item" th:each="course : ${courseList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${course.restaurantCourseIdx},data-name=${course.restaurantCourseName},data-info=${course.restaurantCourseInfo},data-memo=${course.restaurantCourseMemo},data-price=${course.restaurantCoursePrice},data-sale=${course.restaurantSaleYn}">
+               th:attr="data-idx=${course.restaurantCourseIdx},data-name=${course.restaurantCourseName},data-info=${course.restaurantCourseInfo},data-memo=${course.restaurantCourseMemo},data-price=${course.restaurantCoursePrice},data-sale=${course.restaurantSaleYn},data-images=${#strings.listJoin(course.imageUrls, '|')}">
             <div class="thumb">
               <img th:if="${course.thumbnailUrl != null}" th:src="@{${course.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${course.thumbnailUrl != null}" width="20" height="20"><use href="#i-image"/></svg>
@@ -355,7 +355,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(onsenList)}" th:text="#{adm.ir_onsen_empty}">등록된 온천이 없습니다.</div>
 
           <div class="list-item" th:each="onsen : ${onsenList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${onsen.onsenIdx},data-name=${onsen.onsenName},data-info=${onsen.onsenInfo},data-memo=${onsen.onsenMemo},data-price=${onsen.onsenPrice},data-sale=${onsen.onsenSaleYn},data-start=${onsen.onsenStartTime},data-end=${onsen.onsenEndTime}">
+               th:attr="data-idx=${onsen.onsenIdx},data-name=${onsen.onsenName},data-info=${onsen.onsenInfo},data-memo=${onsen.onsenMemo},data-price=${onsen.onsenPrice},data-sale=${onsen.onsenSaleYn},data-start=${onsen.onsenStartTime},data-end=${onsen.onsenEndTime},data-images=${#strings.listJoin(onsen.imageUrls, '|')}">
             <div class="thumb">
               <img th:if="${onsen.thumbnailUrl != null}" th:src="@{${onsen.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${onsen.thumbnailUrl != null}" width="20" height="20"><use href="#i-image"/></svg>
@@ -472,7 +472,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(planList)}" th:text="#{adm.ps_empty}">등록된 플랜이 없습니다.</div>
 
           <div class="list-item" th:each="plan : ${planList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${plan.planIdx},data-name=${plan.planName},data-price=${plan.planPrice},data-info=${plan.planInfo},data-meal=${plan.planIncludesMeal},data-onsen=${plan.planIncludesOnsen}">
+               th:attr="data-idx=${plan.planIdx},data-name=${plan.planName},data-price=${plan.planPrice},data-info=${plan.planInfo},data-meal=${plan.planIncludesMeal},data-onsen=${plan.planIncludesOnsen},data-images=${#strings.listJoin(plan.imageUrls, '|')}">
             <div class="thumb">
               <img th:if="${plan.thumbnailUrl != null}" th:src="@{${plan.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${plan.thumbnailUrl != null}" width="20" height="20"><use href="#i-image"/></svg>
@@ -571,7 +571,7 @@
           <div class="img-hint" th:if="${#lists.isEmpty(facilityList)}" th:text="#{adm.ir_facility_empty}">등록된 시설이 없습니다.</div>
 
           <div class="list-item" th:each="facility : ${facilityList}" style="margin-bottom:10px;"
-               th:attr="data-idx=${facility.facilityIdx},data-name=${facility.facilityName},data-info=${facility.facilityInfo},data-memo=${facility.facilityMemo}">
+               th:attr="data-idx=${facility.facilityIdx},data-name=${facility.facilityName},data-info=${facility.facilityInfo},data-memo=${facility.facilityMemo},data-images=${#strings.listJoin(facility.imageUrls, '|')}">
             <div class="thumb">
               <img th:if="${facility.thumbnailUrl != null}" th:src="@{${facility.thumbnailUrl}}" style="width:100%;height:100%;object-fit:cover;">
               <svg th:unless="${facility.thumbnailUrl != null}" width="20" height="20"><use href="#i-facility"/></svg>
@@ -835,6 +835,20 @@ function updateImgGridCount(tile) {
   badge.textContent = filled + ' / ' + total;
 }
 
+/* 수정 버튼을 눌렀을 때 서버에 저장된 기존 이미지를 타일에 미리보기로 채운다.
+   (새 파일을 고르면 서버가 전체를 교체하므로, 그때는 위 change 핸들러가 기존 미리보기를 비운다) */
+var CTX_PATH = /*[[@{/}]]*/ '/';
+function loadExistingImages(form, item) {
+  var urls = (item.dataset.images || '').split('|').filter(Boolean);
+  var tiles = form.querySelectorAll('.img-grid .img-tile');
+  urls.forEach(function (url, i) {
+    if (!tiles[i]) return;
+    showTilePreview(tiles[i], CTX_PATH.replace(/\/$/, '') + url);
+    tiles[i].classList.add('existing');
+  });
+  if (tiles.length) updateImgGridCount(tiles[0]);
+}
+
 function showTilePreview(tile, dataUrl) {
   tile.classList.add('filled');
   tile.querySelectorAll('svg, span').forEach(function (el) { el.style.display = 'none'; });
@@ -853,6 +867,7 @@ function clearTilePreview(tile, isLogo) {
   var input = tile.querySelector('input[type="file"]');
   if (input) input.value = '';
   tile.classList.remove('filled');
+  tile.classList.remove('existing');
   tile.style.backgroundImage = '';
   var removeBtn = tile.querySelector('.remove');
   if (removeBtn && !isLogo) removeBtn.remove();
@@ -870,6 +885,8 @@ document.addEventListener('change', function (e) {
 
   var reader = new FileReader();
   reader.onload = function (ev) {
+    var grid = tile.closest('.img-grid');
+    if (grid) grid.querySelectorAll('.img-tile.existing').forEach(function (t) { clearTilePreview(t, false); });
     showTilePreview(tile, ev.target.result);
     updateImgGridCount(tile);
   };
@@ -901,6 +918,7 @@ function clearImageGrids(form) {
 function editRoom(btn) {
   var item = btn.closest('.list-item');
   clearImageGrids(document.getElementById('roomForm'));
+  loadExistingImages(document.getElementById('roomForm'), item);
   document.getElementById('roomIdx').value = item.dataset.idx;
   document.getElementById('roomName').value = item.dataset.name || '';
   document.getElementById('roomLevel').value = item.dataset.level || '';
@@ -927,6 +945,7 @@ function resetRoomForm() {
 function editCourse(btn) {
   var item = btn.closest('.list-item');
   clearImageGrids(document.getElementById('courseForm'));
+  loadExistingImages(document.getElementById('courseForm'), item);
   document.getElementById('restaurantCourseIdx').value = item.dataset.idx;
   document.getElementById('restaurantCourseName').value = item.dataset.name || '';
   document.getElementById('restaurantCourseInfo').value = item.dataset.info || '';
@@ -952,6 +971,7 @@ function resetCourseForm() {
 function editOnsen(btn) {
   var item = btn.closest('.list-item');
   clearImageGrids(document.getElementById('onsenForm'));
+  loadExistingImages(document.getElementById('onsenForm'), item);
   document.getElementById('onsenIdx').value = item.dataset.idx;
   document.getElementById('onsenName').value = item.dataset.name || '';
   document.getElementById('onsenInfo').value = item.dataset.info || '';
@@ -979,6 +999,7 @@ function resetOnsenForm() {
 function editPlan(btn) {
   var item = btn.closest('.list-item');
   clearImageGrids(document.getElementById('planForm'));
+  loadExistingImages(document.getElementById('planForm'), item);
   document.getElementById('planIdx').value = item.dataset.idx;
   document.getElementById('planName').value = item.dataset.name || '';
   document.getElementById('planPrice').value = item.dataset.price || '';
@@ -1004,6 +1025,7 @@ function resetPlanForm() {
 function editFacility(btn) {
   var item = btn.closest('.list-item');
   clearImageGrids(document.getElementById('facilityForm'));
+  loadExistingImages(document.getElementById('facilityForm'), item);
   document.getElementById('facilityIdx').value = item.dataset.idx;
   document.getElementById('facilityName').value = item.dataset.name || '';
   document.getElementById('facilityInfo').value = item.dataset.info || '';

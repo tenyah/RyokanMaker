@@ -27,4 +27,9 @@ public class AdminPlanDto {
     public String getThumbnailUrl() {
         return ImageJsonUtil.firstPath(planImage);
     }
+
+    /** 정보등록 수정 폼의 이미지 미리보기용. planImage(경로 JSON 배열)의 전체 이미지 경로 목록. */
+    public java.util.List<String> getImageUrls() {
+        return ImageJsonUtil.parsePaths(planImage);
+    }
 }

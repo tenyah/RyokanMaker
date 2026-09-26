@@ -16,7 +16,7 @@
 
   <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='dashboard', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=false)}"></div>
 
-  <main class="admin-main"
+  <main class="admin-main rev-main"
         th:with="_p1=${@tr.prefetch(todayCheckIns, 'roomName', 'planName')}, _p2=${@tr.prefetch(todayCheckOuts, 'roomName', 'planName')}, _p3=${@tr.prefetch(roomShare, 'roomName')}, _p4=${@tr.prefetch(planSettlement, 'planName')}">
 
     <div class="admin-head" style="display:flex;align-items:flex-end;justify-content:space-between;">
@@ -152,7 +152,10 @@
 
 <script th:inline="javascript">
 /*<![CDATA[*/
-const GOLD = '#B79966', GOLD_DEEP = '#8F7748', GOLD_PALE = '#F1E7D3', INK_SOFT = '#6E675C', INK_FAINT = '#A79E8F', LINE = '#EDE6D8', MAINT = '#F3ECE3', BG_SOFT = '#F7F5F0';
+// 차트 팔레트: 브라운 일변도에서 벗어나되 튀지 않도록 채도를 낮춘 남색·세이지·앰버·테라코타·후지·회청 톤
+const INDIGO = '#4F6D8F', SAGE = '#7FA38F', AMBER = '#D9A066', TERRACOTTA = '#B0736B', WISTERIA = '#8B7FB0', SLATE = '#9AA5AD';
+const CHART_PALETTE = [INDIGO, SAGE, AMBER, TERRACOTTA, WISTERIA, SLATE];
+const INK_SOFT = '#6E675C', LINE = '#EDE6D8';
 
 const locale = /*[[${#locale.language}]]*/ 'ko';
 const axisDivisor = locale === 'en' ? 1000 : 10000;
@@ -169,8 +172,8 @@ new Chart(document.getElementById('chartMonthly'), {
   data: {
     labels: trend.map(p => monthLabel(p.month)),
     datasets: [
-      { label: thisYearLabel, type: 'bar', data: trend.map(p => p.currentYearAmount), backgroundColor: GOLD, borderRadius: 3, order: 2 },
-      { label: lastYearLabel, type: 'line', data: trend.map(p => p.prevYearAmount), borderColor: INK_SOFT, backgroundColor: 'transparent', borderDash: [5,4], tension: 0.3, order: 1, pointRadius: 3 }
+      { label: thisYearLabel, type: 'bar', data: trend.map(p => p.currentYearAmount), backgroundColor: INDIGO, borderRadius: 3, order: 2 },
+      { label: lastYearLabel, type: 'line', data: trend.map(p => p.prevYearAmount), borderColor: AMBER, backgroundColor: AMBER, borderDash: [5,4], tension: 0.3, order: 1, pointRadius: 3 }
     ]
   },
   options: {
@@ -184,7 +187,7 @@ new Chart(document.getElementById('chartMonthly'), {
 });
 
 const roomShare = /*[[${roomShare}]]*/ [];
-const roomPalette = [GOLD_DEEP, GOLD, INK_FAINT, GOLD_PALE, MAINT, BG_SOFT];
+const roomPalette = CHART_PALETTE;
 new Chart(document.getElementById('chartRoom'), {
   type: 'doughnut',
   data: {
@@ -199,7 +202,7 @@ new Chart(document.getElementById('chartPlan'), {
   type: 'bar',
   data: {
     labels: planSettlement.map(p => p.planName),
-    datasets: [{ data: planSettlement.map(p => p.amount), backgroundColor: GOLD, borderRadius: 3, barThickness: 16 }]
+    datasets: [{ data: planSettlement.map(p => p.amount), backgroundColor: planSettlement.map((p, i) => CHART_PALETTE[i % CHART_PALETTE.length]), borderRadius: 3, barThickness: 16 }]
   },
   options: {
     indexAxis: 'y', responsive: true, maintainAspectRatio: false,

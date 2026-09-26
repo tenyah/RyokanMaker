@@ -16,7 +16,7 @@
 
   <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='revenue_monthly', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=true)}"></div>
 
-  <main class="admin-main">
+  <main class="admin-main rev-main">
 
     <div class="admin-head">
       <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue}">매출현황</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue_monthly}">월매출조회</span></div>
@@ -109,7 +109,9 @@
 
 <script th:inline="javascript">
 /*<![CDATA[*/
-const GOLD = '#B79966', GOLD_DEEP = '#8F7748', INK_SOFT = '#6E675C', LINE = '#EDE6D8';
+// 차트 팔레트: 브라운 일변도에서 벗어나되 튀지 않도록 채도를 낮춘 남색·앰버 톤 (대시보드와 동일)
+const INDIGO = '#4F6D8F', INDIGO_LIGHT = '#9DB4CC', AMBER = '#D9A066';
+const LINE = '#EDE6D8';
 
 const locale = /*[[${#locale.language}]]*/ 'ko';
 const axisDivisor = locale === 'en' ? 1000 : 10000;
@@ -125,8 +127,8 @@ new Chart(document.getElementById('chartMonthly'), {
   data: {
     labels: trend.map(p => monthLabelFn(p.month)),
     datasets: [
-      { label: thisYearLabel, type: 'bar', data: trend.map(p => p.currentYearAmount), backgroundColor: GOLD, borderRadius: 3, order: 2 },
-      { label: lastYearLabel, type: 'line', data: trend.map(p => p.prevYearAmount), borderColor: INK_SOFT, backgroundColor: 'transparent', borderDash: [5,4], tension: 0.3, order: 1, pointRadius: 3 }
+      { label: thisYearLabel, type: 'bar', data: trend.map(p => p.currentYearAmount), backgroundColor: INDIGO, borderRadius: 3, order: 2 },
+      { label: lastYearLabel, type: 'line', data: trend.map(p => p.prevYearAmount), borderColor: AMBER, backgroundColor: AMBER, borderDash: [5,4], tension: 0.3, order: 1, pointRadius: 3 }
     ]
   },
   options: {
@@ -141,7 +143,7 @@ new Chart(document.getElementById('chartMonthly'), {
 
 const dowTotals = /*[[${summary.dowTotals}]]*/ [0,0,0,0,0,0,0];
 const dowChartLabels = /*[[${dowLabels}]]*/ ['일','월','화','수','목','금','토'];
-const dowColors = dowTotals.map((_, idx) => (idx === 5 || idx === 6) ? GOLD_DEEP : GOLD);
+const dowColors = dowTotals.map((_, idx) => (idx === 5 || idx === 6) ? INDIGO : INDIGO_LIGHT);
 new Chart(document.getElementById('chartDow'), {
   type: 'bar',
   data: { labels: dowChartLabels, datasets: [{ data: dowTotals, backgroundColor: dowColors, borderRadius: 3, barThickness: 34 }] },

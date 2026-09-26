@@ -40,15 +40,8 @@
       <p th:text="#{adm.inq_desc}">사이트 문의하기를 통해 접수된 고객 문의를 확인하고 답변합니다.</p>
     </div>
 
-    <!-- 통계 타일 -->
-    <div class="stat-grid cols-4" style="margin:0 56px 20px;">
-      <div class="stat-tile"><div class="label" th:text="#{adm.inq_total}">전체 문의</div><div class="value" th:text="${totalCount}">0</div></div>
-      <div class="stat-tile accent-warn"><div class="label" th:text="#{adm.inq_unanswered}">미답변</div><div class="value" th:text="${pendingCount}">0</div></div>
-      <div class="stat-tile accent-gold"><div class="label" th:text="#{adm.inq_answered}">답변완료</div><div class="value" th:text="${answeredCount}">0</div></div>
-    </div>
-
-    <!-- 필터 바 -->
-    <div class="search-bar" style="margin:0 56px 18px;">
+    <!-- 필터 바 (전체/미답변/답변완료 건수 표시를 겸함) -->
+    <div class="search-bar" style="margin:24px 56px 18px;">
       <a class="search-field" th:href="@{/Admin/admin_inquiry}" style="text-decoration:none;">
         <div class="field-label" th:text="#{adm.all}">전체</div>
         <div class="field-value" th:style="${statusFilter == null} ? 'color:var(--gold-deep);font-weight:500;' : ''" th:text="#{adm.count(${totalCount})}">0건</div>

@@ -15,7 +15,7 @@
 
   <div th:replace="~{admin/fragments/admin_shell :: admin_sidebar(activePage='revenue_daily', showInfoSubmenu=false, showRequestsLink=false, showRevenueSubmenu=true)}"></div>
 
-  <main class="admin-main" th:with="_p1=${@tr.prefetch(paidTxns, 'roomName', 'planName')}, _p2=${@tr.prefetch(pendingTxns, 'roomName', 'planName')}">
+  <main class="admin-main rev-main" th:with="_p1=${@tr.prefetch(paidTxns, 'roomName', 'planName')}, _p2=${@tr.prefetch(pendingTxns, 'roomName', 'planName')}">
 
     <div class="admin-head">
       <div class="crumb"><span th:text="#{adm.admin}">관리자</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue}">매출현황</span> &nbsp;/&nbsp; <span th:text="#{adm.revenue_daily}">일자별 매출조회</span></div>
@@ -50,10 +50,10 @@
            th:text="#{adm.rvd_export}">엑셀 다운로드</a>
       </div>
       <div class="period-filter">
-        <a class="pf-btn" th:classappend="${period == 'month'} ? 'active'" th:href="@{/Admin/revenue_daily(period='month')}" th:text="#{adm.rvd_period_month}">이번달</a>
-        <a class="pf-btn" th:classappend="${period == 'today'} ? 'active'" th:href="@{/Admin/revenue_daily(period='today')}" th:text="#{adm.rvd_period_today}">오늘</a>
-        <a class="pf-btn" th:classappend="${period == 'week'} ? 'active'" th:href="@{/Admin/revenue_daily(period='week')}" th:text="#{adm.rvd_period_week}">이번주</a>
         <a class="pf-btn" th:classappend="${period == 'lastmonth'} ? 'active'" th:href="@{/Admin/revenue_daily(period='lastmonth')}" th:text="#{adm.rvd_period_lastmonth}">지난달</a>
+        <a class="pf-btn" th:classappend="${period == 'month'} ? 'active'" th:href="@{/Admin/revenue_daily(period='month')}" th:text="#{adm.rvd_period_month}">이번달</a>
+        <a class="pf-btn" th:classappend="${period == 'week'} ? 'active'" th:href="@{/Admin/revenue_daily(period='week')}" th:text="#{adm.rvd_period_week}">이번주</a>
+        <a class="pf-btn" th:classappend="${period == 'today'} ? 'active'" th:href="@{/Admin/revenue_daily(period='today')}" th:text="#{adm.rvd_period_today}">오늘</a>
         <form th:action="@{/Admin/revenue_daily}" method="get">
           <input type="hidden" name="period" value="custom">
           <span th:text="#{adm.rvd_period_custom}">직접 지정</span>

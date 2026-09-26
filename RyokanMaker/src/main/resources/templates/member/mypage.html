@@ -129,17 +129,18 @@
       <input type="text" name="userAddress" th:value="${member.userAddress}" required>
     </div>
 
-    <div class="form-actions">
-      <button type="submit" class="btn-gold" th:text="#{common.save}">저장</button>
+    <div class="form-actions" style="padding-bottom:64px;">
+      <!-- 두 버튼을 같은 가로 폭으로 맞춘다 (언어별 글자 수가 달라도 더 긴 쪽에 맞춰 동일 폭) -->
+      <div style="display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:16px;">
+        <button type="submit" class="btn-gold" th:text="#{common.save}">저장</button>
+        <!-- 회원탈퇴 폼은 정보 수정 폼 안에 중첩할 수 없어서 form 속성으로 아래 별도 폼에 연결 -->
+        <button type="submit" form="withdrawForm" class="btn-danger" th:text="#{mypage.withdraw}">회원탈퇴</button>
+      </div>
     </div>
   </form>
 
-  <div class="content-actions" style="padding-bottom: 64px;">
-    <form th:action="@{/member/withdraw}" method="post"
-          th:data-confirm="#{mypage.withdraw_confirm}" onsubmit="return confirm(this.dataset.confirm);">
-      <button type="submit" class="btn-line" style="color:var(--warn); border-color:var(--warn);" th:text="#{mypage.withdraw}">회원탈퇴</button>
-    </form>
-  </div>
+  <form id="withdrawForm" th:action="@{/member/withdraw}" method="post"
+        th:data-confirm="#{mypage.withdraw_confirm}" onsubmit="return confirm(this.dataset.confirm);"></form>
 
   <div th:replace="~{include/footer :: footer}"></div>
 

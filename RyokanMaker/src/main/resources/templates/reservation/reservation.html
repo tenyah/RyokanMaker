@@ -111,10 +111,10 @@
 			th:with="mealStep=${selectedPlan.planIncludesMeal == 'Y'} ? 2 : 0,
                 onsenStep=${selectedPlan.planIncludesOnsen == 'Y'} ? (${selectedPlan.planIncludesMeal == 'Y'} ? 3 : 2) : 0">
 
-			<!-- ② 식사(플랜) 선택 : 이 플랜에 식사가 포함된 경우에만 표시 -->
+			<!-- ② 식사 선택 : 이 플랜에 식사가 포함된 경우에만 표시 -->
 			<div th:if="${selectedPlan.planIncludesMeal == 'Y'}">
 				<div class="section-tag">
-					<span class="num" th:text="${mealStep}">2</span><span class="label" th:text="#{resv.step_meal}">식사(플랜) 선택</span><span class="line"></span>
+					<span class="num" th:text="${mealStep}">2</span><span class="label" th:text="#{resv.step_meal}">식사 선택</span><span class="line"></span>
 				</div>
 
 <section class="course-grid">

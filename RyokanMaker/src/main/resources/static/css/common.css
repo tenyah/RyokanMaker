@@ -68,6 +68,15 @@ img { max-width: 100%; display: block; }
 }
 .btn-line:hover { border-color: var(--gold-deep); color: var(--gold-deep); }
 
+/* .btn-gold와 같은 크기의 붉은 바탕 버튼 (회원탈퇴 등) */
+.btn-danger {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--warn); color: #FFFFFF; font-family: var(--sans);
+  font-size: 14px; letter-spacing: 0.08em; padding: 14px 34px; font-weight: 400;
+  border-radius: 0; border: 1px solid var(--warn); white-space: nowrap; cursor: pointer;
+}
+.btn-danger:hover { background: #963F1D; border-color: #963F1D; color: #FFFFFF; }
+
 /* ---------------- 헤더 ---------------- */
 .site-header {
   position: relative; z-index: 5;
@@ -290,7 +299,8 @@ img { max-width: 100%; display: block; }
 
 /* ---------------- 식사 코스 카드 ---------------- */
 .course-grid {
-  padding: 0 56px 40px;
+  margin: 0 56px 40px;
+  padding: 0 0 12px;
   display: flex;
   gap: 40px;
   overflow-x: auto;
@@ -415,6 +425,7 @@ img { max-width: 100%; display: block; }
 .admin-head h1 { font-family: var(--serif); font-weight: 400; font-size: 32px; color: var(--ink); margin: 0 0 14px; }
 .admin-head .rule { width: 36px; height: 1px; background: var(--gold); margin-bottom: 16px; }
 .admin-head p { font-size: 14px; font-weight: 300; color: var(--ink-soft); max-width: 640px; line-height: 1.8; margin: 0; }
+.admin-head p.wide { max-width: none; }
 
 .notice-banner { margin: 0 56px 8px; background: var(--warn-bg); color: var(--warn); font-size: 12.5px; font-weight: 400; padding: 13px 18px; }
 
@@ -466,6 +477,8 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--line); border-top: none; border-right: none; display: flex; align-items: center;
   justify-content: center; color: var(--ink-faint);
 }
+/* 수정 폼에 불러온 서버 저장 이미지는 개별 삭제가 없다(새로 올리면 전체 교체) */
+.img-tile.existing .remove { display: none; }
 .img-hint { font-size: 11px; color: var(--ink-faint); margin-top: 9px; }
 
 /* ---------------- 등록된 항목 리스트 ---------------- */
@@ -738,6 +751,8 @@ img { max-width: 100%; display: block; }
    관리자 - 대시보드 / 매출현황 전용 스타일
    ============================================================ */
 
+/* KPI(.stat-grid)와 좌우 여백·가로 길이를 맞추고, KPI와의 사이에 공백을 둔다 */
+.rev-main > .panel { margin: 24px 56px 0; }
 .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 56px 0; }
 .panel-row .panel { margin: 0; }
 .chart-box { position: relative; height: 260px; }
