@@ -26,12 +26,12 @@
       </div>
     </div>
     <nav>
-      <a th:href="@{/rooms}" th:text="#{nav.rooms}">객실</a>
-      <a th:href="@{/onsen}" th:text="#{nav.onsen}">온천</a>
-      <a th:href="@{/dining}" th:text="#{nav.dining}">식사</a>
-      <a th:href="@{/facility}" th:text="#{nav.facility}">시설</a>
-      <a th:href="@{/access}" th:text="#{nav.access}">교통안내</a>
-      <a th:href="@{/inquiry/list}" th:text="#{nav.contact}">문의하기</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/rooms'}" th:text="#{nav.rooms}">객실</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/onsen'}" th:text="#{nav.onsen}">온천</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/dining'}" th:text="#{nav.dining}">식사</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/facility'}" th:text="#{nav.facility}">시설</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/access'}" th:text="#{nav.access}">교통안내</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/inquiry/list'}" th:text="#{nav.contact}">문의하기</a>
     </nav>
   </div>
   <div class="divider"></div>

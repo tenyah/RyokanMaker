@@ -68,6 +68,63 @@
 
 ---
 
+## 관리자 언어전환 버그 수정, 회원가입 필수표시, 비밀번호 찾기, 관리자 메일 직접발송, 인코딩/i18n 버그 수정 (2026-09-21~22)
+
+**1. 관리자 언어 전환 버튼이 동작하지 않던 버그:** 관리자 로그인/비밀번호 변경/공통 헤더의 KO·EN·JA 버튼을 눌러도 아무 반응이 없었음. 원인은 인라인 `onclick`의 `new URL(location.href)` 호출 — 그 스크립트 실행 컨텍스트에서 `URL`이 브라우저 기본 생성자가 아니라 `document.URL`(문자열)로 먼저 잡혀 `URL is not a constructor` 예외가 났던 것(서버 쪽 `?lang=` 처리 자체는 정상이었음). `new window.URL(...)`로 고쳐서 해결, 실제 EN 버튼 클릭까지 재현해 확인함.
+
+**2. 회원가입 필수 항목 표시:** 필수 8개 항목(이메일/비밀번호/닉네임/영문 이름/국가/연락처/우편번호/주소) 라벨에 붉은 `★` 추가, 선택 항목(일본어 이름)은 제외. 폼 위에 안내 문구(ko/en/ja) 추가. `common.css`에 `.req`/`.req-note` 스타일 신규.
+
+**3. 회원 비밀번호 찾기 (임시 비밀번호 메일) 신규 구현:**
+- 로그인 화면에 "비밀번호를 잊으셨나요?" 링크 → `/member/forgot`에서 가입 이메일 입력 시 임시 비밀번호(10자리) 발급 후 메일 발송, 로그인 후 마이페이지에서 변경하도록 안내.
+- **안전장치:** 메일 발송에 성공한 뒤에만 DB 비밀번호를 바꿈(실패 시 기존 비밀번호 유지) / 가입 여부와 무관하게 같은 안내를 보여줘서 가입 여부 노출 방지 / 같은 이메일 1분 쿨다운(남용 방지).
+- `MemberMapper.updatePassword` 신규(비밀번호만 변경), `MemberService.sendTempPassword()`.
+
+**4. 손님에게 가는 메일을 료칸 관리자 메일 주소로 직접 발송:** 처음엔 플랫폼 공용 Gmail 계정(june47087 개인 계정)으로만 발송했는데, 사용자가 "관리자 계정 메일로 보내야 맞다"고 판단 → 료칸별 관리자 메일(`ADMIN.ADMIN_MAIL`)에서 **료칸 이름을 보낸 사람 이름으로** 직접 발송하도록 변경.
+- **DB:** `ADMIN.MAIL_APP_PASSWORD VARCHAR2(500)` 컬럼 추가 (`sql/admin_mail_password.sql`). ERDCloud에도 반영 필요(사용자에게 안내).
+- **보안:** Gmail 앱 비밀번호는 평문 저장 대신 `SecretCipher`(AES-256-GCM, 키는 환경변수 `MAIL_SECRET_KEY`에서 SHA-256으로 생성)로 암호화해 저장. 관리자 화면(정보등록 > "메일 발송 설정")에 입력하면 저장되고, 저장된 값은 화면에 다시 보여주지 않음.
+- **동작:** 관리자 메일+앱 비밀번호가 등록돼 있으면 그 계정으로 직접 SMTP 발송(`JavaMailSenderImpl`을 동적으로 생성), 없거나 발송 실패 시 플랫폼 공용 계정(`spring.mail.*`)으로 대체. 관리자 계정 승인/신청 알림 메일(플랫폼이 신청자에게 보내는 것)은 기존 방식 그대로 유지 — 손님 메일에만 이 기능 적용.
+- **검증:** 로컬에 가짜 SMTP 서버(순수 소켓)를 띄워 실제 로그인 계정·From 헤더·보낸 사람 이름·본문 내용까지 확인(암호화 왕복/다른키 거부/평문 노출 없음도 별도 확인). 임시 회원 2명으로 전체 흐름(성공/메일실패/미가입/쿨다운) 검증 후 삭제.
+- **아직 안 된 것:** DB 컬럼 추가, `MAIL_SECRET_KEY` 환경변수 설정, 관리자 화면에서 실제 앱 비밀번호 등록은 사용자가 직접 해야 함. 현재 Gmail 주소만 지원.
+
+**5. Eclipse 인코딩 문제:** 팀원 환경에서 `messages*.properties`가 깨져 보인다는 문의 → 파일 자체는 UTF-8로 정상 저장돼 있음을 바이트 단위로 확인, 원인은 `.settings/`(Eclipse 로컬 설정, git 미추적)에만 UTF-8 지정이 있고 팀에는 공유가 안 됐던 것. `pom.xml`에 `project.build.sourceEncoding`/`project.reporting.outputEncoding=UTF-8` 추가 — 이후 Maven 프로젝트 업데이트(Alt+F5) 한 번이면 Eclipse가 자동으로 인코딩을 맞춤. 빌드/런타임 영향 없음.
+
+**6. 관리자 신청폼(`admin_apply.html`) 이메일 라벨 미반영 버그:** 이메일 옆에 안내 문구("개인 이메일이 아닌 료칸 이메일...")를 적어도 화면에 안 나온다는 문의 → `th:text="#{member.email}"`이 태그 안의 정적 텍스트를 항상 메시지 값("이메일")으로 덮어쓰는 것이 원인. 전용 키 `adm.apply_email_label`로 분리하고 ko/en/ja 번역을 추가해 해결.
+
+**7. 메시지 파일 중복 키 버그 (6번 작업 중 발견):** `messages_en.properties`/`messages_ja.properties`에 `adm.apply_email_label`이 각각 두 번 정의되어 있었고, 뒤에 오는 줄(둘 다 한국어 원문, `\uXXXX` 이스케이프 형태)이 앞서 넣은 정확한 번역을 덮어써서 **EN/JA 화면에서도 한국어로 표시**되던 버그. `\uXXXX` 이스케이프로 자동 변환되어 들어간 흔적으로 보아 Eclipse의 리소스번들 편집기가 백그라운드에서 파일을 건드린 것으로 추정(이 세션 내내 반복된 "파일이 디스크에서 바뀌었다" 알림과 같은 원인일 가능성). 중복 줄 제거로 해결, 전체 키 중복 여부 재검사(`sort | uniq -d`) 통과, 3개 언어 실제 렌더링 결과(한글/영문/가나 문자 종류)로 재확인.
+
+**검증 방식(공통):** 실제 DB/실제 컴파일에 대해 임시 MockMvc 테스트(커밋 안 함)로 확인 후 즉시 삭제하는 방식을 계속 사용. `mvnw clean compile` 확인 완료.
+
+**다음에 확인할 것:** ERDCloud에 `ADMIN.MAIL_APP_PASSWORD VARCHAR2(500)` 컬럼 추가 필요. `Test`를 받는 팀원 DB에도 `sql/admin_mail_password.sql` 실행 필요. 리소스번들 자동 동기화가 의심되는 Eclipse 플러그인이 있다면, 이후에도 비슷한 중복 키 버그가 재발할 수 있으니 확인 권장.
+
+**8. RESERVATION 테이블에 예약자 정보 5종 + 국적/전화 2종 추가 (사용자 직접 DDL 실행):** 회원 계정으로 로그인해도 실제 예약자는 다른 사람일 수 있다는 이유로, `RESV_FIRST_NAME_EN`/`RESV_LAST_NAME_EN`/`RESV_LAST_NAME_JP`/`RESV_FIRST_NAME_JP`/`RESV_MAIL`(예약자 이름·이메일, 일본어 이름만 선택)과 `RESV_COUNTRY`(FK → `COUNTRY_CODE`)/`RESV_TEL`을 회원 정보와 별개로 예약 건마다 저장하도록 컬럼 추가. 기존 테스트 예약 16건이 있어 처음엔 NOT NULL이 안 걸렸고(ORA-02296), 테스트 데이터라 판단해 자식 테이블(`ROOM_RESERVATION`/`RESTAURANT_RESERVATION`/`ONSEN_RESERVATION`) 포함 전부 삭제 후 NOT NULL로 재적용(일본어 이름 2개만 선택 유지). SQL Developer에서 내보낸 최신 DDL로 실제 반영 확인. **코드(예약 저장 로직, 결제 폼 연동)는 아직 미착수 — 다른 담당자가 진행 예정.**
+
+---
+
+## 경로 기반 멀티테넌시 구현: 료칸별 독립 사이트/회원 지원 (2026-09-29)
+
+**배경:** 지금까지는 손님 화면(`/`, `/rooms`, `/member/*` 등)이 전부 관리자 1번(清流庵) 데이터로 고정돼 있어서, 관리자 계정 신청·승인으로 새 료칸(관리자)이 생겨도 그 료칸의 손님용 사이트를 보여줄 방법이 없었음(관리자 로그인 뒤편 화면은 이미 `session`의 `adminIdx` 기준이라 다중 관리자였지만, 손님이 보는 앞단은 아니었음). "새 관리자가 생기면 독립된 사이트를 주고, 손님도 료칸별로 따로 가입/로그인할 수 있어야 한다"는 요구로 진행.
+
+**방식 결정:** 서브도메인 대신 **경로 기반**(`/r/{adminId}/...`, `adminId`=`ADMIN.ADMIN_ID`)을 채택 — 지금 인프라(EC2 하나, 도메인 하나)로 바로 가능하고 DNS 작업이 필요 없음.
+
+**구조:**
+- `TenantInterceptor`: `/r/{adminId}/**` 요청에서 경로변수 `adminId`로 `AdminService.findByAdminId()` 조회 → `request` attribute(`resolvedTenant`)에 저장. 없는 `adminId`면 404. `GlobalModelAdvice`가 이 값을 `siteInfo` 모델 속성으로 노출해서 템플릿은 기존과 거의 동일하게 사용.
+- `RootController`: `/`는 옛 북마크/QR 호환용으로 관리자 1번의 `/r/{adminId}`로 리다이렉트만 함.
+- **MEMBER 복합키:** `(ADMIN_IDX, USER_MAIL)`로 바꿔 같은 이메일도 료칸마다 독립 회원. DB 마이그레이션은 `sql/multi_tenant_member.sql`(가드 처리돼 있어 여러 번 실행해도 안전), **EC2 Oracle DB에 이미 적용 완료**.
+- **세션 키 분리:** `"loginMember:" + adminId`로 분리해서 한 브라우저(두 탭 등)에서 여러 료칸에 동시 로그인해도 서로 안 섞임. 로그아웃/탈퇴도 그 료칸 세션 키만 지우고 `session.invalidate()`는 쓰지 않음(다른 료칸 로그인이나 관리자 세션까지 끊기지 않도록).
+- **손님 화면 데이터 격리:** 객실/온천/식사코스/플랜의 "판매중 목록" 조회(`findAllOnSale`), 공지 미리보기, 문의 목록/상세/삭제/답변, 1번 관리자 고정이던 7개 컨트롤러(`ReservationController`/`SiteController`/`AccessController`/`InquiryController`/`NoticeController`/`PaymentController`/`GlobalModelAdvice`) 전부 `adminId`로 찾은 테넌트의 `adminIdx`를 쓰도록 변경.
+- 관리자 화면(`/Admin/**`)은 원래부터 세션의 로그인 관리자 `adminIdx` 기준이라 변경 없음.
+
+**병합 중 발견해서 같이 고친 것 (`Test`에는 있고 이 브랜치 갈라진 시점엔 없던 최근 기능들):**
+- **마이페이지 예약 취소**(`MemberService.cancelReservation`)가 `userMail`만 확인하고 `adminIdx`는 확인하지 않던 것을 발견 — `RESV_NUM`은 전체 료칸에 걸쳐 유일한 값이라, 같은 이메일이 다른 료칸에도 있으면 그 예약번호로 다른 료칸 예약을 취소시킬 수 있었음. `cancelReservation(adminIdx, resvNum, userMail)`로 바꾸고 `selectReservationHeader`가 돌려주는 `adminIdx`까지 같이 확인하도록 수정.
+- `MemberController.reservationCancel()`이 옛 세션 키(`"loginMember"`)와 옛 리다이렉트(`/member/login`)를 그대로 쓰고 있던 것을 발견 — 테넌트 조회/세션 키/리다이렉트를 다른 메서드들과 같은 패턴으로 통일.
+- `member/mypage.html`의 예약 취소 버튼 폼(`@{/member/reservation_cancel}`)이 `/r/{adminId}` 접두어 없이 남아있던 것을 발견해 수정.
+- `RestaurantCourseMapper`에 최근 추가된 `updateSaleYn`(식사 코스 판매중지 토글)은 유지하고, `findAllOnSale()`만 `findAllOnSale(adminIdx)`로 교체(둘 다 살림).
+
+**검증:** `mvnw clean compile` BUILD SUCCESS. 커밋 메시지 기준 실제 EC2에서 크로스 테넌트 가입/로그인 격리까지 확인됐다고 기록되어 있음. **이번 병합으로 되살린 예약 취소 관련 수정 3건은 아직 이 세션에서 재검증하지 않음 — 서버 띄워서 두 료칸으로 직접 확인 필요.**
+
+
+---
+
 ## 메일 계정을 application.properties에 평문으로 복원 (2026-09-22, 미커밋)
 
 **증상:** 회원가입 시 `MailAuthenticationException: failed to connect, no password specified?` — 가입은 정상, 가입 완료 메일만 실패. 원인은 Choiyeongsu13이 바꿔둔 `spring.mail.username/password=${MAIL_USERNAME:}/${MAIL_PASSWORD:}`인데 이 PC엔 환경변수가 없어 둘 다 빈 값. `EmailService.send()`는 계정이 비었는지 확인하지 않고 Gmail 접속을 시도하므로 **"조용히 건너뜀"이 아니라 매번 WARN + 긴 스택을 남긴다**(앞 항목의 "조용히 건너뜀" 서술은 틀림).
@@ -384,6 +441,9 @@
 - plan_sales 온천 카드/토글 실제 동작 확인.
 - 아직 push 안 함 (`origin/june47087-byte`).
 - 결제 예약 저장(ORA-17004 수정 후) 골든패스 검증, 온천/식사 예약 테이블 저장 미구현 등은 그대로 남아 있음.
+
+---
+
 ## 관리자가 손님 화면 소개·설명 문구를 수정하는 기능 (PAGE_CONTENT) (2026-09-21)
 
 **배경:** 페이지마다 소개·설명 문구가 `messages*.properties`(코드)에 박혀 있어 관리자가 고칠 수 없었음. 특히 교통안내는 버스 노선·요금이 바뀔 수 있는 내용인데 `ADMIN.RYOKAN_ACCESS` 한 줄(당시 33자)뿐이었음. 브랜치 `Choiyeongsu13` (Test에는 아직 미반영).

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class PageContentService {
 
     private static final Logger log = LoggerFactory.getLogger(PageContentService.class);
 
-    /** 사이트가 단일 료칸 기준이라 손님 화면은 이 관리자의 문구를 보여준다 (다른 컨트롤러의 MAIN_ADMIN_IDX와 같은 가정). */
+    /** /r/{adminId} 밖(관리자 패널 등)에서 부득이하게 필요할 때만 쓰는 기본값. */
     public static final int SITE_ADMIN_IDX = 1;
 
     private static final int MAX_BYTES = 1000;
@@ -31,8 +32,9 @@ public class PageContentService {
     @Autowired
     private PageContentMapper pageContentMapper;
 
-    private volatile Map<String, String> siteCache = Collections.emptyMap();
-    private volatile long siteLoadedAt = 0L;
+    // 료칸(adminIdx)마다 별도로 캐시한다 - 단일 캐시였으면 두 번째 료칸이 첫 번째 료칸 문구를 보게 됨
+    private final Map<Integer, Map<String, String>> siteCache = new ConcurrentHashMap<>();
+    private final Map<Integer, Long> siteLoadedAt = new ConcurrentHashMap<>();
 
     /**
      * 키 → 문구 맵. 테이블이 없거나 DB가 불안정해도 화면이 죽지 않도록 빈 맵을 돌려주고,
@@ -52,18 +54,15 @@ public class PageContentService {
         return map;
     }
 
-    /** 손님 화면용. 매 요소마다 DB를 치지 않도록 짧게 캐시하고, 저장 시 바로 비운다. */
-    public Map<String, String> getSiteMap() {
+    /** 손님 화면용. 료칸(adminIdx)별로 매 요소마다 DB를 치지 않도록 짧게 캐시하고, 저장 시 바로 비운다. */
+    public Map<String, String> getSiteMap(Integer adminIdx) {
         long now = System.currentTimeMillis();
-        if (now - siteLoadedAt > CACHE_MILLIS) {
-            synchronized (this) {
-                if (now - siteLoadedAt > CACHE_MILLIS) {
-                    siteCache = getMap(SITE_ADMIN_IDX);
-                    siteLoadedAt = System.currentTimeMillis();
-                }
-            }
+        Long loadedAt = siteLoadedAt.get(adminIdx);
+        if (loadedAt == null || now - loadedAt > CACHE_MILLIS) {
+            siteCache.put(adminIdx, getMap(adminIdx));
+            siteLoadedAt.put(adminIdx, now);
         }
-        return siteCache;
+        return siteCache.getOrDefault(adminIdx, Collections.emptyMap());
     }
 
     /**
@@ -86,7 +85,7 @@ public class PageContentService {
                 }
             }
         } finally {
-            siteLoadedAt = 0L;
+            siteLoadedAt.remove(adminIdx);
         }
     }
 

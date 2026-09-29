@@ -18,8 +18,8 @@ public class InquiryService {
     private EmailService emailService;
 
     /** 로그인한 회원이 작성한 문의 내역 (마이페이지 - 1:1 문의) */
-    public List<InquiryDto> listByMember(String userMail) {
-        return inquiryMapper.selectListByUserMail(userMail);
+    public List<InquiryDto> listByMember(Integer adminIdx, String userMail) {
+        return inquiryMapper.selectListByUserMail(adminIdx, userMail);
     }
 
     public InquiryDto select(int inquiryIdx) {
@@ -30,10 +30,13 @@ public class InquiryService {
         return inquiryMapper.insert(inquiryDto);
     }
 
-    /** 문의 삭제 - 본인 글이 맞는지 확인 후 삭제. 본인 글이 아니거나 없으면 false. */
-    public boolean delete(int inquiryIdx, String userMail) {
+    /**
+     * 문의 삭제 - 본인(같은 adminIdx + userMail) 글이 맞는지 확인 후 삭제. 본인 글이 아니거나 없으면 false.
+     * 같은 이메일이 다른 료칸의 회원일 수도 있으므로 userMail만으로는 판단하지 않는다.
+     */
+    public boolean delete(int inquiryIdx, Integer adminIdx, String userMail) {
         InquiryDto inquiry = inquiryMapper.selectByIdx(inquiryIdx);
-        if (inquiry == null || !inquiry.getUserMail().equals(userMail)) {
+        if (inquiry == null || !inquiry.getUserMail().equals(userMail) || !inquiry.getAdminIdx().equals(adminIdx)) {
             return false;
         }
         inquiryMapper.deleteByIdx(inquiryIdx);

@@ -30,7 +30,7 @@
     </div>
   </div>
 
-  <form class="form-card" th:action="@{/member/login}" method="post">
+  <form class="form-card" th:action="@{'/r/' + ${siteInfo.adminId} + '/member/login'}" method="post">
 
     <div class="form-row">
       <label class="field-label" th:text="#{member.email}">이메일</label>
@@ -44,10 +44,10 @@
 
     <div class="form-actions">
       <button type="submit" class="btn-gold" th:text="#{nav.login}">로그인</button>
-      <a class="btn-line" th:href="@{/member/signup}" th:text="#{nav.signup}">회원가입</a>
+      <a class="btn-line" th:href="@{'/r/' + ${siteInfo.adminId} + '/member/signup'}" th:text="#{nav.signup}">회원가입</a>
     </div>
     <div style="text-align:center; margin-top:14px; font-size:13px;">
-      <a th:href="@{/member/forgot}" th:text="#{member.forgot_link}">비밀번호를 잊으셨나요?</a>
+      <a th:href="@{'/r/' + ${siteInfo.adminId} + '/member/forgot'}" th:text="#{member.forgot_link}">비밀번호를 잊으셨나요?</a>
     </div>
   </form>
 

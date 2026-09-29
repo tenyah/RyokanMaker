@@ -23,7 +23,7 @@
 
 		<!-- 검색 조건 바 -->
 		<section style="padding: 32px 56px 0;">
-			<form class="search-bar" th:action="@{/reservation/reservation}" method="get">
+			<form class="search-bar" th:action="@{'/r/' + ${siteInfo.adminId} + '/reservation/reservation'}" method="get">
 				<input type="hidden" name="planCode" th:value="${selectedPlan.planIdx}">
 
 				<div class="search-field">
@@ -217,7 +217,8 @@
 			style="padding: 24px 56px 56px; display: flex; justify-content: center;">
 			<button type="button" id="goPaymentBtn" class="btn-gold"
 				style="border: none; cursor: pointer; padding: 18px 56px; font-size: 15px;"
-				th:attr="data-plan-code=${selectedPlan.planIdx},
+				th:attr="data-payment-url=@{'/r/' + ${siteInfo.adminId} + '/payment'},
+                         data-plan-code=${selectedPlan.planIdx},
                          data-plan-price=${selectedPlan.planPrice},
                          data-check-in=${searchCondition.checkIn},
                          data-check-out=${searchCondition.checkOut},
@@ -275,7 +276,7 @@
 					params.append('onsen', r.value);
 				});
 
-				window.location.href = '/payment?' + params.toString();
+				window.location.href = this.getAttribute('data-payment-url') + '?' + params.toString();
 			});
 
 			// 온천 날짜 목록은 첫날만 펼쳐서 시작

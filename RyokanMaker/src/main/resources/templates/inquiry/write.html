@@ -18,7 +18,7 @@
     <p class="desc" th:text="${@pt.t('INQUIRY_WRITE_DESC')}">궁금하신 점을 남겨주시면 확인 후 답변드리겠습니다.</p>
   </section>
 
-  <form class="form-card" th:action="@{/inquiry/write}" method="post">
+  <form class="form-card" th:action="@{'/r/' + ${siteInfo.adminId} + '/inquiry/write'}" method="post">
     <input type="hidden" name="adminIdx" th:value="${adminIdx}">
 
     <div class="form-row">
@@ -33,7 +33,7 @@
 
     <div class="form-actions">
       <button type="submit" class="btn-gold" th:text="#{inquiry.submit}">문의 등록</button>
-      <a class="btn-line" th:href="@{/inquiry/list}" th:text="#{common.cancel}">취소</a>
+      <a class="btn-line" th:href="@{'/r/' + ${siteInfo.adminId} + '/inquiry/list'}" th:text="#{common.cancel}">취소</a>
     </div>
   </form>
 

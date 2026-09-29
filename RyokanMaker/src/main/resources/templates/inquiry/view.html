@@ -41,8 +41,8 @@
     </div>
 
     <div class="content-actions">
-      <a class="btn-line" th:href="@{/inquiry/list}" th:text="#{common.list}">목록으로</a>
-      <form th:action="@{/inquiry/delete}" method="post" th:data-confirm="#{inquiry.delete_confirm}" onsubmit="return confirm(this.dataset.confirm);">
+      <a class="btn-line" th:href="@{'/r/' + ${siteInfo.adminId} + '/inquiry/list'}" th:text="#{common.list}">목록으로</a>
+      <form th:action="@{'/r/' + ${siteInfo.adminId} + '/inquiry/delete'}" method="post" th:data-confirm="#{inquiry.delete_confirm}" onsubmit="return confirm(this.dataset.confirm);">
         <input type="hidden" name="idx" th:value="${inquiry.inquiryIdx}">
         <button type="submit" class="btn-line" style="color:var(--warn); border-color:var(--warn);" th:text="#{common.delete}">삭제</button>
       </form>

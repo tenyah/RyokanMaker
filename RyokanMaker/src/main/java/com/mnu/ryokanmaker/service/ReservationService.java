@@ -49,12 +49,12 @@ public class ReservationService {
     @Autowired
     private OnsenMapper onsenMapper;
 
-    public List<AdminPlanDto> getAllPlans() {
-        return planMapper.findAllOnSale();
+    public List<AdminPlanDto> getAllPlans(Integer adminIdx) {
+        return planMapper.findAllOnSale(adminIdx);
     }
 
-    public List<RestaurantCourseDto> getCourses() {
-        List<RestaurantCourseDto> courses = restaurantCourseMapper.findAllOnSale();
+    public List<RestaurantCourseDto> getCourses(Integer adminIdx) {
+        List<RestaurantCourseDto> courses = restaurantCourseMapper.findAllOnSale(adminIdx);
         int basePrice = courses.stream().mapToInt(c -> priceOf(c.getRestaurantCoursePrice())).min().orElse(0);
         for (RestaurantCourseDto c : courses) {
             c.setExtraCharge(priceOf(c.getRestaurantCoursePrice()) - basePrice);
@@ -68,16 +68,16 @@ public class ReservationService {
         return price == null ? 0 : price;
     }
 
-    public List<RoomAvailabilityDto> getRoomAvailability(LocalDate checkIn, LocalDate checkOut,
+    public List<RoomAvailabilityDto> getRoomAvailability(Integer adminIdx, LocalDate checkIn, LocalDate checkOut,
                                                           int adultCount, int childCount) {
         int requestedPeople = adultCount + childCount;
         List<RoomReservationDto> reserved = roomReservationMapper.findOverlapping(checkIn, checkOut);
 
-        Long basePrice = roomMapper.findMinPrice(); // 현재 판매중인 방 중 최저가 — 플랜 가격에 이미 포함된 금액
+        Long basePrice = roomMapper.findMinPrice(adminIdx); // 현재 판매중인 방 중 최저가 — 플랜 가격에 이미 포함된 금액
         if (basePrice == null) basePrice = 0L;
 
         List<RoomAvailabilityDto> rooms = new ArrayList<>();
-        for (RoomDto room : roomMapper.findAllOnSale()) {
+        for (RoomDto room : roomMapper.findAllOnSale(adminIdx)) {
             if (room.getRoomPeople() < requestedPeople) {
                 continue;
             }
@@ -93,9 +93,10 @@ public class ReservationService {
     }
 
     /** 숙박 기간의 매일(체크인 ~ 체크아웃 전날)마다 온천/시간대 선택표를 만든다. */
-    public List<OnsenDayDto> getOnsenDays(LocalDate checkIn, LocalDate checkOut) {
-        List<OnsenDto> onsenList = onsenMapper.findAllOnSale();
-        // 이미 예약된 칸: "날짜|온천idx|시간" 형태로 모아 두고 칸마다 조회한다
+    public List<OnsenDayDto> getOnsenDays(Integer adminIdx, LocalDate checkIn, LocalDate checkOut) {
+        List<OnsenDto> onsenList = onsenMapper.findAllOnSale(adminIdx);
+        // 이미 예약된 칸: "날짜|온천idx|시간" 형태로 모아 두고 칸마다 조회한다.
+        // ONSEN_IDX는 전체 료칸을 통틀어 유일한 값이라 다른 료칸의 온천과 섞일 일은 없다.
         Set<String> reserved = new HashSet<>();
         for (OnsenPickDto r : onsenMapper.findReservedSlots(checkIn, checkOut)) {
             reserved.add(slotKey(r.getDate(), r.getOnsenIdx(), r.getTimeSlot()));
@@ -159,17 +160,17 @@ public class ReservationService {
      *   + (선택한 코스 가격 - 판매중 코스 최저가) x 숙박 일수   ※ courseIdx가 있을 때만
      *   + 날짜별로 고른 온천마다 (온천 가격 - 판매중 온천 최저가)
      */
-    public Integer calculateFinalPrice(Integer planIdx, Integer roomIdx, Integer courseIdx, List<OnsenPickDto> onsenPicks, int nights) {
-        return calculatePriceBreakdown(planIdx, roomIdx, courseIdx, onsenPicks, nights).getTotal();
+    public Integer calculateFinalPrice(Integer adminIdx, Integer planIdx, Integer roomIdx, Integer courseIdx, List<OnsenPickDto> onsenPicks, int nights) {
+        return calculatePriceBreakdown(adminIdx, planIdx, roomIdx, courseIdx, onsenPicks, nights).getTotal();
     }
 
     /** 결제금액을 플랜 요금 / 객실 추가 / 코스 추가 / 온천 추가로 나눠서 계산한다. */
     /** 코스 추가요금은 1박 기준 차액 x 숙박 일수. */
-    public PriceBreakdownDto calculatePriceBreakdown(Integer planIdx, Integer roomIdx, Integer courseIdx, List<OnsenPickDto> onsenPicks, int nights) {
+    public PriceBreakdownDto calculatePriceBreakdown(Integer adminIdx, Integer planIdx, Integer roomIdx, Integer courseIdx, List<OnsenPickDto> onsenPicks, int nights) {
         AdminPlanDto plan = planMapper.findById(planIdx);
         RoomDto room = roomMapper.findById(roomIdx);
 
-        Long basePrice = roomMapper.findMinPrice();
+        Long basePrice = roomMapper.findMinPrice(adminIdx);
         if (basePrice == null) basePrice = 0L;
 
         int planFee = plan.getPlanPrice().intValue();
@@ -177,14 +178,14 @@ public class ReservationService {
 
         Integer courseExtra = null;
         if (courseIdx != null) {
-            courseExtra = getCourses().stream()
+            courseExtra = getCourses(adminIdx).stream()
                     .filter(c -> courseIdx.equals(c.getRestaurantCourseIdx()))
                     .mapToInt(RestaurantCourseDto::getExtraCharge).findFirst().orElse(0) * nights;
         }
 
         Integer onsenExtra = null;
         if (onsenPicks != null && !onsenPicks.isEmpty()) {
-            List<OnsenDto> onsenList = onsenMapper.findAllOnSale();
+            List<OnsenDto> onsenList = onsenMapper.findAllOnSale(adminIdx);
             int onsenBasePrice = onsenList.stream().mapToInt(o -> priceOf(o.getOnsenPrice())).min().orElse(0);
             int sum = 0;
             for (OnsenPickDto pick : onsenPicks) {

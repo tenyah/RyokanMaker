@@ -22,6 +22,9 @@ import com.mnu.ryokanmaker.service.ExchangeRateService;
 import com.mnu.ryokanmaker.service.PaymentReservationService;
 import com.mnu.ryokanmaker.service.ReservationService;
 import com.mnu.ryokanmaker.service.TossPaymentService;
+import com.mnu.ryokanmaker.config.TenantInterceptor;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +38,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -58,6 +63,7 @@ import java.util.UUID;
  * RESERVATION/ROOM_RESERVATION의 USER_MAIL이 MEMBER를 FK로 참조하므로 로그인 회원만 예약할 수 있다.
  */
 @Controller
+@RequestMapping("/r/{adminId}")
 public class PaymentController {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
@@ -112,7 +118,9 @@ public class PaymentController {
      * 결제 페이지로 이동을 누르면 그 선택값이 쿼리 파라미터로 여기에 전달된다.
      */
     @GetMapping("/payment")
-    public String payment(@RequestParam String planCode,
+    public String payment(@PathVariable String adminId,
+                           HttpServletRequest request,
+                           @RequestParam String planCode,
                            @RequestParam Long roomIdx,
                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkIn,
                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOut,
@@ -124,15 +132,20 @@ public class PaymentController {
                            @RequestParam(required = false) List<String> onsen,
                            Model model, HttpSession session) {
 
-        MemberDto member = loginMember(session);
+        MemberDto member = loginMember(session, adminId);
         if (member == null) {
-            return "redirect:/member/login";
+            return "redirect:/r/" + adminId + "/member/login";
         }
+        Integer tenantAdminIdx = TenantInterceptor.currentTenant(request).getAdminIdx();
 
         AdminPlanDto plan = planMapper.findById(Integer.valueOf(planCode));
         RoomDto room = roomMapper.findById(roomIdx.intValue());
+        // 이 료칸 소유가 아닌 방 번호를 다른 료칸 경로로 넘겨서 예약하는 것을 막는다
+        if (room == null || !room.getAdminIdx().equals(tenantAdminIdx)) {
+            return "redirect:/r/" + adminId + "/reservation/plan";
+        }
         RestaurantCourseDto course = courseIdx != null
-                ? restaurantCourseMapper.findAllOnSale().stream()
+                ? restaurantCourseMapper.findAllOnSale(tenantAdminIdx).stream()
                         .filter(c -> c.getRestaurantCourseIdx().equals(courseIdx.intValue()))
                         .findFirst().orElse(null)
                 : null;
@@ -142,7 +155,7 @@ public class PaymentController {
         List<OnsenPickDto> onsenPicks = reservationService.parseOnsenPicks(onsen, checkIn, checkOut);
         int nights = (int) ChronoUnit.DAYS.between(checkIn, checkOut);
         PriceBreakdownDto priceJpy = reservationService.calculatePriceBreakdown(
-                Integer.valueOf(planCode), roomIdx.intValue(),
+                tenantAdminIdx, Integer.valueOf(planCode), roomIdx.intValue(),
                 courseIdx != null ? courseIdx.intValue() : null,
                 onsenPicks, nights);
 
@@ -215,8 +228,8 @@ public class PaymentController {
      */
     @PostMapping("/payment/prepare")
     @ResponseBody
-    public ResponseEntity<String> prepare(@ModelAttribute GuestInfoForm guestInfoForm, HttpSession session) {
-        MemberDto member = loginMember(session);
+    public ResponseEntity<String> prepare(@PathVariable String adminId, @ModelAttribute GuestInfoForm guestInfoForm, HttpSession session) {
+        MemberDto member = loginMember(session, adminId);
         if (member == null) {
             return ResponseEntity.status(401).body("login required");
         }
@@ -257,7 +270,8 @@ public class PaymentController {
     }
 
     @GetMapping("/payment/success")
-    public String success(@RequestParam String paymentKey,
+    public String success(@PathVariable String adminId,
+                           @RequestParam String paymentKey,
                            @RequestParam String orderId,
                            @RequestParam int amount,
                            HttpSession session,
@@ -275,7 +289,7 @@ public class PaymentController {
         Object method = result.get("method");
         paymentReservationService.markAsPaid(orderId, method != null ? method.toString() : null);
 
-        sendReservationMail(session, orderId);
+        sendReservationMail(session, adminId, orderId);
 
         session.removeAttribute(SESSION_RESERVATION_CONTEXT + orderId);
 
@@ -295,8 +309,8 @@ public class PaymentController {
     }
 
     /** 결제 승인 후 예약 완료 메일 발송. 세션이 만료돼 예약 정보를 못 찾으면 건너뛴다(예약 자체는 이미 저장됨). */
-    private void sendReservationMail(HttpSession session, String orderId) {
-        MemberDto member = loginMember(session);
+    private void sendReservationMail(HttpSession session, String adminId, String orderId) {
+        MemberDto member = loginMember(session, adminId);
         ReservationContext context = (ReservationContext) session.getAttribute(SESSION_RESERVATION_CONTEXT + orderId);
         if (context == null) {
             log.warn("예약 완료 메일 생략: 세션에 예약 정보가 없음 (orderId={})", orderId);
@@ -326,8 +340,8 @@ public class PaymentController {
         }
     }
 
-    private MemberDto loginMember(HttpSession session) {
-        return (MemberDto) session.getAttribute("loginMember");
+    private MemberDto loginMember(HttpSession session, String adminId) {
+        return (MemberDto) session.getAttribute(TenantInterceptor.memberSessionKey(adminId));
     }
 
     // ---------------------------------------------------------------

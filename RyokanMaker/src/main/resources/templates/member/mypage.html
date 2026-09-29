@@ -52,7 +52,7 @@
           <td th:text="#{common.price(${#numbers.formatInteger(r.resvPrice, 0, 'COMMA')})}">848,508원</td>
           <td th:text="${@tr.label('resv.status', r.resvStatus)}">예약완료</td>
           <td>
-            <form th:unless="${r.resvStatus == '예약취소'}" th:action="@{/member/reservation_cancel}" method="post" style="margin:0;"
+            <form th:unless="${r.resvStatus == '예약취소'}" th:action="@{'/r/' + ${siteInfo.adminId} + '/member/reservation_cancel'}" method="post" style="margin:0;"
                   th:data-confirm="#{mypage.resv_cancel_confirm}"
                   onsubmit="return confirm(this.dataset.confirm);">
               <input type="hidden" name="resvNum" th:value="${r.resvNum}">
@@ -73,7 +73,7 @@
     </div>
   </div>
 
-  <form class="form-card" th:action="@{/member/mypage}" method="post">
+  <form class="form-card" th:action="@{'/r/' + ${siteInfo.adminId} + '/member/mypage'}" method="post">
 
     <div class="form-row">
       <label class="field-label" th:text="#{member.email_id}">이메일 (아이디)</label>
@@ -139,7 +139,7 @@
     </div>
   </form>
 
-  <form id="withdrawForm" th:action="@{/member/withdraw}" method="post"
+  <form id="withdrawForm" th:action="@{'/r/' + ${siteInfo.adminId} + '/member/withdraw'}" method="post"
         th:data-confirm="#{mypage.withdraw_confirm}" onsubmit="return confirm(this.dataset.confirm);"></form>
 
   <div th:replace="~{include/footer :: footer}"></div>

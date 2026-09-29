@@ -13,9 +13,9 @@
         <result column="INQUIRY_CREATED_AT"     property="inquiryCreatedAt"/>
     </resultMap>
 
-    <select id="selectListByUserMail" parameterType="string" resultMap="inquiryResultMap">
+    <select id="selectListByUserMail" resultMap="inquiryResultMap">
         SELECT * FROM INQUIRY
-        WHERE USER_MAIL = #{userMail}
+        WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
         ORDER BY INQUIRY_IDX DESC
     </select>
 
@@ -33,8 +33,8 @@
         DELETE FROM INQUIRY WHERE INQUIRY_IDX = #{inquiryIdx}
     </delete>
 
-    <delete id="deleteByUserMail" parameterType="string">
-        DELETE FROM INQUIRY WHERE USER_MAIL = #{userMail}
+    <delete id="deleteByUserMail">
+        DELETE FROM INQUIRY WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
     </delete>
 
     <!-- 미답변을 위로, 그 다음 최신순으로 정렬해서 관리자가 처리할 문의를 먼저 보게 함.

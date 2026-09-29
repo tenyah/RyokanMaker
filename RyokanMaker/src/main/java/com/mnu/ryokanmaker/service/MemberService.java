@@ -46,43 +46,47 @@ public class MemberService {
     /**
      * 비밀번호 찾기 - 가입된 이메일이면 임시 비밀번호를 만들어 메일로 보내고 비밀번호를 그 값으로 바꾼다.
      * 메일 발송에 성공한 뒤에만 DB를 바꾸므로, 메일이 실패해도 기존 비밀번호가 그대로 유지된다.
-     * 가입 여부를 밖에서 알 수 없도록 결과를 반환하지 않고, 같은 이메일로 1분 안에 다시 요청하면 무시한다
+     * 가입 여부를 밖에서 알 수 없도록 결과를 반환하지 않고, 같은 (료칸, 이메일)로 1분 안에 다시 요청하면 무시한다
      * (남이 계속 요청해서 비밀번호를 바꿔버리는 것을 막기 위해).
      */
-    public void sendTempPassword(String userMail) {
+    public void sendTempPassword(Integer adminIdx, String userMail) {
         if (userMail == null || userMail.isBlank()) {
             return;
         }
         String mail = userMail.strip();
+        String cooldownKey = adminIdx + ":" + mail;
         long now = System.currentTimeMillis();
-        Long last = lastTempPwRequest.get(mail);
+        Long last = lastTempPwRequest.get(cooldownKey);
         if (last != null && now - last < TEMP_PW_COOLDOWN_MILLIS) {
             return;
         }
-        lastTempPwRequest.put(mail, now);
+        lastTempPwRequest.put(cooldownKey, now);
 
-        MemberDto member = memberMapper.selectByUserMail(mail);
+        MemberDto member = memberMapper.selectByUserMail(adminIdx, mail);
         if (member == null) {
             return;
         }
         String tempPassword = PasswordUtil.generateTempPassword();
         emailService.sendMemberTempPassword(mail, member.getUserNickname(), tempPassword);
-        memberMapper.updatePassword(mail, PasswordUtil.sha256(tempPassword));
+        memberMapper.updatePassword(adminIdx, mail, PasswordUtil.sha256(tempPassword));
     }
 
     /** 마이페이지 - 내 예약 현황 */
-    public List<AdminReservationListItemDto> getReservationHistory(String userMail) {
-        return reservationMapper.selectReservationListByUserMail(userMail);
+    public List<AdminReservationListItemDto> getReservationHistory(Integer adminIdx, String userMail) {
+        return reservationMapper.selectReservationListByUserMail(adminIdx, userMail);
     }
 
     /**
      * 마이페이지 - 본인 예약 취소. AdminReservationService.cancelReservation과 같은 흐름이지만
-     * 소유자 확인 기준이 adminIdx가 아니라 userMail(로그인한 회원 본인)이다.
+     * 소유자 확인 기준이 (adminIdx, userMail) 둘 다 로그인한 회원 본인과 일치해야 한다.
+     * adminIdx까지 확인해야 하는 이유: MEMBER가 (adminIdx, userMail) 복합키라 같은 이메일이
+     * 다른 료칸에도 존재할 수 있고, resvNum은 전체 료칸에 걸쳐 유일한 값이라 다른 료칸 예약의
+     * resvNum을 넣으면 userMail만 확인해서는 걸러지지 않기 때문이다.
      */
     @Transactional
-    public void cancelReservation(Integer resvNum, String userMail) {
+    public void cancelReservation(Integer adminIdx, Integer resvNum, String userMail) {
         ReservationDto header = reservationMapper.selectReservationHeader(resvNum);
-        if (header == null || !userMail.equals(header.getUserMail())) {
+        if (header == null || !adminIdx.equals(header.getAdminIdx()) || !userMail.equals(header.getUserMail())) {
             throw new IllegalArgumentException("예약을 찾을 수 없습니다: resvNum=" + resvNum);
         }
         if (PaymentReservationService.STATUS_CANCELLED.equals(header.getResvStatus())) {
@@ -100,8 +104,8 @@ public class MemberService {
         reservationMapper.cancelOnsenReservations(resvNum, userMail, cancelled);
     }
 
-    public boolean existsByUserMail(String userMail) {
-        return memberMapper.selectByUserMail(userMail) != null;
+    public boolean existsByUserMail(Integer adminIdx, String userMail) {
+        return memberMapper.selectByUserMail(adminIdx, userMail) != null;
     }
 
     /** 회원가입 폼의 국가 선택 드롭다운 채우기용 (COUNTRY_CODE 테이블) */
@@ -119,9 +123,9 @@ public class MemberService {
         emailService.sendSignupComplete(memberDto.getUserMail(), memberDto.getUserNickname());
     }
 
-    /** 로그인 : 이메일/비밀번호가 맞으면 회원 정보를, 아니면 null을 반환 */
-    public MemberDto authenticate(String userMail, String userPassword) {
-        MemberDto member = memberMapper.selectByUserMail(userMail);
+    /** 로그인 : (료칸, 이메일, 비밀번호)가 맞으면 회원 정보를, 아니면 null을 반환 */
+    public MemberDto authenticate(Integer adminIdx, String userMail, String userPassword) {
+        MemberDto member = memberMapper.selectByUserMail(adminIdx, userMail);
         if (member == null) {
             return null;
         }
@@ -131,18 +135,18 @@ public class MemberService {
         return member;
     }
 
-    public MemberDto findByUserMail(String userMail) {
-        return memberMapper.selectByUserMail(userMail);
+    public MemberDto findByUserMail(Integer adminIdx, String userMail) {
+        return memberMapper.selectByUserMail(adminIdx, userMail);
     }
 
     /**
      * 마이페이지 정보 수정. newPassword가 비어있으면 기존 비밀번호를 그대로 유지.
-     * memberDto에는 userMail만 채워져 있어도 되고, 나머지는 이 메서드가 DB에서 채운 뒤 덮어씀.
+     * memberDto에는 adminIdx/userMail만 채워져 있어도 되고, 나머지는 이 메서드가 DB에서 채운 뒤 덮어씀.
      */
     public MemberDto updateProfile(MemberDto memberDto, String newPassword) {
         String passwordToSave;
         if (newPassword == null || newPassword.isBlank()) {
-            MemberDto current = memberMapper.selectByUserMail(memberDto.getUserMail());
+            MemberDto current = memberMapper.selectByUserMail(memberDto.getAdminIdx(), memberDto.getUserMail());
             passwordToSave = current.getUserPassword();
         } else {
             passwordToSave = PasswordUtil.sha256(newPassword);
@@ -158,12 +162,12 @@ public class MemberService {
      * 도중에 하나라도 실패하면 전체 롤백되도록 트랜잭션으로 묶는다.
      */
     @Transactional
-    public void withdraw(String userMail) {
-        reservationMapper.deleteRoomReservationsByUserMail(userMail);
-        reservationMapper.deleteOnsenReservationsByUserMail(userMail);
-        reservationMapper.deleteRestaurantReservationsByUserMail(userMail);
-        reservationMapper.deleteReservationsByUserMail(userMail);
-        inquiryMapper.deleteByUserMail(userMail);
-        memberMapper.deleteByUserMail(userMail);
+    public void withdraw(Integer adminIdx, String userMail) {
+        reservationMapper.deleteRoomReservationsByUserMail(adminIdx, userMail);
+        reservationMapper.deleteOnsenReservationsByUserMail(adminIdx, userMail);
+        reservationMapper.deleteRestaurantReservationsByUserMail(adminIdx, userMail);
+        reservationMapper.deleteReservationsByUserMail(adminIdx, userMail);
+        inquiryMapper.deleteByUserMail(adminIdx, userMail);
+        memberMapper.deleteByUserMail(adminIdx, userMail);
     }
 }
