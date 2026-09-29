@@ -54,11 +54,11 @@
 		  AND ADMIN_IDX = #{adminIdx}
 	</delete>
 
-	<!-- 사용자 예약 화면(온천 선택)에 노출할 판매중 온천 전체 조회 -->
+	<!-- 사용자 예약 화면(온천 선택)에 노출할, 특정 료칸의 판매중 온천 전체 조회 -->
 	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.OnsenDto">
 		SELECT *
 		FROM ONSEN
-		WHERE ONSEN_SALE_YN = 'Y'
+		WHERE ADMIN_IDX = #{adminIdx} AND ONSEN_SALE_YN = 'Y'
 		ORDER BY ONSEN_IDX
 	</select>
 

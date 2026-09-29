@@ -14,10 +14,6 @@ public class NoticeService {
     @Autowired
     private NoticeMapper noticeMapper;
 
-    public List<NoticeDto> list() {
-        return noticeMapper.selectList();
-    }
-
     public NoticeDto select(int noticeIdx) {
         return noticeMapper.selectByIdx(noticeIdx);
     }

@@ -47,7 +47,7 @@
             </span>
           </div>
           <a class="btn-gold" style="padding:12px 24px; font-size:13px; text-decoration:none;"
-             th:href="@{/reservation/reservation(planCode=${plan.planIdx})}" th:text="#{plans.book}">이 플랜으로 예약하기</a>
+             th:href="@{'/r/' + ${siteInfo.adminId} + '/reservation/reservation'(planCode=${plan.planIdx})}" th:text="#{plans.book}">이 플랜으로 예약하기</a>
         </div>
       </div>
     </div>

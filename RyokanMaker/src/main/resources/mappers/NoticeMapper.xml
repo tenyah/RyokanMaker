@@ -10,11 +10,6 @@
         <result column="NOTICE_CREATED_AT" property="noticeCreatedAt"/>
     </resultMap>
 
-    <select id="selectList" resultMap="noticeResultMap">
-        SELECT * FROM NOTICE
-        ORDER BY NOTICE_IDX DESC
-    </select>
-
     <select id="selectByIdx" parameterType="int" resultMap="noticeResultMap">
         SELECT * FROM NOTICE WHERE NOTICE_IDX = #{noticeIdx}
     </select>

@@ -106,8 +106,8 @@
       <h1 th:text="${siteInfo != null and !#strings.isEmpty(siteInfo.ryokanName)} ? ${siteInfo.ryokanName} : '清流庵'">清流庵</h1>
       <p class="tagline" th:text="${@pt.t('INDEX_TAGLINE')}">오타루 운하가 내려다보이는, 하룻밤의 고요</p>
       <div class="hero-actions">
-        <a class="btn-gold" th:href="@{/reservation/plan}" th:text="#{nav.booking}">숙박예약</a>
-        <a class="btn-line" th:href="@{/reservation/plan}" th:text="#{index.plan_tour}">플랜 둘러보기</a>
+        <a class="btn-gold" th:href="@{'/r/' + ${siteInfo.adminId} + '/reservation/plan'}" th:text="#{nav.booking}">숙박예약</a>
+        <a class="btn-line" th:href="@{'/r/' + ${siteInfo.adminId} + '/reservation/plan'}" th:text="#{index.plan_tour}">플랜 둘러보기</a>
       </div>
     </div>
   </section>
@@ -179,7 +179,7 @@
   </section>
 
   <div class="board-list" th:with="_p=${@tr.prefetch(notices, 'noticeTitle')}">
-    <a class="board-row" th:each="notice : ${notices}" th:href="@{/notice/view(idx=${notice.noticeIdx})}">
+    <a class="board-row" th:each="notice : ${notices}" th:href="@{'/r/' + ${siteInfo.adminId} + '/notice/view'(idx=${notice.noticeIdx})}">
       <span class="board-date" th:text="${#temporals.format(notice.noticeCreatedAt, 'yyyy/MM/dd')}"></span>
       <span class="board-title" th:text="${@tr.t(notice.noticeTitle)}"></span>
     </a>

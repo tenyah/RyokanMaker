@@ -27,7 +27,7 @@
     </div>
   </div>
 
-  <form class="form-card" th:action="@{/member/signup}" method="post">
+  <form class="form-card" th:action="@{'/r/' + ${siteInfo.adminId} + '/member/signup'}" method="post">
 
     <div class="req-note"><span class="req">★</span> <span th:text="#{signup.required_note}">는 필수 입력 항목입니다.</span></div>
 

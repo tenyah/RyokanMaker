@@ -5,7 +5,7 @@
     <!--
         마이페이지 예약 현황: RESERVATION 1건당 1행.
         대표 객실명/플랜명은 그 예약에 딸린 ROOM_RESERVATION 중 ROOM_RESV_NUM이 가장 작은 1건만 조인해서 보여준다.
-        AdminReservationMapper.selectReservationList와 동일한 조인이지만 USER_MAIL 기준으로 필터링한다.
+        AdminReservationMapper.selectReservationList와 동일한 조인이지만 (ADMIN_IDX, USER_MAIL) 기준으로 필터링한다.
     -->
     <select id="selectReservationListByUserMail" resultType="com.mnu.ryokanmaker.domain.AdminReservationListItemDto">
         SELECT
@@ -19,7 +19,7 @@
             r.RESV_PEOPLE       AS resvPeople,
             r.RESV_PRICE        AS resvPrice
         FROM RESERVATION r
-        JOIN MEMBER m ON m.USER_MAIL = r.USER_MAIL
+        JOIN MEMBER m ON m.USER_MAIL = r.USER_MAIL AND m.ADMIN_IDX = r.ADMIN_IDX
         LEFT JOIN ROOM_RESERVATION rr
             ON rr.RESV_NUM = r.RESV_NUM
             AND rr.ROOM_RESV_NUM = (
@@ -29,24 +29,24 @@
             )
         LEFT JOIN ROOM rm ON rm.ROOM_IDX = rr.ROOM_IDX
         LEFT JOIN PLAN p ON p.PLAN_IDX = rr.PLAN_IDX
-        WHERE r.USER_MAIL = #{userMail}
+        WHERE r.ADMIN_IDX = #{adminIdx} AND r.USER_MAIL = #{userMail}
         ORDER BY r.RESV_NUM DESC
     </select>
 
-    <delete id="deleteRoomReservationsByUserMail" parameterType="string">
-        DELETE FROM ROOM_RESERVATION WHERE USER_MAIL = #{userMail}
+    <delete id="deleteRoomReservationsByUserMail">
+        DELETE FROM ROOM_RESERVATION WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
     </delete>
 
-    <delete id="deleteOnsenReservationsByUserMail" parameterType="string">
-        DELETE FROM ONSEN_RESERVATION WHERE USER_MAIL = #{userMail}
+    <delete id="deleteOnsenReservationsByUserMail">
+        DELETE FROM ONSEN_RESERVATION WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
     </delete>
 
-    <delete id="deleteRestaurantReservationsByUserMail" parameterType="string">
-        DELETE FROM RESTAURANT_RESERVATION WHERE USER_MAIL = #{userMail}
+    <delete id="deleteRestaurantReservationsByUserMail">
+        DELETE FROM RESTAURANT_RESERVATION WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
     </delete>
 
-    <delete id="deleteReservationsByUserMail" parameterType="string">
-        DELETE FROM RESERVATION WHERE USER_MAIL = #{userMail}
+    <delete id="deleteReservationsByUserMail">
+        DELETE FROM RESERVATION WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
     </delete>
 
 </mapper>

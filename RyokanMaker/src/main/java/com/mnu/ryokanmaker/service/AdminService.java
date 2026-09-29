@@ -52,6 +52,11 @@ public class AdminService {
 		return adminMapper.selectByAdminIdx(adminIdx);
 	}
 
+	/** 경로의 {adminId}(ADMIN.ADMIN_ID, 유니크)로 테넌트를 찾는다. 없으면 null(컨트롤러/인터셉터에서 404 처리). */
+	public AdminDto findByAdminId(String adminId) {
+		return adminMapper.selectByAdminId(adminId);
+	}
+
 	/**
 	 * 여관 기본정보 수정 (인덱스 화면 입력). 1 관리자 = 1 여관이라 등록/삭제 없이 수정만 있음.
 	 * logoFile : 로고 1장 (선택) - 안 올리면 기존 로고 유지

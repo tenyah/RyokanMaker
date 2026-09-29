@@ -19,7 +19,7 @@
   </section>
 
   <div class="list-toolbar">
-    <a class="btn-gold" style="text-decoration:none;" th:href="@{/inquiry/write}" th:text="#{inquiry.write}">문의 작성</a>
+    <a class="btn-gold" style="text-decoration:none;" th:href="@{'/r/' + ${siteInfo.adminId} + '/inquiry/write'}" th:text="#{inquiry.write}">문의 작성</a>
   </div>
 
   <section class="qna-table">
@@ -34,7 +34,7 @@
       <tbody th:with="_p=${@tr.prefetch(inquiryList, 'inquiryTitle')}">
         <tr th:each="inquiry : ${inquiryList}">
           <td>
-            <a class="qna-title-link" th:href="@{/inquiry/view(idx=${inquiry.inquiryIdx})}"
+            <a class="qna-title-link" th:href="@{'/r/' + ${siteInfo.adminId} + '/inquiry/view'(idx=${inquiry.inquiryIdx})}"
                th:text="${@tr.t(inquiry.inquiryTitle)}">문의 제목</a>
           </td>
           <td class="qna-status">

@@ -59,11 +59,11 @@
 		  AND ADMIN_IDX = #{adminIdx}
 	</delete>
 
-	<!-- 사용자 예약 화면(객실 선택)에 노출할 판매중 객실 전체 조회 -->
+	<!-- 사용자 예약 화면(객실 선택)에 노출할, 특정 료칸의 판매중 객실 전체 조회 -->
 	<select id="findAllOnSale" resultType="com.mnu.ryokanmaker.domain.RoomDto">
 		SELECT *
 		FROM ROOM
-		WHERE ROOM_SALE_YN = 'Y'
+		WHERE ADMIN_IDX = #{adminIdx} AND ROOM_SALE_YN = 'Y'
 		ORDER BY ROOM_IDX
 	</select>
 
@@ -76,7 +76,7 @@
 	<select id="findMinPrice" resultType="java.lang.Long">
 		SELECT MIN(ROOM_PRICE)
 		FROM ROOM
-		WHERE ROOM_SALE_YN = 'Y'
+		WHERE ADMIN_IDX = #{adminIdx} AND ROOM_SALE_YN = 'Y'
 	</select>
 
 	<update id="updateSaleYn">

@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import com.mnu.ryokanmaker.config.TenantInterceptor;
 import com.mnu.ryokanmaker.domain.AdminDto;
 import com.mnu.ryokanmaker.domain.MemberDto;
 import com.mnu.ryokanmaker.service.AdminService;
 import com.mnu.ryokanmaker.service.InquiryService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 /**
@@ -24,7 +26,7 @@ public class GlobalModelAdvice {
 
 	private static final Logger log = LoggerFactory.getLogger(GlobalModelAdvice.class);
 
-	// 사이트가 단일 료칸(清流庵) 기준이라 공개 화면(헤더/푸터)의 로고·상호·연락처도 이 관리자 소유 데이터로 고정 조회
+	// /r/{adminId} 밖의 화면(관리자 패널 등)에서 쓰는 기본값. 손님 화면은 TenantInterceptor가 찾은 테넌트를 우선 사용한다.
 	private static final int MAIN_ADMIN_IDX = 1;
 
 	@Autowired
@@ -40,10 +42,15 @@ public class GlobalModelAdvice {
 
 	/**
 	 * 공개 화면 헤더/푸터에 쓰는 료칸 기본정보(로고, 상호, 주소, 연락처, 이메일).
+	 * /r/{adminId} 밑이면 그 테넌트, 아니면(관리자 패널 등) 기존처럼 관리자 1번을 기본값으로 조회한다.
 	 * 로그인 여부와 무관하게 모든 방문자에게 보여야 하므로 세션의 "admin"과 별도로 DB에서 조회한다.
 	 */
 	@ModelAttribute("siteInfo")
-	public AdminDto siteInfo() {
+	public AdminDto siteInfo(HttpServletRequest request) {
+		AdminDto tenant = TenantInterceptor.currentTenant(request);
+		if (tenant != null) {
+			return tenant;
+		}
 		try {
 			return adminService.getRyokanInfo(MAIN_ADMIN_IDX);
 		} catch (Exception e) {
@@ -52,9 +59,18 @@ public class GlobalModelAdvice {
 		}
 	}
 
+	/**
+	 * 로그인한 회원. 같은 브라우저 세션이라도 료칸마다 별도로 로그인하므로,
+	 * 세션 키를 "loginMember:{adminId}"로 분리해서 서로 섞이지 않게 한다.
+	 * /r/{adminId} 밖(관리자 패널 등)에서는 회원 로그인 개념이 없으므로 null.
+	 */
 	@ModelAttribute("loginMember")
-	public MemberDto loginMember(HttpSession session) {
-		return (MemberDto) session.getAttribute("loginMember");
+	public MemberDto loginMember(HttpServletRequest request, HttpSession session) {
+		AdminDto tenant = TenantInterceptor.currentTenant(request);
+		if (tenant == null) {
+			return null;
+		}
+		return (MemberDto) session.getAttribute(TenantInterceptor.memberSessionKey(tenant.getAdminId()));
 	}
 
 	@ModelAttribute("pendingInquiryCount")

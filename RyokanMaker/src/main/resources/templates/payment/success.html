@@ -23,7 +23,7 @@
       <div class="result-row"><span class="k" th:text="#{pay.paid_status}">결제상태</span><span class="v" th:text="${@tr.label('pay.status', result['status'])}">DONE</span></div>
     </div>
 
-    <a class="result-action" th:href="@{/}" th:text="#{pay.back_main}">메인으로 돌아가기</a>
+    <a class="result-action" th:href="@{'/r/' + ${siteInfo.adminId}}" th:text="#{pay.back_main}">메인으로 돌아가기</a>
   </div>
 
 </div>

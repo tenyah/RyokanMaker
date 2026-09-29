@@ -14,8 +14,8 @@ public interface OnsenMapper {
 	public int updateOnsen(OnsenDto onsenDto);
 	public int deleteOnsen(@Param("onsenIdx") Integer onsenIdx, @Param("adminIdx") Integer adminIdx);
 
-	/** 사용자 예약 화면(온천 선택)에 노출할 판매중(SALE_YN='Y') 온천 전체 조회 */
-	public List<OnsenDto> findAllOnSale();
+	/** 사용자 예약 화면(온천 선택)에 노출할, 특정 료칸의 판매중(SALE_YN='Y') 온천 전체 조회 */
+	public List<OnsenDto> findAllOnSale(@Param("adminIdx") Integer adminIdx);
 
 	/** 판매 여부(ONSEN_SALE_YN)만 토글 */
 	public int updateSaleYn(@Param("onsenIdx") Integer onsenIdx, @Param("adminIdx") Integer adminIdx,

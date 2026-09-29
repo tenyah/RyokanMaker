@@ -30,7 +30,7 @@
     </div>
 
     <div class="content-actions">
-      <a class="btn-line" th:href="@{/}" th:text="#{common.home}">홈으로</a>
+      <a class="btn-line" th:href="@{'/r/' + ${siteInfo.adminId}}" th:text="#{common.home}">홈으로</a>
     </div>
   </section>
 
