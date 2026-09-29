@@ -24,7 +24,8 @@
         INSERT INTO MEMBER (ADMIN_IDX, USER_MAIL, USER_PASSWORD, USER_NICKNAME, USER_ADDRESS, USER_COUNTRY, USER_TEL,
                              USER_LAST_NAME_EN, USER_FIRST_NAME_EN, USER_LAST_NAME_JP, USER_FIRST_NAME_JP)
         VALUES (#{adminIdx}, #{userMail}, #{userPassword}, #{userNickname}, #{userAddress}, #{userCountry}, #{userTel},
-                #{userLastNameEn}, #{userFirstNameEn}, #{userLastNameJp}, #{userFirstNameJp})
+                #{userLastNameEn}, #{userFirstNameEn},
+                #{userLastNameJp,jdbcType=VARCHAR}, #{userFirstNameJp,jdbcType=VARCHAR})
     </insert>
 
     <update id="update" parameterType="com.mnu.ryokanmaker.domain.MemberDto">
@@ -36,8 +37,8 @@
             USER_TEL = #{userTel},
             USER_LAST_NAME_EN = #{userLastNameEn},
             USER_FIRST_NAME_EN = #{userFirstNameEn},
-            USER_LAST_NAME_JP = #{userLastNameJp},
-            USER_FIRST_NAME_JP = #{userFirstNameJp}
+            USER_LAST_NAME_JP = #{userLastNameJp,jdbcType=VARCHAR},
+            USER_FIRST_NAME_JP = #{userFirstNameJp,jdbcType=VARCHAR}
         WHERE ADMIN_IDX = #{adminIdx} AND USER_MAIL = #{userMail}
     </update>
 

@@ -120,7 +120,15 @@
 - `member/mypage.html`의 예약 취소 버튼 폼(`@{/member/reservation_cancel}`)이 `/r/{adminId}` 접두어 없이 남아있던 것을 발견해 수정.
 - `RestaurantCourseMapper`에 최근 추가된 `updateSaleYn`(식사 코스 판매중지 토글)은 유지하고, `findAllOnSale()`만 `findAllOnSale(adminIdx)`로 교체(둘 다 살림).
 
-**검증:** `mvnw clean compile` BUILD SUCCESS. 커밋 메시지 기준 실제 EC2에서 크로스 테넌트 가입/로그인 격리까지 확인됐다고 기록되어 있음. **이번 병합으로 되살린 예약 취소 관련 수정 3건은 아직 이 세션에서 재검증하지 않음 — 서버 띄워서 두 료칸으로 직접 확인 필요.**
+**검증:** `mvnw clean compile` BUILD SUCCESS. 커밋 메시지 기준 실제 EC2에서 크로스 테넌트 가입/로그인 격리까지 확인됐다고 기록되어 있음.
+
+**병합 직후 로컬 재검증(공유 DB 대상, 테스트 데이터는 끝나고 삭제):**
+- 회원가입 중 **`ORA-17004`로 500 발생**을 발견 — 일본어 이름(선택 항목)을 비우면 `MemberMapper.xml`의 `insert`/`update`가 `USER_LAST_NAME_JP`/`USER_FIRST_NAME_JP`에 NULL을 `jdbcType` 지정 없이 넘겨서 발생(예전 `PaymentMapper`에서 겪은 것과 같은 원인). 두 문에 `jdbcType=VARCHAR` 추가로 수정. **멀티테넌시와 무관한 기존 버그**로, 일본어 이름 없이 가입을 시도한 적이 없어서 이번에 처음 드러남.
+- 같은 이메일로 `/r/test`, `/r/sample` 각각 회원가입 성공, **같은 쿠키(브라우저)로 두 료칸에 동시 로그인 → 두 마이페이지 모두 로그인 유지**(200) 확인.
+- `test`에서 회원탈퇴해도 `sample` 로그인은 안 끊김 확인 (`session.invalidate()` 대신 해당 료칸 세션 키만 제거하는 수정이 실제로 동작).
+- `sample`에서 쓴 문의가 `test`의 문의 목록에는 안 보임(0건) 확인 — 문의 격리 정상.
+- 테스트 계정 2개는 각 료칸에서 회원탈퇴로 정리, DB에 남은 테스트 데이터 없음.
+- **아직 확인 못 한 것:** 객실/온천/식사코스/플랜의 손님 화면 노출 격리(관리자로 로그인해 실제 상품을 등록해 봐야 함), 결제·예약 저장 흐름의 테넌트 스코프.
 
 
 ---
